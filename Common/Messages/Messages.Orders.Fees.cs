@@ -143,7 +143,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedSecurityType(SecurityType securityType)
             {
-                return $"TDAmeritradeFeeModel doesn't return correct fee model for SecurityType = {nameof(securityType)}";
+                return $"TDAmeritradeFeeModel doesn't return correct fee model for SecurityType = {securityType}";
             }
         }
     }
