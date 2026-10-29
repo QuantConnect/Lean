@@ -162,6 +162,9 @@ namespace QuantConnect.Tests.Brokerages
                     case SecurityType.IndexOption:
                         algorithm.AddIndexOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
                         break;
+                    case SecurityType.Future:
+                        algorithm.AddFutureContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
                     default:
                         throw new NotImplementedException($"{nameof(TestsHelpers)}.{nameof(InitializeSecurity)}: uses not implemented {securityType} security type.");
                 }
