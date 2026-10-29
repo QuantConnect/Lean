@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class FutureSymbolGeneratorTests
     {
         private const int Seed = 123456789;
