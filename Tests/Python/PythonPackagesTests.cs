@@ -133,12 +133,19 @@ def RunTest():
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn
-from cesium import datasets, featurize
+from cesium import featurize
 
 def RunTest():
     seaborn.set()
 
-    eeg = datasets.fetch_andrzejak()
+    # Synthetic stand-in for datasets.fetch_andrzejak(), which downloads the EEG dataset on every run: same layout, 20 series per class
+    random = np.random.default_rng(0)
+    classes = np.repeat([""Z"", ""O"", ""N"", ""F"", ""S""], 20)
+    eeg = {
+        ""times"": [np.linspace(0, 23.6, 4097) for _ in classes],
+        ""measurements"": [random.normal(size=4097) for _ in classes],
+        ""classes"": classes,
+    }
 
     # Group together classes (Z, O), (N, F), (S) as normal, interictal, ictal
     eeg[""classes""] = eeg[""classes""].astype(""U16"")  # allocate memory for longer class names
