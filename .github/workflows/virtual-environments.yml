@@ -22,62 +22,94 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run Python Virtual Environments Tests
+        shell: bash
         run: |
           # Build
           dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
-          # Python Virtual Environment System Packages
-          python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
+          # The test groups below run at the same time, each one in its own test hosts and in order, and their output is shown as each one ends.
+          # Packages that hang or interfere when sharing a test host keep running in their own dotnet test invocation, as before.
+          packageTests() {
+            # Run Python Package Tests
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 120seconds --blame-crash
+          }
 
-          # Run Virtual Environment Test System Packages
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
+          virtualEnvironmentAndSeparatePackageTests() {
+            # Python Virtual Environment System Packages
+            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
 
-          # Python Virtual Environment
-          rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
+            # Run Virtual Environment Test System Packages
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
 
-          # Run Virtual Environment Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
+            # Python Virtual Environment
+            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
 
-          # Run Python Package Tests
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 120seconds --blame-crash
+            # Run Virtual Environment Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
 
-          # Run StableBaselines Python Package Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run StableBaselines Python Package Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StableBaselinesTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run AxPlatform Python Package Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.AxPlatformTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run AxPlatform Python Package Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.AxPlatformTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run TensorlyTest Python Package Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorlyTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run TensorlyTest Python Package Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorlyTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run NeuralTangents, Ignite Python Package Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.IgniteTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run NeuralTangents, Ignite Python Package Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.IgniteTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run TensorflowTest
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run TensorflowTest
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run TensorflowProbability
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowProbabilityTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run TensorflowProbability
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.TensorflowProbabilityTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run Hvplot Python Package Test
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.RiskparityportfolioTest" --blame-hang-timeout 120seconds --blame-crash
+            # Run Hvplot Python Package Test
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.RiskparityportfolioTest" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run Transformers
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers" --blame-hang-timeout 120seconds --blame-crash
+            # Run Shap
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest|PyvinecopulibTest" --blame-hang-timeout 120seconds --blame-crash
+          }
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.XTransformers" --blame-hang-timeout 120seconds --blame-crash
+          separatePackageTests() {
+            # Run Transformers
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Transformers" --blame-hang-timeout 120seconds --blame-crash
 
-          # Run Shap
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest|PyvinecopulibTest" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.XTransformers" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StatsForecast|Mlforecast" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.StatsForecast|Mlforecast" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.MlxtendTest|Thinc" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.MlxtendTest|Thinc" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ModuleVersionTestExplicit" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ModuleVersionTestExplicit" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Neuralforecast" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Neuralforecast" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Tsfel" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Tsfel" --blame-hang-timeout 120seconds --blame-crash
 
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikitOptimizeTest" --blame-hang-timeout 120seconds --blame-crash
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikitOptimizeTest" --blame-hang-timeout 120seconds --blame-crash
+          }
+
+          testGroups=(packageTests virtualEnvironmentAndSeparatePackageTests separatePackageTests)
+
+          # Thread pools default to the host's core count, not the container's cpus limit, and the groups running at the same time
+          # would starve each other into hangs: give each group its share of the cpus instead
+          read quota period < /sys/fs/cgroup/cpu.max || quota=max
+          cpus=$([ "$quota" = max ] && nproc || echo $(( quota / period )))
+          threads=$(( cpus > ${#testGroups[@]} ? cpus / ${#testGroups[@]} : 1 ))
+          export OMP_NUM_THREADS=$threads MKL_NUM_THREADS=$threads OPENBLAS_NUM_THREADS=$threads NUMBA_NUM_THREADS=$threads TF_NUM_INTRAOP_THREADS=$threads TF_NUM_INTEROP_THREADS=$threads
+
+          pids=()
+          for testGroup in "${testGroups[@]}"; do
+            $testGroup > $testGroup.log 2>&1 &
+            pids+=($!)
+          done
+
+          failed=0
+          for i in "${!testGroups[@]}"; do
+            wait ${pids[$i]} && result=passed || { result=failed; failed=1; }
+            echo "========== ${testGroups[$i]} $result =========="
+            cat ${testGroups[$i]}.log
+          done
+          exit $failed
