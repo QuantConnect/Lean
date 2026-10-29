@@ -42,15 +42,15 @@ using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Algorithm
 {
-    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures), FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
     public class AlgorithmHistoryTests
     {
         private QCAlgorithm _algorithm;
         private TestHistoryProvider _testHistoryProvider;
-        private IDataProvider _dataProvider;
-        private IMapFileProvider _mapFileProvider;
-        private IDataCacheProvider _cacheProvider;
-        private IFactorFileProvider _factorFileProvider;
+        private static IDataProvider _dataProvider;
+        private static IMapFileProvider _mapFileProvider;
+        private static IDataCacheProvider _cacheProvider;
+        private static IFactorFileProvider _factorFileProvider;
 
         [SetUp]
         public void Setup()
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public static void OneTimeSetUp()
         {
             _dataProvider = TestGlobals.DataProvider;
             _mapFileProvider = TestGlobals.MapFileProvider;
@@ -1960,6 +1960,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
             }
         }
 
+        [Parallelizable(ParallelScope.All)]
         // C#
         [TestCase(Language.CSharp, Resolution.Second, true, 23400, 23400, 23400)]
         [TestCase(Language.CSharp, Resolution.Second, false, 23400, 22884, 16093)]
@@ -2342,6 +2343,7 @@ tradeBar = TradeBar
             }
         }
 
+        [Parallelizable(ParallelScope.All)]
         // C#
         [TestCase(Language.CSharp, true, 4023, 800)] // 4023, 800
         [TestCase(Language.CSharp, false, 2056, 437)] // 2056, 437
@@ -2523,6 +2525,7 @@ tick = Tick
             }
         }
 
+        [Parallelizable(ParallelScope.All)]
         // C#
         [TestCase(Language.CSharp, Resolution.Daily, 51)]
         [TestCase(Language.CSharp, Resolution.Hour, 400)]
@@ -3024,6 +3027,7 @@ tradeBar = TradeBar
             }
         }
 
+        [Parallelizable(ParallelScope.All)]
         // C#
         [TestCase(Language.CSharp, Resolution.Daily, 61)]
         [TestCase(Language.CSharp, Resolution.Hour, 477)]
@@ -3920,6 +3924,7 @@ def get_history(algorithm, security):
             }
         }
 
+        [Parallelizable(ParallelScope.All)]
         [TestCase(true, Resolution.Tick, true)]
         [TestCase(true, Resolution.Second, true)]
         [TestCase(true, Resolution.Minute, true)]
