@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class WaveTrendOscillatorTests : CommonIndicatorTests<IBaseDataBar>
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()

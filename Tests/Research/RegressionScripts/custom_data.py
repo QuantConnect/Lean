@@ -40,7 +40,8 @@ class CustomPythonData(PythonData):
 class Nifty(PythonData):
     '''NIFTY Custom Data Class'''
     def get_source(self, config, date, is_live_mode):
-        return SubscriptionDataSource("https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1", SubscriptionTransportMedium.REMOTE_FILE)
+        # local copy of the 2014 rows of https://www.dropbox.com/s/rsmg44jr6wexn2h/CNXNIFTY.csv?dl=1
+        return SubscriptionDataSource("TestData/cnxnifty_2014.csv", SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
 
 
     def reader(self, config, line, date, is_live_mode):

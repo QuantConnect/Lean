@@ -74,8 +74,6 @@ def getUniverseHistory(qb, start, end):
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
 
-                    Console.WriteLine((string)pyHistory.to_string());
-
                     if (flatten)
                     {
                         Assert.AreEqual(20, pyHistory.index.levels[0].__len__().AsManagedObject(typeof(int)));
