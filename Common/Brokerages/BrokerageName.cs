@@ -177,6 +177,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Terminal link models
         /// </summary>
+        [Obsolete("TerminalLink brokerage name is deprecated. Use QuantBridge instead.")]
         TerminalLink,
 
         /// <summary>
@@ -217,6 +218,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Clear Street models
         /// </summary>
-        ClearStreet
+        ClearStreet,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Quant Bridge models
+        /// </summary>
+        QuantBridge
     }
 }

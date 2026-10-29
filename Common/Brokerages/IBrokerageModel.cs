@@ -198,7 +198,8 @@ namespace QuantConnect.Brokerages
                     return new DefaultBrokerageModel(accountType);
 
                 case BrokerageName.TerminalLink:
-                    return new TerminalLinkBrokerageModel(accountType);
+                case BrokerageName.QuantBridge:
+                    return new QuantBridgeBrokerageModel(accountType);
 
                 case BrokerageName.Alpaca:
                     return new AlpacaBrokerageModel();
@@ -401,6 +402,9 @@ namespace QuantConnect.Brokerages
 
                 case TradeStationBrokerageModel _:
                     return BrokerageName.TradeStation;
+
+                case QuantBridgeBrokerageModel:
+                    return BrokerageName.QuantBridge;
 
                 case CharlesSchwabBrokerageModel:
                     return BrokerageName.CharlesSchwab;

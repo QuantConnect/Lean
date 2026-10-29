@@ -16,13 +16,27 @@
 using System;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Common.Orders
 {
     [TestFixture]
-    public class TerminalLinkOrderPropertiesTests
+    public class QuantBridgeOrderPropertiesTests
     {
+        [Test]
+        public void TerminalLinkOrderPropertiesCloneTypeCompatibility()
+        {
+            // an algorithm written before the rename still checks for the old type
+            var terminalLinkOrderProperties = new TerminalLinkOrderProperties();
+
+            var clone = terminalLinkOrderProperties.Clone();
+
+            Assert.IsInstanceOf<TerminalLinkOrderProperties>(clone);
+            Assert.IsInstanceOf<QuantBridgeOrderProperties>(clone);
+            Assert.IsInstanceOf<IOrderProperties>(clone);
+        }
+
         [Test]
         public void SeamlesslySetsStrategyInPython()
         {
@@ -32,22 +46,22 @@ namespace QuantConnect.Tests.Common.Orders
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
+def getOrderProperties() -> QuantBridgeOrderProperties:
     strategyFields = [
-        TerminalLinkOrderProperties.StrategyField(""09:30:00""),
-        TerminalLinkOrderProperties.StrategyField(""10:30:00""),
-        TerminalLinkOrderProperties.StrategyField(),
-        TerminalLinkOrderProperties.StrategyField()
+        QuantBridgeOrderProperties.StrategyField(""09:30:00""),
+        QuantBridgeOrderProperties.StrategyField(""10:30:00""),
+        QuantBridgeOrderProperties.StrategyField(),
+        QuantBridgeOrderProperties.StrategyField()
     ]
 
-    properties = TerminalLinkOrderProperties()
-    properties.Strategy = TerminalLinkOrderProperties.StrategyParameters(""VWAP"", strategyFields)
+    properties = QuantBridgeOrderProperties()
+    properties.Strategy = QuantBridgeOrderProperties.StrategyParameters(""VWAP"", strategyFields)
 
     return properties
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var orderProperties = (TerminalLinkOrderProperties)getOrderProperties();
+                var orderProperties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(orderProperties);
                 Assert.AreEqual("VWAP", orderProperties.Strategy.Name);
@@ -68,11 +82,41 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
         }
 
         [Test]
+        public void SetsStrategyInPythonWithTheNamesFromBeforeTheRename()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("terminalLinkModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.Strategy = TerminalLinkOrderProperties.StrategyParameters(""VWAP"", [
+        TerminalLinkOrderProperties.StrategyField(""09:30:00""),
+        TerminalLinkOrderProperties.StrategyField()
+    ])
+
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var orderProperties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.AreEqual("VWAP", orderProperties.Strategy.Name);
+                Assert.AreEqual(2, orderProperties.Strategy.Fields.Count);
+                Assert.IsTrue(orderProperties.Strategy.Fields[0].HasValue);
+                Assert.AreEqual("09:30:00", orderProperties.Strategy.Fields[0].Value);
+                Assert.IsFalse(orderProperties.Strategy.Fields[1].HasValue);
+            }
+        }
+
+        [Test]
         public void LocateFieldsDefaultToEmpty()
         {
             // Locate fields are only meaningful for Reg SHO short equity sales; for any other
             // order they must be unset so the brokerage doesn't emit EMSX_LOCATE_* on the request.
-            var properties = new TerminalLinkOrderProperties();
+            var properties = new QuantBridgeOrderProperties();
             Assert.IsNull(properties.LocateBroker);
             Assert.IsNull(properties.LocateId);
         }
@@ -86,15 +130,15 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.LocateBroker = ""BMTB""
     properties.LocateId = ""LOC-123""
     return properties
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+                var properties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(properties);
                 Assert.AreEqual("BMTB", properties.LocateBroker);
@@ -107,7 +151,7 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
         {
             // A regular trade is the EMSX default, and the value for which the brokerage sends no
             // EMSX_CFD_FLAG at all, so it must be what an untouched instance reports.
-            var properties = new TerminalLinkOrderProperties();
+            var properties = new QuantBridgeOrderProperties();
             Assert.IsFalse(properties.IsCfdTrade);
         }
 
@@ -117,9 +161,9 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
             // Order properties are reused across orders and cloned before being edited, e.g. by
             // BrokerageExtensions.RemoveLocateFromNonShortOrder; a shared dictionary would let an
             // edit on the copy leak back into the caller's instance.
-            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var properties = new QuantBridgeOrderProperties { IsCfdTrade = true };
 
-            var clone = (TerminalLinkOrderProperties)properties.Clone();
+            var clone = (QuantBridgeOrderProperties)properties.Clone();
             clone.IsCfdTrade = false;
 
             Assert.IsTrue(properties.IsCfdTrade);
@@ -134,14 +178,14 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.is_cfd_trade = True
     return properties
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+                var properties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(properties);
                 Assert.IsTrue(properties.IsCfdTrade);
@@ -157,15 +201,15 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.additional_properties[""EMSX_CFD_FLAG""] = ""1""
     properties.additional_properties[""EMSX_ODD_LOT""] = ""0""
     return properties
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+                var properties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(properties);
                 Assert.AreEqual(2, properties.AdditionalProperties.Count);
@@ -186,8 +230,8 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.is_cfd_trade = True
     properties.additional_properties[""EMSX_ODD_LOT""] = ""0""
     properties.additional_properties.clear()
@@ -195,7 +239,7 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+                var properties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(properties);
                 Assert.IsEmpty(properties.AdditionalProperties);
@@ -214,14 +258,14 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.additional_properties.update({ ""EMSX_CFD_FLAG"": ""1"", ""EMSX_ODD_LOT"": ""0"" })
     return properties
 ");
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
-                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+                var properties = (QuantBridgeOrderProperties)getOrderProperties();
 
                 Assert.IsNotNull(properties);
                 Assert.AreEqual(2, properties.AdditionalProperties.Count);
@@ -242,8 +286,8 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                     @"
 from AlgorithmImports import *
 
-def getOrderProperties() -> TerminalLinkOrderProperties:
-    properties = TerminalLinkOrderProperties()
+def getOrderProperties() -> QuantBridgeOrderProperties:
+    properties = QuantBridgeOrderProperties()
     properties.additional_properties = { ""EMSX_CFD_FLAG"": ""1"" }
     return properties
 ");
@@ -266,7 +310,7 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
 from AlgorithmImports import *
 
 def getCfdFlag() -> str:
-    properties = TerminalLinkOrderProperties()
+    properties = QuantBridgeOrderProperties()
     properties.is_cfd_trade = True
     return properties.additional_properties[""EMSX_CFD_FLAG""]
 ");

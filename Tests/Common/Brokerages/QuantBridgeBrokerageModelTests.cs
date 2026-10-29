@@ -18,14 +18,15 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
-    public class TerminalLinkBrokerageModelTests
+    public class QuantBridgeBrokerageModelTests
     {
-        private readonly TerminalLinkBrokerageModel _brokerageModel = new();
+        private readonly QuantBridgeBrokerageModel _brokerageModel = new();
 
         [TestCase("SPY", SecurityType.Equity)]
         [TestCase("SPY", SecurityType.Option)]
@@ -42,7 +43,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
-        // Forex/Crypto/Cfd and FutureOption are not tradable on TerminalLink
+        // Forex/Crypto/Cfd and FutureOption are not tradable on Quant Bridge
         [TestCase("EURUSD", SecurityType.Forex)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
@@ -63,7 +64,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var algo = new AlgorithmStub();
             var security = algo.AddSecurity(SecurityType.Index, "SPX");
-            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var properties = new QuantBridgeOrderProperties { IsCfdTrade = true };
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
 
             Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);
@@ -110,6 +111,16 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsFalse(_brokerageModel.CanUpdateOrder(security, order, request, out var message));
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
             Assert.AreEqual("NotSupported", message.Code);
+        }
+
+        [TestCase(BrokerageName.QuantBridge)]
+        [TestCase(BrokerageName.TerminalLink)]
+        public void CreateReturnsTheQuantBridgeModelForBothNames(BrokerageName brokerageName)
+        {
+            var model = BrokerageModel.Create(new OrderProvider(), brokerageName, AccountType.Margin);
+
+            Assert.AreEqual(typeof(QuantBridgeBrokerageModel), model.GetType());
+            Assert.AreEqual(BrokerageName.QuantBridge, BrokerageModel.GetBrokerageName(model));
         }
 
         private static Order CreateOrder(OrderType orderType, Symbol symbol, decimal quantity)

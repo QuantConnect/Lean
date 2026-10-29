@@ -303,21 +303,21 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
                 .SetName("BloombergFixPositionSideCloseDropsLocate");
 
-            // TerminalLink keeps the locate broker and locate id together; either one alone counts
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 0m, -10m, true)
-                .SetName("ShortSellKeepsTerminalLinkLocate");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 100m, -300m, true)
-                .SetName("CrossZeroSellKeepsTerminalLinkLocate");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 20m, -10m, false)
-                .SetName("SellToCloseDropsTerminalLinkLocate");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 0m, -10m, true)
+            // Quant Bridge keeps the locate broker and locate id together; either one alone counts
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsQuantBridgeLocate");
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 100m, -300m, true)
+                .SetName("CrossZeroSellKeepsQuantBridgeLocate");
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsQuantBridgeLocate");
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateId = "LOC-123" }, 0m, -10m, true)
                 .SetName("ShortSellKeepsLoneLocateId");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 20m, -10m, false)
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateId = "LOC-123" }, 20m, -10m, false)
                 .SetName("SellToCloseDropsLoneLocateId");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
-                .SetName("TerminalLinkPositionSideShortKeepsLocate");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
-                .SetName("TerminalLinkPositionSideCloseDropsLocate");
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("QuantBridgePositionSideShortKeepsLocate");
+            yield return new TestCaseData(new QuantBridgeOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("QuantBridgePositionSideCloseDropsLocate");
 
             // Wolverine carries the locate broker only
             yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
@@ -377,14 +377,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
             for (var i = 0; i < 2; i++)
             {
-                var properties = new TerminalLinkOrderProperties { LocateBroker = "MLCO" };
+                var properties = new QuantBridgeOrderProperties { LocateBroker = "MLCO" };
                 var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -10, 0, 0, DateTime.UtcNow, "", properties);
                 _algorithm.Transactions.ProcessRequest(orderRequest);
                 _transactionHandler.HandleOrderRequest(orderRequest);
                 Assert.IsTrue(orderRequest.Response.IsSuccess);
 
                 // The order got a cleaned clone; the caller's own object is never touched
-                Assert.IsNull(((TerminalLinkOrderProperties)_transactionHandler.GetOrderById(orderRequest.OrderId).Properties).LocateBroker);
+                Assert.IsNull(((QuantBridgeOrderProperties)_transactionHandler.GetOrderById(orderRequest.OrderId).Properties).LocateBroker);
                 Assert.AreEqual("MLCO", properties.LocateBroker);
             }
 
@@ -398,7 +398,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             return properties switch
             {
-                TerminalLinkOrderProperties terminalLink => (terminalLink.LocateBroker, terminalLink.LocateId, null, null),
+                QuantBridgeOrderProperties quantBridge => (quantBridge.LocateBroker, quantBridge.LocateId, null, null),
                 WolverineOrderProperties wolverine => (wolverine.LocateBroker, null, null, null),
                 FixOrderProperties fix => (null, null, GetTag(fix, "5700"), GetTag(fix, "114")),
                 _ => default

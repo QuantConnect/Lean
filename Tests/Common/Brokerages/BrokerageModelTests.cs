@@ -864,6 +864,8 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 new TestCaseData(new FTXUSBrokerageModel(), BrokerageName.FTXUS),
                 new TestCaseData(new FTXBrokerageModel(), BrokerageName.FTX),
                 new TestCaseData(new BybitBrokerageModel(), BrokerageName.Bybit),
+                new TestCaseData(new QuantBridgeBrokerageModel(), BrokerageName.QuantBridge),
+                new TestCaseData(new TerminalLinkBrokerageModel(), BrokerageName.QuantBridge),
                 new TestCaseData(new DefaultBrokerageModel(), BrokerageName.Default)
             };
         }
