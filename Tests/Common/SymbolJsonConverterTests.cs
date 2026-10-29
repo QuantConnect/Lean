@@ -229,6 +229,18 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(market, symbol.ID.Market);
         }
 
+        [TestCaseSource(nameof(OptionSymbols))]
+        public void OptionWithoutUnderlyingDeserialization(Symbol expected)
+        {
+            var json = $"{{\"value\":\"{expected.Value}\",\"id\":\"{expected.ID}\"}}";
+            var symbol = JsonConvert.DeserializeObject<Symbol>(json);
+
+            Assert.AreEqual(expected, symbol);
+            Assert.AreEqual(expected.Value, symbol.Value);
+            Assert.AreEqual(expected.Underlying, symbol.Underlying);
+            Assert.AreEqual(expected.Underlying.Value, symbol.Underlying.Value);
+        }
+
         public static object[] TestSymbols =
         {
             new object[] { @"{
@@ -281,6 +293,14 @@ namespace QuantConnect.Tests.Common
                 ""ID"": ""SPY R735QTJ8XC9X"",
                 ""Permtick"": ""SPY""
             }", "SPY", "SPY R735QTJ8XC9X", SecurityType.Equity, null }
+        };
+
+        public static Symbol[] OptionSymbols =
+        {
+            Symbols.SPY_C_192_Feb19_2016,
+            Symbol.CreateOption(Symbols.SPX, Market.USA, OptionStyle.European, OptionRight.Call, 7850m, new DateTime(2027, 12, 17)),
+            Symbol.CreateOption(Symbol.CreateFuture("ES", Market.CME, new DateTime(2020, 3, 20)), Market.CME, OptionStyle.American, OptionRight.Call, 3200m, new DateTime(2020, 3, 20)),
+            Symbols.SPY_Option_Chain
         };
 
         class OldSymbol
