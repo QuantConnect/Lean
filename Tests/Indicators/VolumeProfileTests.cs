@@ -122,17 +122,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(vp.Current.Value, 1m);
         }
 
-        [Test]
-        public void ValueAreaSpansWholeProfileWhenItHoldsAllTheVolume()
+        [TestCase(new[] { 100, 200, 300 }, 1)]
+        [TestCase(new[] { 100, 0, 50 }, 1)]
+        [TestCase(new[] { 100, 0, 50 }, 0.9)]
+        public void ValueAreaGrowsToWholeProfileWithoutHanging(int[] volumes, double valueAreaVolumePercentage)
         {
-            var vp = new VolumeProfile(3, 1m);
+            var vp = new VolumeProfile(3, (decimal)valueAreaVolumePercentage);
             var reference = new DateTime(2000, 1, 1);
             var closes = new[] { 10m, 11m, 12m };
             var update = Task.Run(() =>
             {
                 for (var i = 0; i < closes.Length; i++)
                 {
-                    vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = closes[i], Volume = 100 * (i + 1), Time = reference.AddDays(1 + i) });
+                    vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = closes[i], Volume = volumes[i], Time = reference.AddDays(1 + i) });
                 }
             });
 

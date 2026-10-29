@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ValueAreaSpansWholeProfileWhenItHoldsAllTheVolume()
+        public void ValueAreaGrowsToWholeProfileWithoutHanging()
         {
             var tp = new TimeProfile(3, 1m);
             var reference = new DateTime(2000, 1, 1);
