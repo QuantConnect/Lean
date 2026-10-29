@@ -3469,6 +3469,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // no worker thread: these tests drive HandleOrderRequest manually
             protected override bool SynchronousProcessing => true;
 
+            // the tests handle the request themselves after submitting it, so there is nothing to wait for
+            protected override void WaitForOrderSubmission(OrderTicket ticket)
+            {
+            }
+
             // drains the queued requests like the engine would, so tests can leave the queue truly empty or not
             public void PumpPendingRequests()
             {
