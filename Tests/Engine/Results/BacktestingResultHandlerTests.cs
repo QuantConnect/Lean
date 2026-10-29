@@ -639,6 +639,32 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void SkipsTheFinalAnalysisWhenTheAlgorithmFailedToLoad()
+        {
+            var previousLogHandler = Log.LogHandler;
+            var logHandler = new QueueLogHandler();
+            Log.LogHandler = logHandler;
+            try
+            {
+                using var api = new Api.Api();
+                using var messaging = new QuantConnect.Messaging.Messaging();
+                var resultHandler = new TestableBacktestingResultHandler();
+                resultHandler.Initialize(new(new BacktestNodePacket(), messaging, api, new BacktestingTransactionHandler(), null));
+
+                // An algorithm that fails to load is never set, and the handler still exits with the final result
+                resultHandler.Exit();
+
+                Assert.IsNotNull(resultHandler.FinalResult);
+                Assert.IsNull(resultHandler.FinalResult.Results.Analysis);
+                Assert.IsFalse(logHandler.Logs.Any(log => log.Message.Contains("Error running backtest analysis")));
+            }
+            finally
+            {
+                Log.LogHandler = previousLogHandler;
+            }
+        }
+
         private class TestableBacktestingResultHandler : BacktestingResultHandler
         {
             public decimal ExposedStartingPortfolioValue => StartingPortfolioValue;
@@ -652,6 +678,11 @@ namespace QuantConnect.Tests.Engine.Results
             public ManualResetEventSlim InRunAnalysisRan { get; } = new();
 
             /// <summary>
+            /// The final result stored when the handler exits
+            /// </summary>
+            public BacktestResultPacket FinalResult { get; private set; }
+
+            /// <summary>
             /// The findings of the first in-run analysis run, null when the analysis failed
             /// </summary>
             public IReadOnlyList<QuantConnect.Analysis> InRunAnalysisFindings { get; private set; }
@@ -662,6 +693,15 @@ namespace QuantConnect.Tests.Engine.Results
                 InRunAnalysisFindings = base.RunInRunResultsAnalysis(completeResult, totalPerformance);
                 InRunAnalysisRan.Set();
                 return InRunAnalysisFindings;
+            }
+
+            protected override void StoreResult(Packet packet)
+            {
+                if (packet is BacktestResultPacket result && ExitTriggered)
+                {
+                    FinalResult = result;
+                }
+                base.StoreResult(packet);
             }
         }
     }

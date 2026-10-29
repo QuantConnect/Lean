@@ -430,8 +430,8 @@ namespace QuantConnect.Lean.Engine.Results
                 // Save summary results
                 SaveResults($"{AlgorithmId}-summary.json", CreateResultSummary(result));
 
-                // Run backtest analyzer
-                if (RunResultsAnalysis)
+                // Run backtest analyzer, unless the algorithm failed to load and there is nothing to analyze
+                if (RunResultsAnalysis && AlgorithmInstance != null)
                 {
                     var logs = CloneLogs();
                     // The final analysis reuses the speed metrics accumulated by the in-run analyzer,
