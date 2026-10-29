@@ -62,28 +62,35 @@ jobs:
           run-id: ${{ steps.reference-run.outputs.id }}
           github-token: ${{ github.token }}
 
-      - name: Compare Benchmarks
-        id: compare
-        if: steps.reference.outcome == 'success'
-        continue-on-error: true
-        run: python compare_benchmarks.py reference/benchmark_results.json benchmark_results.json failed_benchmarks.json
-
-      # the stored results come from another run and machine: run the failed algorithms, or all of them without stored results,
-      # again on master and on the change on this machine, and fail only if the regression repeats
       - name: Checkout Lean Master
-        if: github.event_name == 'pull_request' && steps.compare.outcome != 'success'
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v2
         with:
           repository: QuantConnect/Lean
           path: LeanMaster
           ref: 'master'
 
-      - name: Re-check Failed Benchmarks
-        if: github.event_name == 'pull_request' && steps.compare.outcome != 'success'
+      # without stored results, run master here as the reference, like before they were stored
+      - name: Run Benchmarks Master
+        if: github.event_name == 'pull_request' && steps.reference.outcome != 'success'
         run: |
-          ALGORITHMS=$([ -f failed_benchmarks.json ] && echo failed_benchmarks.json || true)
+          dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
+          cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data && cd ../
+          mkdir -p reference && cp LeanMaster/benchmark_results.json reference/benchmark_results.json
+
+      - name: Compare Benchmarks
+        id: compare
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python compare_benchmarks.py reference/benchmark_results.json benchmark_results.json failed_benchmarks.json
+
+      # a single sample per side, maybe from another run and machine, is noisy: run the failed algorithms again on master and
+      # on the change on this machine, and fail only if the regression repeats
+      - name: Re-check Failed Benchmarks
+        if: steps.compare.outcome == 'failure'
+        run: |
           dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
           sleep 30
-          cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data ${ALGORITHMS:+../$ALGORITHMS} && cd ../
-          python run_benchmarks.py /Data $ALGORITHMS
+          cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data ../failed_benchmarks.json && cd ../
+          python run_benchmarks.py /Data failed_benchmarks.json
           python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json
