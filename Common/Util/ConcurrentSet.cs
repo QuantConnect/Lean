@@ -29,10 +29,27 @@ namespace QuantConnect.Util
     public class ConcurrentSet<T> : ISet<T>
     {
         private readonly IEnumerator<T> _emptyEnumerator = Enumerable.Empty<T>().GetEnumerator();
-        private readonly OrderedDictionary _set = new OrderedDictionary();
+        private readonly OrderedDictionary _set;
         // for performance we will keep a enumerator list which we will refresh only if required
         private readonly List<T> _enumerator = new List<T>();
         private bool _refreshEnumerator;
+
+        /// <summary>
+        /// Creates a new set using the default equality comparer
+        /// </summary>
+        public ConcurrentSet()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new set using the given equality comparer
+        /// </summary>
+        /// <param name="comparer">The comparer to use for the items, null for the default one</param>
+        public ConcurrentSet(IEqualityComparer comparer)
+        {
+            _set = comparer != null ? new OrderedDictionary(comparer) : new OrderedDictionary();
+        }
 
         /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
