@@ -453,12 +453,13 @@ namespace QuantConnect.Storage
 
         /// <summary>
         /// Saves the given Python dictionary, list, tuple or .NET object in JSON format for the specified path,
-        /// tolerating nested types the standard json module rejects: datetime/date/time are stored in ISO-8601
-        /// format, Decimal and numpy values as numbers, NaN and infinity as null, .NET objects (Symbol included)
-        /// as the C# <see cref="SaveJson{T}"/> overload writes them and non-string dictionary keys as strings.
-        /// pandas objects are rejected, use <see cref="SaveDataframe"/>, and so is any other type that would
-        /// not round trip. A top-level Python str, int, float or bool is not accepted, use <see cref="SaveText"/>
-        /// for text
+        /// tolerating nested types the standard json module rejects: datetime/date/time, pandas Timestamp and
+        /// numpy datetime64 are stored in ISO-8601 format, timedelta and timedelta64 as ISO-8601 durations,
+        /// Decimal and numpy numbers as numbers, NaN, infinity and NaT as null, .NET objects (Symbol included)
+        /// as the C# <see cref="SaveJson{T}"/> overload writes them (a NaN inside one is Newtonsoft's "NaN"
+        /// string) and non-string dictionary keys as strings. pandas DataFrames and Series are rejected, use
+        /// <see cref="SaveDataframe"/>, and so is any other type that would not round trip. A top-level Python
+        /// str, int, float or bool is not accepted, use <see cref="SaveText"/> for text
         /// </summary>
         /// <param name="path">The object path</param>
         /// <param name="obj">The Python object to be saved</param>
@@ -548,7 +549,7 @@ namespace QuantConnect.Storage
             if (_jsonSerializeMethod == null)
             {
                 var module = PyModule.FromString("object_store_helpers", @"from json import dumps, loads
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 from math import isfinite
 import numpy
@@ -558,16 +559,15 @@ import Newtonsoft.Json as newtonsoft
 
 def _key(key):
     # json only accepts str/int/float/bool/None keys; a .NET key is its string, like a .NET dictionary key
+    if isinstance(key, float) and not isfinite(key):
+        raise TypeError(f'save_json() cannot use {key} as a dictionary key')
     if isinstance(key, (str, int, float)) or key is None:
         return key
-    if isinstance(key, (datetime, date, time)):
-        return key.isoformat()
-    if isinstance(key, Decimal):
-        return str(key)
-    if isinstance(key, numpy.generic):
-        return key.item()
     if isinstance(key, System.Object):
         return str(key)
+    normalized = _normalize(key)
+    if isinstance(normalized, (str, int, float)) and not isinstance(normalized, bool):
+        return normalized
     raise TypeError(f'save_json() cannot use a {type(key).__name__} as a dictionary key')
 
 def _normalize(value):
@@ -581,11 +581,18 @@ def _normalize(value):
         # NaN and infinity are not valid JSON
         return value if isfinite(value) else None
     if isinstance(value, (datetime, date, time)):
-        return value.isoformat()
+        return None if value is pandas.NaT else value.isoformat()
+    if isinstance(value, timedelta):
+        return pandas.Timedelta(value).isoformat()
     if isinstance(value, Decimal):
         return _normalize(float(value))
     if isinstance(value, numpy.ndarray):
-        return _normalize(value.tolist())
+        # tolist() turns nanosecond datetime64/timedelta64 into integers: convert those element-wise
+        return [_normalize(v) for v in value] if value.dtype.kind in 'mM' else _normalize(value.tolist())
+    if isinstance(value, numpy.datetime64):
+        return None if numpy.isnat(value) else pandas.Timestamp(value).isoformat()
+    if isinstance(value, numpy.timedelta64):
+        return None if numpy.isnat(value) else pandas.Timedelta(value).isoformat()
     if isinstance(value, numpy.generic):
         return _normalize(value.item())
     if isinstance(value, (pandas.DataFrame, pandas.Series)):

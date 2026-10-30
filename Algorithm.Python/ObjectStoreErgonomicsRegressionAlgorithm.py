@@ -68,7 +68,8 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             "symbol": self.spy,
             "fills": [{"price": Decimal("167.42"), self.spy: 10}],
             "fill_quantities": List[int]([10, -10]),
-            "returns": np.array([0.01, np.nan])
+            "returns": np.array([0.01, np.nan]),
+            "bar_times": pd.DatetimeIndex([datetime(2013, 10, 10), datetime(2013, 10, 11)]).values
         }
         if not self.object_store.save_json("ergonomics/trade_log.json", trade_log):
             raise AssertionError("Expected save_json to succeed")
@@ -80,7 +81,8 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             "symbol": {"value": "SPY", "id": str(self.spy.id), "permtick": "SPY"},
             "fills": [{"price": 167.42, "SPY": 10}],
             "fill_quantities": [10, -10],
-            "returns": [0.01, None]
+            "returns": [0.01, None],
+            "bar_times": ["2013-10-10T00:00:00", "2013-10-11T00:00:00"]
         }
         if data != expected:
             raise AssertionError(f"Unexpected read_json round trip result: {data}")

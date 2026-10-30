@@ -1258,6 +1258,83 @@ def test(object_store):
         }
 
         [Test]
+        public void PythonSaveJsonWritesNumpyDatetimesAsIso8601AndNatAsNull()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/datetime64.json', {
+        'index': pd.DatetimeIndex([pd.Timestamp('2020-01-01'), pd.Timestamp('2020-01-02 03:04:05.000000006')]).values,
+        'scalar': np.datetime64('2020-01-01T00:00:00.000000000'),
+        'day': np.datetime64('2020-01-01'),
+        'timestamp': pd.Timestamp('2020-01-01 10:00'),
+        'nat': pd.NaT,
+        'nat64': np.datetime64('NaT'),
+        'with_nat': pd.to_datetime(['2020-01-01', None]).values,
+        'grid': np.array([['2020-01-01', '2020-01-02']], dtype='datetime64[D]')
+    })
+    data = object_store.read_json('ergonomics/datetime64.json')
+    assert data == {
+        'index': ['2020-01-01T00:00:00', '2020-01-02T03:04:05.000000006'],
+        'scalar': '2020-01-01T00:00:00',
+        'day': '2020-01-01T00:00:00',
+        'timestamp': '2020-01-01T10:00:00',
+        'nat': None,
+        'nat64': None,
+        'with_nat': ['2020-01-01T00:00:00', None],
+        'grid': [['2020-01-01T00:00:00', '2020-01-02T00:00:00']]
+    }, data
+
+    object_store.delete('ergonomics/datetime64.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonWritesTimedeltasAsIso8601Durations()
+        {
+            RunPythonTest(@"
+import numpy as np
+from datetime import timedelta
+
+def test(object_store):
+    object_store.save_json('ergonomics/timedelta.json', {
+        'holding': timedelta(days=1, hours=2),
+        'latency': np.timedelta64(1500, 'ms'),
+        'spans': (pd.to_datetime(['2020-01-02', '2020-01-03']) - pd.Timestamp('2020-01-01')).values,
+        'pandas': pd.Timedelta(seconds=1.5),
+        'nat': np.timedelta64('NaT')
+    })
+    data = object_store.read_json('ergonomics/timedelta.json')
+    assert data == {
+        'holding': 'P1DT2H0M0S',
+        'latency': 'P0DT0H0M1.5S',
+        'spans': ['P1DT0H0M0S', 'P2DT0H0M0S'],
+        'pandas': 'P0DT0H0M1.5S',
+        'nat': None
+    }, data
+    assert pd.Timedelta(data['holding']) == timedelta(days=1, hours=2)
+
+    object_store.delete('ergonomics/timedelta.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsNanDictionaryKeysWithTypeError()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    error = None
+    try:
+        object_store.save_json('ergonomics/nan_key.json', {float('nan'): 1})
+    except TypeError as e:
+        error = str(e)
+    assert error is not None and 'nan' in error and 'key' in error, error
+    assert not object_store.contains_key('ergonomics/nan_key.json')
+");
+        }
+
+        [Test]
         public void PythonSaveJsonRejectsPandasObjectsPointingToSaveDataframe()
         {
             RunPythonTest(@"
