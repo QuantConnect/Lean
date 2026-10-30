@@ -87,13 +87,21 @@ namespace QuantConnect.Optimizer
                     .Select(a => a.Name)
                     .ToList();
 
+            var totalOrders = parsed?.Orders?.Count ?? 0;
+            // Backtest summaries carry the statistics but not the orders themselves
+            if (parsed?.Orders == null && parsed?.Statistics != null
+                && parsed.Statistics.TryGetValue(PerformanceMetrics.TotalOrders, out var totalOrdersStatistic))
+            {
+                int.TryParse(totalOrdersStatistic, NumberStyles.Any, CultureInfo.InvariantCulture, out totalOrders);
+            }
+
             return new OptimizationBacktestMetrics
             {
                 BacktestId = backtestId,
                 Parameters = parameters,
                 SharpeRatio = parsed?.TotalPerformance?.PortfolioStatistics?.SharpeRatio ?? 0m,
                 TotalPerformance = parsed?.TotalPerformance,
-                TotalOrders = parsed?.Orders?.Count ?? 0,
+                TotalOrders = totalOrders,
                 AnalysisNames = analysisNames
             };
         }
