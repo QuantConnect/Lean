@@ -100,6 +100,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 _thread.Start();
                 _threadStarted.WaitOne();
             }
+
+            // keep the backtest going until the thread makes its additions, however fast the backtest runs
+            var additionCount = Interlocked.Read(ref AdditionCount);
+            SpinWait.SpinUntil(() => Interlocked.Read(ref AdditionCount) > additionCount || !_thread.IsAlive, TimeSpan.FromSeconds(1));
             base.OnData(data);
         }
         public override void OnEndOfAlgorithm()

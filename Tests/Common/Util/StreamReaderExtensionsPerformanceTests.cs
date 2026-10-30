@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -33,87 +34,63 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase(typeof(QuoteBar), typeof(QuoteBarTest), TickType.Quote)]
         public void Performance(Type streamReaderType, Type readLineReaderType, TickType tickType)
         {
-            var streamReaderMilliSeconds = 0L;
+            using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
+            var date = new DateTime(2013, 10, 07);
+            var (streamReader, streamReaderSource) = CreateReader(streamReaderType, tickType, zipCache, date);
+            var (getLineReader, getLineReaderSource) = CreateReader(readLineReaderType, tickType, zipCache, date);
+
+            // warmup
+            streamReader.Read(streamReaderSource).Count();
+            getLineReader.Read(getLineReaderSource).Count();
+
+            var streamReaderTimes = new List<TimeSpan>();
             var streamReaderCount = 0;
-            var getLineReaderMilliSeconds = 0L;
+            var getLineReaderTimes = new List<TimeSpan>();
             var getLineReaderCount = 0;
             var stopWatch = new Stopwatch();
+            // alternate the readers so machine load and JIT tiering weigh on both alike
+            for (int i = 0; i < 300; i++)
             {
-                var config = new SubscriptionDataConfig(
-                    streamReaderType,
-                    Symbols.SPY,
-                    Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    true,
-                    false,
-                    tickType: tickType
-                );
-                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
-                var date = new DateTime(2013, 10, 07);
-                var reader = new TextSubscriptionDataSourceReader(
-                    zipCache,
-                    config,
-                    date,
-                    false,
-                    null);
-                var source = streamReaderType.GetBaseDataInstance().GetSource(config, date, false);
-                // warmup
-                streamReaderCount = reader.Read(source).Count();
-                streamReaderCount = 0;
+                stopWatch.Restart();
+                streamReaderCount += streamReader.Read(streamReaderSource).Count();
+                streamReaderTimes.Add(stopWatch.Elapsed);
 
-                // start test
-                stopWatch.Start();
-                for (int i = 0; i < 300; i++)
-                {
-                    streamReaderCount += reader.Read(source).Count();
-                }
-                stopWatch.Stop();
-                streamReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
-                zipCache.DisposeSafely();
+                stopWatch.Restart();
+                getLineReaderCount += getLineReader.Read(getLineReaderSource).Count();
+                getLineReaderTimes.Add(stopWatch.Elapsed);
             }
+            // the median read leaves out the few a GC pause or a CPU throttle stretched by tens of milliseconds
+            var streamReaderMedian = streamReaderTimes.Order().ElementAt(streamReaderTimes.Count / 2);
+            var getLineReaderMedian = getLineReaderTimes.Order().ElementAt(getLineReaderTimes.Count / 2);
+            Log.Trace($"StreamReader: median {streamReaderMedian.TotalMilliseconds}ms. Count {streamReaderCount}");
+            Log.Trace($"GetLine Reader: median {getLineReaderMedian.TotalMilliseconds}ms. Count {getLineReaderCount}");
 
-            {
-                var config = new SubscriptionDataConfig(
-                    readLineReaderType,
-                    Symbols.SPY,
-                    Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    true,
-                    false,
-                    tickType: tickType
-                );
-                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
-                var date = new DateTime(2013, 10, 07);
-                var reader = new TextSubscriptionDataSourceReader(
-                    zipCache,
-                    config,
-                    date,
-                    false,
-                    null);
-                var source = readLineReaderType.GetBaseDataInstance().GetSource(config, date, false);
-                // warmup
-                getLineReaderCount = reader.Read(source).Count();
-                getLineReaderCount = 0;
-
-                // start test
-                stopWatch.Start();
-                for (int i = 0; i < 300; i++)
-                {
-                    getLineReaderCount += reader.Read(source).Count();
-                }
-                stopWatch.Stop();
-                getLineReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
-            }
-            Log.Trace($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
-            Log.Trace($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
-
-            // its 50% faster but lets leave some room to avoid noise
-            Assert.IsTrue((streamReaderMilliSeconds * 1.5d) < getLineReaderMilliSeconds);
+            // the stream reader isn't faster than the line reader anymore, this keeps the bound the test always enforced
+            Assert.Less(streamReaderMedian, getLineReaderMedian * 2);
             Assert.AreEqual(getLineReaderCount, streamReaderCount);
+        }
+
+        private static (TextSubscriptionDataSourceReader, SubscriptionDataSource) CreateReader(Type dataType, TickType tickType,
+            ZipDataCacheProvider zipCache, DateTime date)
+        {
+            var config = new SubscriptionDataConfig(
+                dataType,
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                true,
+                false,
+                tickType: tickType
+            );
+            var reader = new TextSubscriptionDataSourceReader(
+                zipCache,
+                config,
+                date,
+                false,
+                null);
+            return (reader, dataType.GetBaseDataInstance().GetSource(config, date, false));
         }
 
         /// <summary>

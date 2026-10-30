@@ -23,8 +23,10 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class RateGateTests
     {
+        // asserts wall-clock time, so it shouldn't share the machine with other tests
         [TestCase(5)]
         [TestCase(10)]
+        [NonParallelizable]
         public void RateGateWithTimeout(int count)
         {
             var rate = TimeSpan.FromMilliseconds(500);

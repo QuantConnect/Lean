@@ -31,7 +31,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class ScannableEnumerator<T> : IEnumerator<T> where T : class, IBaseData
     {
         private T _current;
-        private bool _consolidated;
         private bool _isPeriodBase;
         private bool _validateInputType;
         private Type _consolidatorInputType;
@@ -126,7 +125,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (!_queue.TryDequeue(out _current) && _isPeriodBase)
             {
-                _consolidated = false;
                 lock (_consolidator)
                 {
                     // if there is a working bar we will try to pull it out if the time is right, each consolidator knows when it's right
@@ -134,10 +132,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     _consolidator.Scan(localTime);
                 }
 
-                if (_consolidated)
-                {
-                    _queue.TryDequeue(out _current);
-                }
+                // the scan or a concurrent update could have consolidated a new bar
+                _queue.TryDequeue(out _current);
             }
 
             // even if we don't have data to return, we haven't technically
@@ -166,7 +162,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private void DataConsolidatedHandler(object sender, IBaseData data)
         {
             var dataPoint = data as T;
-            _consolidated = true;
             Enqueue(dataPoint);
             _newDataAvailableHandler(sender, new NewDataAvailableEventArgs { DataPoint = dataPoint });
         }
