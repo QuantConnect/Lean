@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from System.Collections.Generic import KeyNotFoundException
+from System.Collections.Generic import KeyNotFoundException, List
 from decimal import Decimal
 
 ### <summary>
@@ -60,13 +60,15 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
         if not self.object_store.save(sanitized, "a,b\n1,2"):
             raise AssertionError("Expected the sanitized key to be storable")
 
-        # save_json tolerates datetime/date/Decimal/Symbol values and non-string dictionary keys
+        # save_json tolerates datetime/date/Decimal/numpy/NaN values, .NET objects and non-string dictionary keys
         trade_log = {
             "time": datetime(2013, 10, 11, 16, 0, 0),
             "date": date(2013, 10, 11),
             "qty": Decimal("1.5"),
             "symbol": self.spy,
-            "fills": [{"price": Decimal("167.42"), self.spy: 10}]
+            "fills": [{"price": Decimal("167.42"), self.spy: 10}],
+            "fill_quantities": List[int]([10, -10]),
+            "returns": np.array([0.01, np.nan])
         }
         if not self.object_store.save_json("ergonomics/trade_log.json", trade_log):
             raise AssertionError("Expected save_json to succeed")
@@ -75,11 +77,25 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             "time": "2013-10-11T16:00:00",
             "date": "2013-10-11",
             "qty": 1.5,
-            "symbol": "SPY",
-            "fills": [{"price": 167.42, "SPY": 10}]
+            "symbol": {"value": "SPY", "id": str(self.spy.id), "permtick": "SPY"},
+            "fills": [{"price": 167.42, "SPY": 10}],
+            "fill_quantities": [10, -10],
+            "returns": [0.01, None]
         }
         if data != expected:
             raise AssertionError(f"Unexpected read_json round trip result: {data}")
+        # the symbol id and the ticker key both resolve back to the added security through the symbol cache
+        if self.symbol(data["symbol"]["id"]) != self.spy or self.symbol("SPY") != self.spy:
+            raise AssertionError(f"Expected the stored symbol to resolve to {self.spy}, got: {data['symbol']}")
+
+        # save_json refuses what it cannot serialize faithfully instead of storing its string
+        error = None
+        try:
+            self.object_store.save_json("ergonomics/rejected.json", {"history": pd.Series([1.0, 2.0])})
+        except TypeError as e:
+            error = str(e)
+        if error is None or "save_dataframe" not in error:
+            raise AssertionError(f"Expected save_json to reject a pandas Series pointing to save_dataframe, got: '{error}'")
 
         # read_json throws on a missing key like every other read method
         error = None

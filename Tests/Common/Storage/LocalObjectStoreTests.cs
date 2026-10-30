@@ -655,6 +655,24 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
+        public void SanitizeKeyIsLossyAndDistinctNamesCanCollide()
+        {
+            var first = ObjectStore.SanitizeKey("trade_log_ai&cloud.csv");
+            var second = ObjectStore.SanitizeKey("trade_log_ai:cloud.csv");
+
+            Assert.AreEqual("trade_log_ai_cloud.csv", first);
+            Assert.AreEqual(first, second);
+            Assert.AreEqual(first, ObjectStore.SanitizeKey("trade_log_ai_cloud.csv"));
+
+            // the second save silently overwrites the first: collision checks are up to the caller
+            Assert.IsTrue(_store.Save(first, "first"));
+            Assert.IsTrue(_store.Save(second, "second"));
+            Assert.AreEqual("second", _store.Read(first));
+
+            _store.Delete(first);
+        }
+
+        [Test]
         public void SaveTextAndReadTextAreAliasesOfSaveAndRead()
         {
             Assert.IsTrue(_store.SaveText("save_text_alias.txt", "abc"));
@@ -1155,16 +1173,154 @@ def test(object_store):
         'fills': [{symbol: 10}]
     })
     data = object_store.read_json('ergonomics/log.json')
-    # symbols are stored as their string representation, which depends on the symbol cache state
+    # a Symbol value is written like the C# SaveJson<T> does, a Symbol key as its string like a .NET dictionary key
     assert data == {
         'time': '2024-01-02T03:04:05',
         'date': '2024-01-01',
         'qty': 1.5,
-        'symbol': str(symbol),
+        'symbol': {'value': 'SPY', 'id': str(symbol.id), 'permtick': 'SPY'},
         'fills': [{str(symbol): 10}]
     }, data
+    # both forms resolve back to the Symbol through the symbol cache, which is what QCAlgorithm.symbol(str) does
+    assert SymbolCache.get_symbol(data['symbol']['id']) == symbol
+    assert SymbolCache.get_symbol(next(iter(data['fills'][0]))) == symbol
 
     object_store.delete('ergonomics/log.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonSerializesDotNetObjectsLikeTheCSharpOverload()
+        {
+            RunPythonTest(@"
+from System.Collections.Generic import List, Dictionary
+import Newtonsoft.Json as newtonsoft
+
+def test(object_store):
+    numbers = List[int]([1, 2])
+    weights = Dictionary[str, float]()
+    weights['a'] = 1.5
+    point = IndicatorDataPoint(datetime(2020, 1, 1), 5)
+
+    object_store.save_json('ergonomics/dotnet.json', {'numbers': numbers, 'weights': weights, 'point': point})
+    data = object_store.read_json('ergonomics/dotnet.json')
+    assert data == {
+        'numbers': [1, 2],
+        'weights': {'a': 1.5},
+        'point': json.loads(newtonsoft.JsonConvert.serialize_object(point))
+    }, data
+
+    object_store.delete('ergonomics/dotnet.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonConvertsNumpyArraysAndScalars()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/numpy.json', {
+        'weights': np.array([1.5, 2.5]),
+        'grid': np.array([[1, 2], [3, 4]]),
+        'count': np.int64(3),
+        'ratio': np.float32(0.5)
+    })
+    data = object_store.read_json('ergonomics/numpy.json')
+    assert data == {'weights': [1.5, 2.5], 'grid': [[1, 2], [3, 4]], 'count': 3, 'ratio': 0.5}, data
+
+    object_store.delete('ergonomics/numpy.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonWritesNanAndInfinityAsNull()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/nan.json', {
+        'pnl': float('nan'),
+        'ratio': float('inf'),
+        'drawdown': -float('inf'),
+        'series': np.array([1.0, np.nan]),
+        'scalar': np.float64('nan')
+    })
+    text = object_store.read('ergonomics/nan.json')
+    assert 'NaN' not in text and 'Infinity' not in text, text
+    data = object_store.read_json('ergonomics/nan.json')
+    assert data == {'pnl': None, 'ratio': None, 'drawdown': None, 'series': [1.0, None], 'scalar': None}, data
+
+    object_store.delete('ergonomics/nan.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsPandasObjectsPointingToSaveDataframe()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    for value in [pd.DataFrame({'a': [1, 2]}), pd.Series([1, 2])]:
+        error = None
+        try:
+            object_store.save_json('ergonomics/pandas.json', {'data': value})
+        except TypeError as e:
+            error = str(e)
+        assert error is not None and 'save_dataframe' in error and type(value).__name__ in error, error
+        assert not object_store.contains_key('ergonomics/pandas.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsUnsupportedTypesNamingTheType()
+        {
+            RunPythonTest(@"
+class TradeRecord:
+    pass
+
+def test(object_store):
+    for value in [TradeRecord(), object(), (x for x in [1])]:
+        error = None
+        try:
+            object_store.save_json('ergonomics/unsupported.json', {'data': value})
+        except TypeError as e:
+            error = str(e)
+        assert error is not None and type(value).__name__ in error, error
+        assert not object_store.contains_key('ergonomics/unsupported.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRoundTripsTopLevelContainersAndRejectsTopLevelScalars()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    failures = []
+    try:
+        for value in [None, [1, 'a'], (1, 2)]:
+            expected = list(value) if isinstance(value, tuple) else value
+            object_store.save_json('ergonomics/container.json', value)
+            data = object_store.read_json('ergonomics/container.json')
+            if data != expected:
+                failures.append(f'{value!r} -> {data!r}')
+
+        # a top-level str/int/float/bool does not bind to the PyObject overload: the error names the mismatch
+        for value in ['text', 42, 1.5, True]:
+            try:
+                object_store.save_json('ergonomics/scalar.json', value)
+                failures.append(f'{value!r} was accepted')
+            except TypeError as e:
+                if 'No method matches' not in str(e):
+                    failures.append(f'{value!r} -> {e}')
+        if object_store.contains_key('ergonomics/scalar.json'):
+            failures.append('a rejected scalar was saved')
+    finally:
+        for key in ['ergonomics/container.json', 'ergonomics/scalar.json']:
+            if object_store.contains_key(key):
+                object_store.delete(key)
+    assert not failures, failures
 ");
         }
 
@@ -1261,6 +1417,7 @@ from AlgorithmImports import *
 from System.Collections.Generic import KeyNotFoundException
 from datetime import datetime
 from decimal import Decimal
+import json
 import pandas as pd
 
 def assert_raises_key_not_found(action):

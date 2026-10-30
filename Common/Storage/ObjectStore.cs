@@ -270,7 +270,10 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Converts an arbitrary name into a supported object store key by replacing every unsupported character
         /// with '_', keeping at most the final '.extension'. Useful for programmatically-built keys, for instance
-        /// from user-facing names: 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'
+        /// from user-facing names: 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'.
+        /// The mapping is lossy: distinct names can sanitize to the same key, e.g. 'a&amp;b.csv' and 'a:b.csv' both
+        /// become 'a_b.csv', so it only sanitizes, it does not generate unique keys. Checking for collisions,
+        /// for instance with <see cref="ContainsKey"/>, is up to the caller
         /// </summary>
         /// <param name="key">The arbitrary name to sanitize</param>
         /// <returns>A key following the object store key format, see <see cref="IsSupportedKey"/></returns>
@@ -337,7 +340,8 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Returns the object data for the specified path as a pandas DataFrame, read as JSON if the path has
         /// a '.json' extension and as CSV otherwise, so a <see cref="SaveDataframe"/> round trip restores the frame.
-        /// A CSV index in ISO-8601 format is restored as a time index
+        /// A CSV index in ISO-8601 format is restored as a time index. A saved Series comes back as a
+        /// one-column DataFrame, call squeeze() on it to get the Series
         /// </summary>
         /// <param name="path">The object path</param>
         /// <returns>The pandas DataFrame</returns>
@@ -448,14 +452,18 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Saves the given Python object in JSON format for the specified path, tolerating types the standard
-        /// json module rejects: datetime/date/time are stored in ISO-8601 format, Decimal and numpy scalars as
-        /// numbers and any other unsupported type (e.g. Symbol) as its string representation. Non-string
-        /// dictionary keys are stringified
+        /// Saves the given Python dictionary, list, tuple or .NET object in JSON format for the specified path,
+        /// tolerating nested types the standard json module rejects: datetime/date/time are stored in ISO-8601
+        /// format, Decimal and numpy values as numbers, NaN and infinity as null, .NET objects (Symbol included)
+        /// as the C# <see cref="SaveJson{T}"/> overload writes them and non-string dictionary keys as strings.
+        /// pandas objects are rejected, use <see cref="SaveDataframe"/>, and so is any other type that would
+        /// not round trip. A top-level Python str, int, float or bool is not accepted, use <see cref="SaveText"/>
+        /// for text
         /// </summary>
         /// <param name="path">The object path</param>
         /// <param name="obj">The Python object to be saved</param>
         /// <returns>True if the object was saved successfully</returns>
+        /// <exception cref="PythonException">A TypeError naming the value that cannot be serialized</exception>
         public bool SaveJson(string path, PyObject obj)
         {
             string json;
@@ -542,32 +550,53 @@ namespace QuantConnect.Storage
                 var module = PyModule.FromString("object_store_helpers", @"from json import dumps, loads
 from datetime import datetime, date, time
 from decimal import Decimal
-try:
-    import numpy
-except ImportError:
-    numpy = None
+from math import isfinite
+import numpy
+import pandas
+import System
+import Newtonsoft.Json as newtonsoft
 
-def _default(value):
-    if isinstance(value, (datetime, date, time)):
-        return value.isoformat()
-    if isinstance(value, Decimal):
-        return float(value)
-    if numpy is not None and isinstance(value, numpy.generic):
-        return value.item()
-    # Symbol and any other type json does not handle
-    return str(value)
+def _key(key):
+    # json only accepts str/int/float/bool/None keys; a .NET key is its string, like a .NET dictionary key
+    if isinstance(key, (str, int, float)) or key is None:
+        return key
+    if isinstance(key, (datetime, date, time)):
+        return key.isoformat()
+    if isinstance(key, Decimal):
+        return str(key)
+    if isinstance(key, numpy.generic):
+        return key.item()
+    if isinstance(key, System.Object):
+        return str(key)
+    raise TypeError(f'save_json() cannot use a {type(key).__name__} as a dictionary key')
 
 def _normalize(value):
     if isinstance(value, dict):
-        # json requires str/int/float/bool/None keys: stringify anything else (Symbol, datetime, ...)
-        return { (k if isinstance(k, (str, int, float, bool)) or k is None else str(_default(k))): _normalize(v)
-            for k, v in value.items() }
-    if isinstance(value, (list, tuple, set)):
+        return {_key(k): _normalize(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
         return [_normalize(v) for v in value]
-    return value
+    if isinstance(value, (str, int)) or value is None:
+        return value
+    if isinstance(value, float):
+        # NaN and infinity are not valid JSON
+        return value if isfinite(value) else None
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return _normalize(float(value))
+    if isinstance(value, numpy.ndarray):
+        return _normalize(value.tolist())
+    if isinstance(value, numpy.generic):
+        return _normalize(value.item())
+    if isinstance(value, (pandas.DataFrame, pandas.Series)):
+        raise TypeError(f'save_json() does not accept a pandas {type(value).__name__}, use save_dataframe() instead')
+    if isinstance(value, System.Object):
+        # .NET objects serialize like the C# SaveJson<T> does
+        return loads(newtonsoft.JsonConvert.SerializeObject(value))
+    raise TypeError(f'save_json() cannot serialize a {type(value).__name__}: convert it to a dict, list or str first')
 
 def serialize(value):
-    return dumps(_normalize(value), default=_default)
+    return dumps(_normalize(value), allow_nan=False)
 
 def deserialize(json_string):
     return loads(json_string)
