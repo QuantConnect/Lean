@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
@@ -55,6 +56,10 @@ namespace QuantConnect.Algorithm
             "WarmUpPeriod",
             "Period"
         };
+
+        // indicators fed by each registered consolidator, to detach it from them when its security is removed.
+        // Weakly keyed so entries die with the consolidator, see 'RemoveSecurityConsolidators'
+        private readonly ConditionalWeakTable<IDataConsolidator, HashSet<IndicatorBase>> _indicatorsByConsolidator = new();
 
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
@@ -3390,9 +3395,31 @@ namespace QuantConnect.Algorithm
             foreach (var consolidator in indicator.Consolidators)
             {
                 SubscriptionManager.RemoveConsolidator(null, consolidator);
+                _indicatorsByConsolidator.Remove(consolidator);
             }
 
             indicator.Consolidators.Clear();
+        }
+
+        /// <summary>
+        /// Removes the consolidators of the given symbol and detaches them from the indicators they feed.
+        /// Multi symbol indicators, e.g. <see cref="B(Symbol, Symbol, int, Resolution?, Func{IBaseData, IBaseDataBar})"/>,
+        /// only lose the consolidator of the removed symbol and keep the others.
+        /// </summary>
+        /// <param name="symbol">The symbol whose consolidators will be removed</param>
+        private void RemoveSecurityConsolidators(Symbol symbol)
+        {
+            foreach (var consolidator in SubscriptionManager.RemoveConsolidators(symbol))
+            {
+                if (_indicatorsByConsolidator.TryGetValue(consolidator, out var indicators))
+                {
+                    foreach (var indicator in indicators)
+                    {
+                        indicator.Consolidators.Remove(consolidator);
+                    }
+                    _indicatorsByConsolidator.Remove(consolidator);
+                }
+            }
         }
 
         /// <summary>
@@ -4475,6 +4502,11 @@ namespace QuantConnect.Algorithm
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
+
+            if (indicatorBase != null && Settings.AutomaticIndicatorDeregistration)
+            {
+                _indicatorsByConsolidator.GetOrCreateValue(consolidator).Add(indicatorBase);
+            }
         }
 
         private DateTime GetIndicatorAdjustedHistoryStart(IndicatorBase indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)

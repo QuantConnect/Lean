@@ -709,6 +709,61 @@ def get_consolidator():
             Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
         }
 
+        [Test]
+        public void RemoveConsolidatorDisposesScanWrapperEvenWithoutSubscriptions()
+        {
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            algorithm.SubscriptionManager.AddConsolidator(symbol, consolidator);
+
+            var consolidatorsField = typeof(SubscriptionManager)
+                .GetField("_consolidators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var wrappers = (Dictionary<IDataConsolidator, ConsolidatorWrapper>)consolidatorsField.GetValue(algorithm.SubscriptionManager);
+            Assert.AreEqual(1, wrappers.Count);
+            var wrapper = wrappers[consolidator];
+
+            // the security left the universe: its subscription data configs are gone before the consolidator is removed
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            Assert.IsEmpty(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol));
+
+            algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+
+            Assert.AreEqual(0, wrappers.Count);
+            Assert.IsTrue(wrapper.Disposed);
+        }
+
+        [Test]
+        public void RemoveConsolidatorsRemovesAllTheSymbolConsolidators()
+        {
+            var algorithm = new AlgorithmStub();
+            var spy = algorithm.AddEquity("SPY").Symbol;
+            var ibm = algorithm.AddEquity("IBM").Symbol;
+
+            using var spyHourConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            using var spyDayConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
+            using var ibmConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            algorithm.SubscriptionManager.AddConsolidator(spy, spyHourConsolidator);
+            algorithm.SubscriptionManager.AddConsolidator(spy, spyDayConsolidator);
+            algorithm.SubscriptionManager.AddConsolidator(ibm, ibmConsolidator);
+
+            var removed = algorithm.SubscriptionManager.RemoveConsolidators(spy);
+
+            CollectionAssert.AreEquivalent(new[] { spyHourConsolidator, spyDayConsolidator }, removed);
+            Assert.IsEmpty(GetConsolidators(algorithm, spy));
+            CollectionAssert.AreEqual(new[] { ibmConsolidator }, GetConsolidators(algorithm, ibm));
+            Assert.IsEmpty(algorithm.SubscriptionManager.RemoveConsolidators(spy));
+        }
+
+        private static List<IDataConsolidator> GetConsolidators(QCAlgorithm algorithm, Symbol symbol)
+        {
+            return algorithm.SubscriptionManager.Subscriptions
+                .Where(config => config.Symbol == symbol)
+                .SelectMany(config => config.Consolidators)
+                .ToList();
+        }
+
         [Test, Parallelizable(ParallelScope.None)]
         public void RunRemoveConsolidatorsRegressionAlgorithm()
         {

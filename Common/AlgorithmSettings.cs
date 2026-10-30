@@ -41,6 +41,13 @@ namespace QuantConnect
         public bool AutomaticIndicatorWarmUp { get; set; }
 
         /// <summary>
+        /// True to remove the consolidators of a security, and detach them from their indicators, when the security
+        /// is removed from the algorithm, e.g. when it leaves the universe. True by default.
+        /// Indicators registered while this is false are not tracked, so they are not detached even if it is enabled later
+        /// </summary>
+        public bool AutomaticIndicatorDeregistration { get; set; }
+
+        /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
         public bool? RebalancePortfolioOnSecurityChanges { get; set; }
@@ -198,6 +205,7 @@ namespace QuantConnect
             DatabasesRefreshPeriod = _defaultDatabasesRefreshPeriod;
             IgnoreUnknownAssetHoldings = _defaultIgnoreUnknownAssetHoldings;
             SeedInitialPrices = false;
+            AutomaticIndicatorDeregistration = true;
         }
     }
 }
