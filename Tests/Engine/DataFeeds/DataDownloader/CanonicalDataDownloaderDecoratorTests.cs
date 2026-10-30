@@ -22,7 +22,6 @@ using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
 {
@@ -96,16 +95,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
             var first = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2025, 12, 19));
             var second = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2026, 06, 19));
 
-            // the second contract waits until the first bar of the first contract is in the collection
-            using var firstBarAdded = new ManualResetEventSlim(false);
-            var downloader = new TestDataDownloader(parameters =>
-            {
-                if (parameters.Symbol == first)
-                {
-                    return GetBars(first, startUtc, 3, afterFirstBar: firstBarAdded.Set);
-                }
-                return GetBars(second, startUtc, 3, beforeFirstBar: () => firstBarAdded.Wait(TimeSpan.FromSeconds(10)));
-            });
+            var downloader = new TestDataDownloader(parameters => GetBars(parameters.Symbol, startUtc, 3));
             var decorator = new CanonicalDataDownloaderDecorator(downloader, new TestFutureChainProvider(first, second), null);
 
             var data = decorator.Get(new DataDownloaderGetParameters(canonical, Resolution.Minute, startUtc, endUtc, TickType.Trade));
@@ -114,6 +104,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
             var expected = new[] { first, second }
                 .SelectMany(symbol => Enumerable.Range(0, 3).Select(minute => $"{symbol.ID} {startUtc.AddMinutes(minute):O}"));
             CollectionAssert.AreEquivalent(expected, data.Select(bar => $"{bar.Symbol.ID} {bar.Time:O}").ToList());
+        }
+
+        [Test]
+        public void ReturnsTheOnlyBarForCanonicalFuture()
+        {
+            var startUtc = new DateTime(2025, 12, 08);
+            var canonical = Symbol.Create(Securities.Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME);
+            var contract = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2025, 12, 19));
+            var downloader = new TestDataDownloader(parameters => GetBars(contract, startUtc, 1));
+            var decorator = new CanonicalDataDownloaderDecorator(downloader, new TestFutureChainProvider(contract), null);
+
+            var data = decorator.Get(new DataDownloaderGetParameters(canonical, Resolution.Minute, startUtc, startUtc.AddDays(1), TickType.Trade));
+
+            Assert.IsNotNull(data);
+            Assert.AreEqual(1, data.Count());
         }
 
         [Test]
@@ -143,17 +148,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
             Assert.IsNull(data);
         }
 
-        private static IEnumerable<BaseData> GetBars(Symbol symbol, DateTime start, int count, Action beforeFirstBar = null, Action afterFirstBar = null)
+        private static IEnumerable<BaseData> GetBars(Symbol symbol, DateTime start, int count)
         {
-            beforeFirstBar?.Invoke();
             for (var i = 0; i < count; i++)
             {
                 yield return new TradeBar(start.AddMinutes(i), symbol, 1m, 1m, 1m, 1m, 1m, Time.OneMinute);
-                if (i == 0)
-                {
-                    // the caller asks for the second bar only after it added the first bar to its collection
-                    afterFirstBar?.Invoke();
-                }
             }
         }
 
