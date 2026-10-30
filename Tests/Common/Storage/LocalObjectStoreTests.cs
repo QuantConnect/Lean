@@ -541,6 +541,147 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
+        [Test]
+        public void KeyNotFoundErrorListsTheAvailableKeys()
+        {
+            // dedicated store instance: its in-memory keys are listed first in the error
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.SaveBytes("available_key_a.txt", new byte[] { 1 }));
+            Assert.IsTrue(store.SaveBytes("available_key_b.txt", new byte[] { 1 }));
+
+            var error = Assert.Throws<KeyNotFoundException>(() => store.ReadBytes("missing.missing"));
+
+            Assert.IsTrue(error.Message.Contains("Keys: ["), error.Message);
+            Assert.IsTrue(error.Message.Contains("'available_key_a.txt'"), error.Message);
+            Assert.IsTrue(error.Message.Contains("'available_key_b.txt'"), error.Message);
+
+            store.Delete("available_key_a.txt");
+            store.Delete("available_key_b.txt");
+        }
+
+        [Test]
+        public void KeyNotFoundErrorTruncatesTheAvailableKeysListAtTen()
+        {
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            for (var i = 0; i < 11; i++)
+            {
+                Assert.IsTrue(store.SaveBytes($"truncation_key_{i}.txt", new byte[] { 1 }));
+            }
+
+            var error = Assert.Throws<KeyNotFoundException>(() => store.ReadBytes("missing.missing"));
+
+            Assert.IsTrue(error.Message.Contains(", ...]"), error.Message);
+
+            for (var i = 0; i < 11; i++)
+            {
+                store.Delete($"truncation_key_{i}.txt");
+            }
+        }
+
+        [TestCase("my_key", true)]
+        [TestCase("./my_key/nested\\file.csv", true)]
+        [TestCase("file with spaces #1-$=.txt", true)]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", false)]
+        [TestCase("file.tar.gz", false)]
+        [TestCase("file.name_v2", false)]
+        [TestCase("**abc**", false)]
+        [TestCase("", false)]
+        [TestCase(null, false)]
+        public void ValidatesKeys(string key, bool isSupported)
+        {
+            Assert.AreEqual(isSupported, ObjectStore.IsSupportedKey(key));
+            if (isSupported)
+            {
+                Assert.DoesNotThrow(() => ObjectStore.ValidateKey(key));
+            }
+            else
+            {
+                Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+            }
+        }
+
+        [Test]
+        public void UnsupportedKeyErrorStatesTheKeyRules()
+        {
+            var error = Assert.Throws<ArgumentException>(
+                () => _store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
+
+            Assert.IsTrue(error.Message.Contains("path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'."), error.Message);
+            Assert.IsTrue(error.Message.Contains("keys may only contain english letters, numbers, spaces and the characters"), error.Message);
+            Assert.IsTrue(error.Message.Contains("SanitizeKey"), error.Message);
+        }
+
+        [TestCase("trade log: AI & Cloud.csv", "unsupported characters ':', '&'")]
+        [TestCase("résumé.pdf", "unsupported character 'é'")]
+        [TestCase("file.tar.gz", "it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase("file.name_v2", "the extension 'name_v2' may only contain letters and numbers")]
+        [TestCase("folder.v1/file", "the extension 'v1/file' may only contain letters and numbers")]
+        [TestCase("trade log: AI.v2.csv", "unsupported character ':'; it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase(".", "it has no name before the '.'")]
+        [TestCase("", "the key is empty")]
+        [TestCase(null, "the key is empty")]
+        public void UnsupportedKeyErrorStatesTheIssue(string key, string expectedIssue)
+        {
+            var error = Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+
+            Assert.IsTrue(error.Message.Contains($"'{key}': {expectedIssue}."), error.Message);
+        }
+
+        [TestCase("my_key/file.csv", "my_key/file.csv")]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", "trade_log_ai_hardware___cloud.csv")]
+        [TestCase("trade log: AI & Cloud.csv", "trade log_ AI _ Cloud.csv")]
+        [TestCase("file.tar.gz", "file_tar.gz")]
+        [TestCase("résumé.pdf", "r_sum_.pdf")]
+        [TestCase("a..", "a__")]
+        [TestCase("100%.json", "100_.json")]
+        public void SanitizeKeyReturnsAStorableKey(string key, string expectedSanitizedKey)
+        {
+            var sanitized = ObjectStore.SanitizeKey(key);
+
+            Assert.AreEqual(expectedSanitizedKey, sanitized);
+            Assert.IsTrue(ObjectStore.IsSupportedKey(sanitized));
+            Assert.IsTrue(_store.SaveBytes(sanitized, new byte[] { 1 }));
+
+            _store.Delete(sanitized);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        public void SanitizeKeyThrowsOnNullOrEmptyKey(string key)
+        {
+            Assert.Throws<ArgumentException>(() => ObjectStore.SanitizeKey(key));
+        }
+
+        [Test]
+        public void SanitizeKeyIsLossyAndDistinctNamesCanCollide()
+        {
+            var first = ObjectStore.SanitizeKey("trade_log_ai&cloud.csv");
+            var second = ObjectStore.SanitizeKey("trade_log_ai:cloud.csv");
+
+            Assert.AreEqual("trade_log_ai_cloud.csv", first);
+            Assert.AreEqual(first, second);
+            Assert.AreEqual(first, ObjectStore.SanitizeKey("trade_log_ai_cloud.csv"));
+
+            // the second save silently overwrites the first: collision checks are up to the caller
+            Assert.IsTrue(_store.Save(first, "first"));
+            Assert.IsTrue(_store.Save(second, "second"));
+            Assert.AreEqual("second", _store.Read(first));
+
+            _store.Delete(first);
+        }
+
+        [Test]
+        public void SaveTextAndReadTextAreAliasesOfSaveAndRead()
+        {
+            Assert.IsTrue(_store.SaveText("save_text_alias.txt", "abc"));
+            Assert.AreEqual("abc", _store.Read("save_text_alias.txt"));
+            Assert.AreEqual("abc", _store.ReadText("save_text_alias.txt"));
+
+            _store.Delete("save_text_alias.txt");
+        }
+
         [TestCase("my_key", "./LocalObjectStoreTests/my_key")]
         [TestCase("test/123", "./LocalObjectStoreTests/test/123")]
         [TestCase("**abc**", null)]
@@ -1013,6 +1154,359 @@ def add_data(object_store):
                 // Reset
                 testModule.GetAttr("clean_data").Invoke();
                 testObjectStore.Dispose();
+            }
+        }
+
+        [Test]
+        public void PythonSaveJsonAndReadJsonRoundTripTolerantTypes()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
+
+    # datetime/date/Decimal/Symbol values and non-string dictionary keys, which json.dumps rejects
+    object_store.save_json('ergonomics/log.json', {
+        'time': datetime(2024, 1, 2, 3, 4, 5),
+        'date': datetime(2024, 1, 1).date(),
+        'qty': Decimal('1.5'),
+        'symbol': symbol,
+        'fills': [{symbol: 10}]
+    })
+    data = object_store.read_json('ergonomics/log.json')
+    # a Symbol value is written like the C# SaveJson<T> does, a Symbol key as its string like a .NET dictionary key
+    assert data == {
+        'time': '2024-01-02T03:04:05',
+        'date': '2024-01-01',
+        'qty': 1.5,
+        'symbol': {'value': 'SPY', 'id': str(symbol.id), 'permtick': 'SPY'},
+        'fills': [{str(symbol): 10}]
+    }, data
+    # both forms resolve back to the Symbol through the symbol cache, which is what QCAlgorithm.symbol(str) does
+    assert SymbolCache.get_symbol(data['symbol']['id']) == symbol
+    assert SymbolCache.get_symbol(next(iter(data['fills'][0]))) == symbol
+
+    object_store.delete('ergonomics/log.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonSerializesDotNetObjectsLikeTheCSharpOverload()
+        {
+            RunPythonTest(@"
+from System.Collections.Generic import List, Dictionary
+import Newtonsoft.Json as newtonsoft
+
+def test(object_store):
+    numbers = List[int]([1, 2])
+    weights = Dictionary[str, float]()
+    weights['a'] = 1.5
+    point = IndicatorDataPoint(datetime(2020, 1, 1), 5)
+
+    object_store.save_json('ergonomics/dotnet.json', {'numbers': numbers, 'weights': weights, 'point': point})
+    data = object_store.read_json('ergonomics/dotnet.json')
+    assert data == {
+        'numbers': [1, 2],
+        'weights': {'a': 1.5},
+        'point': json.loads(newtonsoft.JsonConvert.serialize_object(point))
+    }, data
+
+    object_store.delete('ergonomics/dotnet.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonConvertsNumpyArraysAndScalars()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/numpy.json', {
+        'weights': np.array([1.5, 2.5]),
+        'grid': np.array([[1, 2], [3, 4]]),
+        'count': np.int64(3),
+        'ratio': np.float32(0.5)
+    })
+    data = object_store.read_json('ergonomics/numpy.json')
+    assert data == {'weights': [1.5, 2.5], 'grid': [[1, 2], [3, 4]], 'count': 3, 'ratio': 0.5}, data
+
+    object_store.delete('ergonomics/numpy.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonWritesNanAndInfinityAsNull()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/nan.json', {
+        'pnl': float('nan'),
+        'ratio': float('inf'),
+        'drawdown': -float('inf'),
+        'series': np.array([1.0, np.nan]),
+        'scalar': np.float64('nan')
+    })
+    text = object_store.read('ergonomics/nan.json')
+    assert 'NaN' not in text and 'Infinity' not in text, text
+    data = object_store.read_json('ergonomics/nan.json')
+    assert data == {'pnl': None, 'ratio': None, 'drawdown': None, 'series': [1.0, None], 'scalar': None}, data
+
+    object_store.delete('ergonomics/nan.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonWritesNumpyDatetimesAsIso8601AndNatAsNull()
+        {
+            RunPythonTest(@"
+import numpy as np
+
+def test(object_store):
+    object_store.save_json('ergonomics/datetime64.json', {
+        'index': pd.DatetimeIndex([pd.Timestamp('2020-01-01'), pd.Timestamp('2020-01-02 03:04:05.000000006')]).values,
+        'scalar': np.datetime64('2020-01-01T00:00:00.000000000'),
+        'day': np.datetime64('2020-01-01'),
+        'timestamp': pd.Timestamp('2020-01-01 10:00'),
+        'nat': pd.NaT,
+        'nat64': np.datetime64('NaT'),
+        'with_nat': pd.to_datetime(['2020-01-01', None]).values,
+        'grid': np.array([['2020-01-01', '2020-01-02']], dtype='datetime64[D]')
+    })
+    data = object_store.read_json('ergonomics/datetime64.json')
+    assert data == {
+        'index': ['2020-01-01T00:00:00', '2020-01-02T03:04:05.000000006'],
+        'scalar': '2020-01-01T00:00:00',
+        'day': '2020-01-01T00:00:00',
+        'timestamp': '2020-01-01T10:00:00',
+        'nat': None,
+        'nat64': None,
+        'with_nat': ['2020-01-01T00:00:00', None],
+        'grid': [['2020-01-01T00:00:00', '2020-01-02T00:00:00']]
+    }, data
+
+    object_store.delete('ergonomics/datetime64.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonWritesTimedeltasAsIso8601Durations()
+        {
+            RunPythonTest(@"
+import numpy as np
+from datetime import timedelta
+
+def test(object_store):
+    object_store.save_json('ergonomics/timedelta.json', {
+        'holding': timedelta(days=1, hours=2),
+        'latency': np.timedelta64(1500, 'ms'),
+        'spans': (pd.to_datetime(['2020-01-02', '2020-01-03']) - pd.Timestamp('2020-01-01')).values,
+        'pandas': pd.Timedelta(seconds=1.5),
+        'nat': np.timedelta64('NaT')
+    })
+    data = object_store.read_json('ergonomics/timedelta.json')
+    assert data == {
+        'holding': 'P1DT2H0M0S',
+        'latency': 'P0DT0H0M1.5S',
+        'spans': ['P1DT0H0M0S', 'P2DT0H0M0S'],
+        'pandas': 'P0DT0H0M1.5S',
+        'nat': None
+    }, data
+    assert pd.Timedelta(data['holding']) == timedelta(days=1, hours=2)
+
+    object_store.delete('ergonomics/timedelta.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsNanDictionaryKeysWithTypeError()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    error = None
+    try:
+        object_store.save_json('ergonomics/nan_key.json', {float('nan'): 1})
+    except TypeError as e:
+        error = str(e)
+    assert error is not None and 'nan' in error and 'key' in error, error
+    assert not object_store.contains_key('ergonomics/nan_key.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsPandasObjectsPointingToSaveDataframe()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    for value in [pd.DataFrame({'a': [1, 2]}), pd.Series([1, 2])]:
+        error = None
+        try:
+            object_store.save_json('ergonomics/pandas.json', {'data': value})
+        except TypeError as e:
+            error = str(e)
+        assert error is not None and 'save_dataframe' in error and type(value).__name__ in error, error
+        assert not object_store.contains_key('ergonomics/pandas.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRejectsUnsupportedTypesNamingTheType()
+        {
+            RunPythonTest(@"
+class TradeRecord:
+    pass
+
+def test(object_store):
+    for value in [TradeRecord(), object(), (x for x in [1])]:
+        error = None
+        try:
+            object_store.save_json('ergonomics/unsupported.json', {'data': value})
+        except TypeError as e:
+            error = str(e)
+        assert error is not None and type(value).__name__ in error, error
+        assert not object_store.contains_key('ergonomics/unsupported.json')
+");
+        }
+
+        [Test]
+        public void PythonSaveJsonRoundTripsTopLevelContainersAndRejectsTopLevelScalars()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    failures = []
+    try:
+        for value in [None, [1, 'a'], (1, 2)]:
+            expected = list(value) if isinstance(value, tuple) else value
+            object_store.save_json('ergonomics/container.json', value)
+            data = object_store.read_json('ergonomics/container.json')
+            if data != expected:
+                failures.append(f'{value!r} -> {data!r}')
+
+        # a top-level str/int/float/bool does not bind to the PyObject overload: the error names the mismatch
+        for value in ['text', 42, 1.5, True]:
+            try:
+                object_store.save_json('ergonomics/scalar.json', value)
+                failures.append(f'{value!r} was accepted')
+            except TypeError as e:
+                if 'No method matches' not in str(e):
+                    failures.append(f'{value!r} -> {e}')
+        if object_store.contains_key('ergonomics/scalar.json'):
+            failures.append('a rejected scalar was saved')
+    finally:
+        for key in ['ergonomics/container.json', 'ergonomics/scalar.json']:
+            if object_store.contains_key(key):
+                object_store.delete(key)
+    assert not failures, failures
+");
+        }
+
+        [Test]
+        public void PythonReadJsonThrowsOnMissingKey()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert_raises_key_not_found(lambda: object_store.read_json('ergonomics/missing.json'))
+");
+        }
+
+        [Test]
+        public void PythonSaveTextAndReadTextAreAliasesOfSaveAndRead()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    object_store.save_text('ergonomics/report.txt', 'hello')
+    assert object_store.read('ergonomics/report.txt') == 'hello'
+    assert object_store.read_text('ergonomics/report.txt') == 'hello'
+
+    object_store.delete('ergonomics/report.txt')
+");
+        }
+
+        [Test]
+        public void PythonSaveDataframeAndReadDataframeRoundTripAsCsv()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
+    object_store.save_dataframe('ergonomics/frame.csv', frame)
+    assert 'a,b' in object_store.read('ergonomics/frame.csv')
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.csv'), frame)
+
+    object_store.delete('ergonomics/frame.csv')
+");
+        }
+
+        [Test]
+        public void PythonSaveDataframeAndReadDataframeRoundTripAsJson()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
+    object_store.save_dataframe('ergonomics/frame.json', frame)
+    assert object_store.read('ergonomics/frame.json') == frame.to_json()
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.json'), frame)
+
+    object_store.delete('ergonomics/frame.json')
+");
+        }
+
+        [Test]
+        public void PythonReadDataframeRestoresATimeIndex()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    frame = pd.DataFrame({'close': [167.42, 168.0]}, index=pd.to_datetime(['2013-10-10', '2013-10-11']))
+    object_store.save_dataframe('ergonomics/history.csv', frame)
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/history.csv'), frame)
+
+    object_store.delete('ergonomics/history.csv')
+");
+        }
+
+        [Test]
+        public void PythonReadDataframeThrowsOnMissingKey()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert_raises_key_not_found(lambda: object_store.read_dataframe('ergonomics/missing.csv'))
+");
+        }
+
+        [Test]
+        public void PythonSanitizeKeyIsReachableFromTheInstance()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
+");
+        }
+
+        /// <summary>
+        /// Runs the 'test(object_store)' function of the given Python source against the test store
+        /// </summary>
+        private void RunPythonTest(string source)
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestObjectStoreErgonomics", @"
+from AlgorithmImports import *
+from System.Collections.Generic import KeyNotFoundException
+from datetime import datetime
+from decimal import Decimal
+import json
+import pandas as pd
+
+def assert_raises_key_not_found(action):
+    try:
+        action()
+    except KeyNotFoundException:
+        return
+    raise AssertionError('Expected a KeyNotFoundException')
+" + source);
+
+                dynamic test = testModule.GetAttr("test");
+                Assert.DoesNotThrow(() => test(_store));
             }
         }
 
