@@ -50,10 +50,9 @@ namespace QuantConnect.Securities
         /// Applies cash settlement rules
         /// </summary>
         /// <param name="applyFundsParameters">The funds application parameters</param>
-        public void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
+        public virtual void ApplyFunds(ApplyFundsSettlementModelParameters applyFundsParameters)
         {
-            var currency = applyFundsParameters.CashAmount.Currency;
-            var amount = applyFundsParameters.CashAmount.Amount;
+            var (currency, amount) = GetSettlementAmount(applyFundsParameters);
             var security = applyFundsParameters.Security;
             var portfolio = applyFundsParameters.Portfolio;
             if (amount > 0)
@@ -93,6 +92,17 @@ namespace QuantConnect.Securities
             {
                 _cashBook = portfolio.UnsettledCashBook;
             }
+        }
+
+        /// <summary>
+        /// Gets the currency and amount to settle for the given funds application, in the currency the
+        /// settlement is booked in. Defaults to the applied cash amount in its own currency.
+        /// </summary>
+        /// <param name="applyFundsParameters">The funds application parameters</param>
+        /// <returns>The currency and amount to settle</returns>
+        protected virtual (string Currency, decimal Amount) GetSettlementAmount(ApplyFundsSettlementModelParameters applyFundsParameters)
+        {
+            return (applyFundsParameters.CashAmount.Currency, applyFundsParameters.CashAmount.Amount);
         }
 
         /// <summary>
