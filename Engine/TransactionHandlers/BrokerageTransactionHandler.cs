@@ -1298,6 +1298,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     orderEvent.Ticket = ticket;
                     orderEvent.OrderType = order.Type;
                     orderEvent.GroupId = order.GroupId;
+                    orderEvent.Tag = order.Tag;
                 }
 
                 var fillsToProcess = new List<OrderEvent>(orderEvents.Count);

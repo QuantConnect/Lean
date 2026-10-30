@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void JsonIgnores()
         {
-            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
             var json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero),
                 new OrderEventJsonConverter("id"));
 
@@ -52,34 +52,48 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
-            // The Tag and Time synonyms are not serialized, only Message and UtcTime are
+            // The order tag and the Time synonym are not serialized, only Message and UtcTime are
             Assert.IsFalse(json.Contains("\"Tag\"", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("entry", StringComparison.InvariantCulture));
             Assert.IsFalse(json.Contains("\"Time\"", StringComparison.InvariantCulture));
         }
 
         [Test]
-        public void TagAndTimeAreSynonymsOfMessageAndUtcTime()
+        public void TagIsTheOrderTagAndNotTheMessage()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Filled at stale price");
+
+            Assert.AreEqual("entry", orderEvent.Tag);
+            Assert.AreEqual("Filled at stale price", orderEvent.Message);
+
+            // events built from the order id alone do not know the order
+            var brokerageEvent = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.Filled, order.Direction, 1, 1,
+                OrderFee.Zero, "Filled at stale price");
+            Assert.IsNull(brokerageEvent.Tag);
+            Assert.AreEqual("Filled at stale price", brokerageEvent.Message);
+        }
+
+        [Test]
+        public void TimeIsASynonymOfUtcTime()
         {
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
             var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
-            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "This is a message");
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero);
 
-            Assert.AreEqual("This is a message", orderEvent.Tag);
             Assert.AreEqual(utcTime, orderEvent.Time);
 
-            orderEvent.Tag = "Another message";
             orderEvent.Time = utcTime.AddHours(1);
 
-            Assert.AreEqual("Another message", orderEvent.Message);
             Assert.AreEqual(utcTime.AddHours(1), orderEvent.UtcTime);
         }
 
         [Test]
         public void TagAndTimeAreAccessibleFromPython()
         {
-            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
             var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
-            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "This is a message");
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "Filled at stale price");
 
             using (Py.GIL())
             {
@@ -87,15 +101,16 @@ namespace QuantConnect.Tests.Common.Orders
                     @"
 from AlgorithmImports import *
 
-def get_tag_and_time(order_event: OrderEvent):
-    return order_event.tag, order_event.time == order_event.utc_time
+def get_tag_message_and_time(order_event: OrderEvent):
+    return order_event.tag, order_event.message, order_event.time == order_event.utc_time
 ");
 
-                dynamic getTagAndTime = module.GetAttr("get_tag_and_time");
-                var result = getTagAndTime(orderEvent);
+                dynamic getTagMessageAndTime = module.GetAttr("get_tag_message_and_time");
+                var result = getTagMessageAndTime(orderEvent);
 
-                Assert.AreEqual("This is a message", (string)result[0]);
-                Assert.IsTrue((bool)result[1]);
+                Assert.AreEqual("entry", (string)result[0]);
+                Assert.AreEqual("Filled at stale price", (string)result[1]);
+                Assert.IsTrue((bool)result[2]);
             }
         }
 
@@ -122,7 +137,7 @@ def get_tag_and_time(order_event: OrderEvent):
         [Test]
         public void RoundTripSerialization([Values] bool isInTheMoney)
         {
-            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
             var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
             {
                 Message = "Pepe",
@@ -153,6 +168,9 @@ def get_tag_and_time(order_event: OrderEvent):
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
             Assert.AreEqual(orderEvent.OrderType, deserializeObject.OrderType);
             Assert.AreEqual(orderEvent.GroupId, deserializeObject.GroupId);
+            // the order tag is not part of the payload, it comes from the order
+            Assert.AreEqual("entry", orderEvent.Tag);
+            Assert.IsNull(deserializeObject.Tag);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -123,7 +123,8 @@ namespace QuantConnect.Orders
         public OrderDirection Direction { get; set; }
 
         /// <summary>
-        /// The type of the order this event comes from. Null for events deserialized from payloads that predate this property
+        /// The type of the order this event comes from. Null for events built from the order id alone
+        /// until the transaction handler stamps it, and for payloads that predate this property
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         [ProtoMember(20)]
@@ -144,14 +145,11 @@ namespace QuantConnect.Orders
         public string Message { get; set; }
 
         /// <summary>
-        /// Any message from the exchange. Synonym of <see cref="Message"/>
+        /// The tag of the order this event comes from. Null for events built from the order id alone
+        /// until the transaction handler stamps it, and for deserialized events
         /// </summary>
         [JsonIgnore]
-        public string Tag
-        {
-            get { return Message; }
-            set { Message = value; }
-        }
+        public string Tag { get; internal set; }
 
         /// <summary>
         /// True if the order event is an assignment
@@ -326,6 +324,7 @@ namespace QuantConnect.Orders
             Direction = order.Direction;
             OrderType = order.Type;
             GroupId = order.GroupId;
+            Tag = order.Tag;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;

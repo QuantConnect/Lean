@@ -1466,7 +1466,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void BrokerageOrderEventsCarryTheOrderType()
+        public void BrokerageOrderEventsCarryTheOrderTypeAndTag()
         {
             _transactionHandler = new TestBrokerageTransactionHandler();
             using var brokerage = new NoSubmitTestBrokerage(_algorithm);
@@ -1475,20 +1475,31 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var security = _algorithm.Securities[_symbol];
             var price = 1.12m;
             security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
-            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "entry");
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
             _transactionHandler.Process(orderRequest);
             _transactionHandler.PumpPendingRequests();
 
-            // brokerages building events from the order id alone do not know the order type
+            // brokerages building events from the order id alone do not know the order type or tag
             var order = _algorithm.Transactions.GetOpenOrders().Single();
             brokerage.PublishOrderEvent(new OrderEvent(order.Id, order.Symbol, _algorithm.UtcTime, OrderStatus.Submitted,
-                order.Direction, 0, 0, OrderFee.Zero));
+                order.Direction, 0, 0, OrderFee.Zero, "Brokerage message"));
 
             var orderEvent = _algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Submitted);
             Assert.AreEqual(OrderType.Limit, orderEvent.OrderType);
             Assert.AreEqual(order.Type, orderEvent.OrderType);
             Assert.IsNull(orderEvent.GroupId);
+            Assert.AreEqual("entry", orderEvent.Tag);
+            Assert.AreEqual("Brokerage message", orderEvent.Message);
+
+            // events after a tag update carry the new tag
+            _transactionHandler.Process(new UpdateOrderRequest(DateTime.Now, order.Id, new UpdateOrderFields { Tag = "exit" }));
+            _transactionHandler.PumpPendingRequests();
+            brokerage.PublishOrderEvent(new OrderEvent(order.Id, order.Symbol, _algorithm.UtcTime, OrderStatus.Filled,
+                order.Direction, 1.11m, 1000, OrderFee.Zero));
+
+            orderEvent = _algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Filled);
+            Assert.AreEqual("exit", orderEvent.Tag);
         }
 
         [Test]
