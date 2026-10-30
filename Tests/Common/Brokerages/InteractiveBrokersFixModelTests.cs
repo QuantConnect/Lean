@@ -21,6 +21,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -55,6 +56,30 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var canSubmit = model.CanSubmitOrder(leg1, leg1Order, out _) && model.CanSubmitOrder(leg2, leg2Order, out _);
             Assert.AreEqual(expected, canSubmit);
+        }
+
+        // IB routes cryptocurrencies through Paxos, which its FIX session does not reach
+        [TestCase(OrderType.Market)]
+        [TestCase(OrderType.Limit)]
+        public void CannotSubmitCryptoOrders(OrderType orderType)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersFix);
+            var security = algorithm.AddCrypto("BTCUSD");
+            var now = new DateTime(2024, 1, 3);
+
+            Order order = orderType == OrderType.Market
+                ? new MarketOrder(security.Symbol, 1, now)
+                : new LimitOrder(security.Symbol, 1, 100m, now);
+
+            var model = new InteractiveBrokersFixModel();
+            Assert.IsFalse(model.CanSubmitOrder(security, order, out var message));
+
+            Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+            Assert.AreEqual("NotSupported", message.Code);
+            StringAssert.Contains($"does not support {SecurityType.Crypto}", message.Message);
+            // distinctive of the FIX model: the base model accepts crypto market and limit orders
+            StringAssert.Contains($"does not route {security.Symbol.Value} over FIX", message.Message);
         }
 
         private static Security CreateSecurity(SecurityType securityType, int type)
