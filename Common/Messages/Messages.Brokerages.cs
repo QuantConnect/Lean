@@ -218,7 +218,7 @@ namespace QuantConnect
             public static string TradingOutsideRegularHoursNotSupported(IBrokerageModel brokerageModel, OrderType orderType, TimeInForce timeInForce)
             {
                 return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
-                    Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
+                    Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} or {TimeInForce.GoodTilCanceled} TIF are supported outside regular trading hours.");
             }
 
             /// <summary>

@@ -167,8 +167,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            // Alpaca accepts an extended hours order only as a limit order with the day or the gtc time in force
             var supportsOutsideTradingHours = (order.Properties as AlpacaOrderProperties)?.OutsideRegularTradingHours ?? false;
-            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not DayTimeInForce))
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not (DayTimeInForce or GoodTilCanceledTimeInForce)))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.AlpacaBrokerageModel.TradingOutsideRegularHoursNotSupported(this, order.Type, order.TimeInForce));
