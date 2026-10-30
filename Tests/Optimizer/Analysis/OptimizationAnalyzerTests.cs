@@ -174,6 +174,42 @@ namespace QuantConnect.Tests.Optimizer.Analysis
             Assert.AreEqual(10m, metrics.Parameters["y"]);
         }
 
+        [TestCase("1896", 1896)]
+        [TestCase("0", 0)]
+        [TestCase(null, 0)]
+        public void ExtractFrom_TakesTotalOrdersFromStatisticsWhenOrdersAreAbsent(string totalOrdersStatistic, int expectedTotalOrders)
+        {
+            var parameterSet = new ParameterSet(0, new Dictionary<string, string> { ["x"] = "1" });
+            // Same shape as the backtest summary: statistics, but no orders
+            var result = new QuantConnect.Packets.BacktestResult
+            {
+                TotalPerformance = new AlgorithmPerformance(),
+                Statistics = totalOrdersStatistic == null
+                    ? new Dictionary<string, string>()
+                    : new Dictionary<string, string> { [PerformanceMetrics.TotalOrders] = totalOrdersStatistic }
+            };
+
+            var metrics = OptimizationBacktestMetrics.ExtractFrom("bt-0", parameterSet, result.SerializeJsonToString());
+
+            Assert.AreEqual(expectedTotalOrders, metrics.TotalOrders);
+        }
+
+        [Test]
+        public void ExtractFrom_PrefersOrdersOverStatistics()
+        {
+            var parameterSet = new ParameterSet(0, new Dictionary<string, string> { ["x"] = "1" });
+            var result = new QuantConnect.Packets.BacktestResult
+            {
+                TotalPerformance = new AlgorithmPerformance(),
+                Orders = Enumerable.Range(1, 3).ToDictionary(i => i, i => (Order)new MarketOrder()),
+                Statistics = new Dictionary<string, string> { [PerformanceMetrics.TotalOrders] = "7" }
+            };
+
+            var metrics = OptimizationBacktestMetrics.ExtractFrom("bt-0", parameterSet, result.SerializeJsonToString());
+
+            Assert.AreEqual(3, metrics.TotalOrders);
+        }
+
         // ── helpers ──────────────────────────────────────────────────────────────
 
         private static List<OptimizationBacktestMetrics> BuildGridBacktests(
