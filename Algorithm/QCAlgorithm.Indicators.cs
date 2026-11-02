@@ -4503,7 +4503,7 @@ namespace QuantConnect.Algorithm
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
 
-            if (indicatorBase != null && Settings.AutomaticIndicatorDeregistration)
+            if (indicatorBase != null)
             {
                 _indicatorsByConsolidator.GetOrCreateValue(consolidator).Add(indicatorBase);
             }

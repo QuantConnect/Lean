@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### Regression algorithm asserting that the indicators and consolidators created through the helper methods are
 ### deregistered when their security is removed, with no explicit cleanup, and that fresh ones work after re-adding
-### the security. See settings.automatic_indicator_deregistration
+### the security
 ### </summary>
 class AutomaticIndicatorDeregistrationRegressionAlgorithm(QCAlgorithm):
 

@@ -27,8 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm asserting that the indicators and consolidators created through the helper methods are
     /// deregistered when their security is deselected by the universe or removed manually, that the ones created
     /// after the security is selected or added again receive data while the deregistered ones don't, and that the
-    /// ones of a security that stays in the universe keep updating.
-    /// See <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>
+    /// ones of a security that stays in the universe keep updating
     /// </summary>
     public class AutomaticIndicatorDeregistrationOnUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

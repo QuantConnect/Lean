@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that the indicators and consolidators created through the helper methods are
     /// deregistered when their security is removed, with no explicit cleanup, and that fresh ones work after re-adding
-    /// the security. See <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>
+    /// the security
     /// </summary>
     public class AutomaticIndicatorDeregistrationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

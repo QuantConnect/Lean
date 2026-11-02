@@ -215,7 +215,7 @@ namespace QuantConnect.Algorithm
             Securities.CollectionChanged += (sender, args) =>
             {
                 // the removed security's indicators and consolidators would otherwise be kept but never updated again
-                if (Settings.AutomaticIndicatorDeregistration && args.Action == NotifyCollectionChangedAction.Remove)
+                if (args.Action == NotifyCollectionChangedAction.Remove)
                 {
                     foreach (Security security in args.OldItems)
                     {

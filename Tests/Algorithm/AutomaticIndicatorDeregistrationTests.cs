@@ -177,12 +177,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0, ConsolidatorCount(_ibm));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void DoesNotKeepConsolidatorsRemovedThroughTheSubscriptionManager(bool automaticDeregistration)
+        [Test]
+        public void DoesNotKeepConsolidatorsRemovedThroughTheSubscriptionManager()
         {
-            _algorithm.Settings.AutomaticIndicatorDeregistration = automaticDeregistration;
-
             var consolidator = ConsolidateAndRemove();
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -190,12 +187,9 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsFalse(consolidator.IsAlive);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void DoesNotKeepIndicatorsWhoseConsolidatorWasRemovedThroughTheSubscriptionManager(bool automaticDeregistration)
+        [Test]
+        public void DoesNotKeepIndicatorsWhoseConsolidatorWasRemovedThroughTheSubscriptionManager()
         {
-            _algorithm.Settings.AutomaticIndicatorDeregistration = automaticDeregistration;
-
             var indicator = RegisterIndicatorAndRemoveItsConsolidator();
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -220,38 +214,6 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SubscriptionManager.RemoveConsolidator(_spy, sma.Consolidators.Single());
             _algorithm.SubscriptionManager.ScanPastConsolidators(DateTime.MaxValue, _algorithm);
             return new WeakReference(sma);
-        }
-
-        [Test]
-        public void DoesNotDeregisterWhenDisabled()
-        {
-            _algorithm.Settings.AutomaticIndicatorDeregistration = false;
-            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
-
-            _algorithm.Securities.Remove(_spy);
-
-            Assert.AreEqual(1, sma.Consolidators.Count);
-            Assert.AreEqual(1, ConsolidatorCount(_spy));
-        }
-
-        [Test]
-        public void DoesNotTrackIndicatorsRegisteredWhileDisabled()
-        {
-            _algorithm.Settings.AutomaticIndicatorDeregistration = false;
-            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
-            _algorithm.Settings.AutomaticIndicatorDeregistration = true;
-
-            _algorithm.Securities.Remove(_spy);
-
-            // the consolidator is removed but the indicator was never linked to it
-            Assert.AreEqual(0, ConsolidatorCount(_spy));
-            Assert.AreEqual(1, sma.Consolidators.Count);
-        }
-
-        [Test]
-        public void IsEnabledByDefault()
-        {
-            Assert.IsTrue(new QCAlgorithm().Settings.AutomaticIndicatorDeregistration);
         }
     }
 }

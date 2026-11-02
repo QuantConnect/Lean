@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### Regression algorithm asserting that when the mirror contract of an option indicator leaves the option universe,
 ### only the mirror's consolidator is removed: the indicators of the contract that stays keep their consolidators
-### and keep updating. See settings.automatic_indicator_deregistration
+### and keep updating
 ### </summary>
 class AutomaticIndicatorDeregistrationOnOptionUniverseSelectionRegressionAlgorithm(QCAlgorithm):
 
