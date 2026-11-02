@@ -595,10 +595,14 @@ namespace QuantConnect.Tests.Common.Storage
             if (isSupported)
             {
                 Assert.DoesNotThrow(() => ObjectStore.ValidateKey(key));
+                Assert.IsNull(ObjectStore.GetKeyIssues(key));
             }
             else
             {
-                Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+                var error = Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+                var issues = ObjectStore.GetKeyIssues(key);
+                Assert.IsNotNull(issues);
+                Assert.IsTrue(error.Message.EndsWith(issues), error.Message);
             }
         }
 

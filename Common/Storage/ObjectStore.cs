@@ -210,17 +210,34 @@ namespace QuantConnect.Storage
         /// <exception cref="ArgumentException">The key is not supported. The message states the key rules</exception>
         public static void ValidateKey(string key)
         {
-            if (!IsSupportedKey(key))
+            var issues = GetKeyIssues(key);
+            if (issues != null)
             {
-                throw new ArgumentException($"ObjectStore: path is not supported: '{key}': {string.Join("; ", GetKeyIssues(key))}." +
-                    $" Object store {SupportedKeyRules}. Use ObjectStore.{nameof(SanitizeKey)}(name) to convert an arbitrary name into a supported path.");
+                throw new ArgumentException($"ObjectStore: path is not supported: '{key}': {issues}");
             }
         }
 
         /// <summary>
-        /// Describes why a key fails <see cref="IsSupportedKey"/>, one entry per problem found
+        /// Describes why a key fails <see cref="IsSupportedKey"/>: the problems found, the key rules and the
+        /// <see cref="SanitizeKey"/> hint, as stated in the <see cref="ValidateKey"/> error. Null for a supported key.
+        /// The single source for tools that validate keys ahead of time
         /// </summary>
-        private static List<string> GetKeyIssues(string key)
+        /// <param name="key">The object store key to describe</param>
+        /// <returns>The issues with the key, or null if it is supported</returns>
+        public static string GetKeyIssues(string key)
+        {
+            if (IsSupportedKey(key))
+            {
+                return null;
+            }
+            return $"{string.Join("; ", FindKeyIssues(key))}. Object store {SupportedKeyRules}." +
+                $" Use ObjectStore.{nameof(SanitizeKey)}(name) to convert an arbitrary name into a supported path.";
+        }
+
+        /// <summary>
+        /// Lists why a key fails <see cref="IsSupportedKey"/>, one entry per problem found
+        /// </summary>
+        private static List<string> FindKeyIssues(string key)
         {
             var issues = new List<string>();
             if (string.IsNullOrEmpty(key))
