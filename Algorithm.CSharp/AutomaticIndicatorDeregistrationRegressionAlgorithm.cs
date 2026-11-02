@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -35,6 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         private SimpleMovingAverage _ibmSma;
         private SimpleMovingAverage _newIbmSma;
         private int _ibmConsolidatedCount;
+        private int _newIbmConsolidatedCount;
         private int _ibmConsolidatedCountAtRemoval;
         private long _ibmRsiSamplesAtRemoval;
         private bool _removed;
@@ -71,7 +73,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 _readded = true;
                 AddEquity("IBM");
+                if (ConsolidatorCount(_ibm) != 0)
+                {
+                    throw new RegressionTestException("The re-added security should start with no consolidators");
+                }
+
                 _newIbmSma = SMA(_ibm, 10, Resolution.Minute);
+                Consolidate(_ibm, Resolution.Hour, (TradeBar bar) => _newIbmConsolidatedCount++);
+                if (ConsolidatorCount(_ibm) != 2 || _newIbmSma.Consolidators.Count != 1 || _ibmSma.Consolidators.Count != 0)
+                {
+                    throw new RegressionTestException("Only the new indicator and consolidator should be registered after re-adding the security");
+                }
             }
 
             if (!Portfolio.Invested)
@@ -111,10 +123,15 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Deregistered indicators and consolidators should have stopped getting updates");
             }
-            if (_newIbmSma == null || !_newIbmSma.IsReady)
+            if (_newIbmSma == null || !_newIbmSma.IsReady || _newIbmConsolidatedCount == 0)
             {
-                throw new RegressionTestException("Indicators created after re-adding the security should be getting updates");
+                throw new RegressionTestException("Indicators and consolidators created after re-adding the security should be getting updates");
             }
+        }
+
+        private int ConsolidatorCount(Symbol symbol)
+        {
+            return SubscriptionManager.Subscriptions.Where(config => config.Symbol == symbol).Sum(config => config.Consolidators.Count);
         }
 
         /// <summary>

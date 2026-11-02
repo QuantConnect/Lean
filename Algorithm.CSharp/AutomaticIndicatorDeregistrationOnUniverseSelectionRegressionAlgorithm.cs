@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -186,8 +187,22 @@ namespace QuantConnect.Algorithm.CSharp
             public void OnReAdded()
             {
                 _reAdditions++;
+                if (ConsolidatorCount() != 0)
+                {
+                    throw new RegressionTestException($"{_symbol}: the re-added security should start with no consolidators");
+                }
+
                 _newSma = _algorithm.SMA(_symbol, 2, Resolution.Daily);
                 _algorithm.Consolidate(_symbol, Resolution.Daily, (TradeBar bar) => _newConsolidatedCount++);
+                if (ConsolidatorCount() != 2 || _newSma.Consolidators.Count != 1 || _sma.Consolidators.Count != 0)
+                {
+                    throw new RegressionTestException($"{_symbol}: only the new indicator and consolidator should be registered after re-adding the security");
+                }
+            }
+
+            private int ConsolidatorCount()
+            {
+                return _algorithm.SubscriptionManager.Subscriptions.Where(config => config.Symbol == _symbol).Sum(config => config.Consolidators.Count);
             }
 
             public void AssertDeregisteredOnRemoval()

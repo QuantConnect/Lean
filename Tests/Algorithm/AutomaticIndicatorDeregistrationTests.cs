@@ -106,6 +106,23 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void ReAddedSecurityStartsWithNoConsolidators()
+        {
+            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
+            _algorithm.Consolidate(_spy, Resolution.Hour, (TradeBar bar) => { });
+            _algorithm.Securities.Remove(_spy);
+
+            _spy = _algorithm.AddEquity("SPY").Symbol;
+            Assert.AreEqual(0, ConsolidatorCount(_spy));
+            Assert.IsEmpty(sma.Consolidators);
+
+            var newSma = _algorithm.SMA(_spy, 10, Resolution.Minute);
+            var newConsolidator = _algorithm.Consolidate(_spy, Resolution.Hour, (TradeBar bar) => { });
+            CollectionAssert.AreEquivalent(new[] { newSma.Consolidators.Single(), newConsolidator }, ConsolidatorsOf(_spy));
+            Assert.IsEmpty(sma.Consolidators);
+        }
+
+        [Test]
         public void IsANoOpAfterManualDeregistration()
         {
             var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);

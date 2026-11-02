@@ -118,8 +118,16 @@ class SymbolData:
 
     def on_re_added(self):
         self._re_additions += 1
+        if self._consolidator_count() != 0:
+            raise Exception(f"{self._symbol}: the re-added security should start with no consolidators")
+
         self._new_sma = self._algorithm.sma(self._symbol, 2, Resolution.DAILY)
         self._algorithm.consolidate(self._symbol, Resolution.DAILY, self._on_new_consolidated)
+        if self._consolidator_count() != 2 or self._new_sma.consolidators.count != 1 or self._sma.consolidators.count != 0:
+            raise Exception(f"{self._symbol}: only the new indicator and consolidator should be registered after re-adding the security")
+
+    def _consolidator_count(self):
+        return sum(config.consolidators.count for config in self._algorithm.subscription_manager.subscriptions if config.symbol == self._symbol)
 
     def assert_deregistered_on_removal(self):
         if self._removals == 0 or self._re_additions == 0:
