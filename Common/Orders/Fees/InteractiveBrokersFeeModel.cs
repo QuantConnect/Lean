@@ -147,7 +147,7 @@ namespace QuantConnect.Orders.Fees
                     switch (market)
                     {
                         case Market.USA:
-                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.01m);
                             break;
                         case Market.India:
                             equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
@@ -157,20 +157,10 @@ namespace QuantConnect.Orders.Fees
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 
-                    //Per share fees
-                    var tradeFee = equityFee.FeePerShare * quantity;
-
-                    //Maximum Per Order: equityFee.MaximumFeeRate
-                    //Minimum per order. $equityFee.MinimumFee
+                    //Per share fees, at least the minimum per order and at most the maximum per order.
+                    //When the maximum is below the minimum, the maximum is charged
                     var maximumPerOrder = equityFee.MaximumFeeRate * tradeValue;
-                    if (tradeFee < equityFee.MinimumFee)
-                    {
-                        tradeFee = equityFee.MinimumFee;
-                    }
-                    else if (tradeFee > maximumPerOrder)
-                    {
-                        tradeFee = maximumPerOrder;
-                    }
+                    var tradeFee = Math.Min(Math.Max(equityFee.FeePerShare * quantity, equityFee.MinimumFee), maximumPerOrder);
 
                     feeCurrency = equityFee.Currency;
                     //Always return a positive fee.
