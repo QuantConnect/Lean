@@ -908,7 +908,7 @@ namespace QuantConnect
             catch
             {
                 // lets catch the exception just to log some information about the zip file
-                Log.Error($"Compression.UnzipToFolder(): Failure: outFolder: {outFolder} - files: {string.Join(",", files)}");
+                Log.Error($"Compression.UnzipToFolder(): Failure: outFolder: {outFolder} - zip bytes: {dataStream.Length} - files: {string.Join(",", files)}");
                 throw;
             }
             return files;
