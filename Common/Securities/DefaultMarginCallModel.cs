@@ -101,6 +101,15 @@ namespace QuantConnect.Securities
                 {
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
+                        // Skip position groups that are already being liquidated. Margin call orders can stay
+                        // open for a while, for example in backtesting market orders fill on the next data
+                        // point; generating a new order every time we scan the portfolio would duplicate the
+                        // liquidation and could flip the position to the opposite side.
+                        if (IsBeingLiquidated(positionGroup))
+                        {
+                            continue;
+                        }
+
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
                         if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
@@ -114,6 +123,26 @@ namespace QuantConnect.Securities
             }
 
             return marginCallOrders;
+        }
+
+        /// <summary>
+        /// Determines whether the position group already has an open order reducing it, which means a
+        /// liquidation for it is already on its way
+        /// </summary>
+        private bool IsBeingLiquidated(IPositionGroup positionGroup)
+        {
+            foreach (var position in positionGroup.Positions)
+            {
+                var openOrdersQuantity = Portfolio.Transactions.GetOpenOrdersRemainingQuantity(position.Symbol);
+
+                // margin call orders always reduce the position, so we only consider orders going against it
+                if (openOrdersQuantity != 0 && Math.Sign(openOrdersQuantity) != Math.Sign(position.Quantity))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
