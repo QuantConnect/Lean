@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void JsonIgnores()
         {
-            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
             var json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero),
                 new OrderEventJsonConverter("id"));
 
@@ -38,6 +38,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsFalse(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsFalse(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsFalse(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("Tag", StringComparison.InvariantCulture));
 
             json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "This is a message")
             {
@@ -51,16 +52,98 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
+            // The order tag and the Time synonym are not serialized, only Message and UtcTime are
+            Assert.IsFalse(json.Contains("\"Tag\"", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("entry", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("\"Time\"", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void TagIsTheOrderTagAndNotTheMessage()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Filled at stale price");
+
+            Assert.AreEqual("entry", orderEvent.Tag);
+            Assert.AreEqual("Filled at stale price", orderEvent.Message);
+
+            // events built from the order id alone do not know the order
+            var brokerageEvent = new OrderEvent(order.Id, order.Symbol, DateTime.UtcNow, OrderStatus.Filled, order.Direction, 1, 1,
+                OrderFee.Zero, "Filled at stale price");
+            Assert.IsNull(brokerageEvent.Tag);
+            Assert.AreEqual("Filled at stale price", brokerageEvent.Message);
+        }
+
+        [Test]
+        public void TimeIsASynonymOfUtcTime()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            Assert.AreEqual(utcTime, orderEvent.Time);
+
+            orderEvent.Time = utcTime.AddHours(1);
+
+            Assert.AreEqual(utcTime.AddHours(1), orderEvent.UtcTime);
+        }
+
+        [Test]
+        public void TagAndTimeAreAccessibleFromPython()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
+            var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "Filled at stale price");
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_tag_message_and_time(order_event: OrderEvent):
+    return order_event.tag, order_event.message, order_event.time == order_event.utc_time
+");
+
+                dynamic getTagMessageAndTime = module.GetAttr("get_tag_message_and_time");
+                var result = getTagMessageAndTime(orderEvent);
+
+                Assert.AreEqual("entry", (string)result[0]);
+                Assert.AreEqual("Filled at stale price", (string)result[1]);
+                Assert.IsTrue((bool)result[2]);
+            }
+        }
+
+        [Test]
+        public void OrderTypeIsTakenFromTheOrder()
+        {
+            var order = new StopLimitOrder(Symbols.BTCUSD, 0.123m, 100m, 101m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero);
+
+            Assert.AreEqual(OrderType.StopLimit, orderEvent.OrderType);
+            Assert.AreEqual(order.Type, orderEvent.OrderType);
+        }
+
+        [Test]
+        public void GroupIdIsTakenFromTheOrder()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            Assert.IsNull(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero).GroupId);
+
+            var comboOrder = new ComboMarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, new GroupOrderManager(33, 2, 10));
+            Assert.AreEqual(33, new OrderEvent(comboOrder, DateTime.UtcNow, OrderFee.Zero).GroupId);
         }
 
         [Test]
         public void RoundTripSerialization([Values] bool isInTheMoney)
         {
-            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, "entry");
             var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
             {
                 Message = "Pepe",
                 Status = OrderStatus.PartiallyFilled,
+                OrderType = OrderType.StopLimit,
+                GroupId = 7,
                 StopPrice = 1,
                 LimitPrice = 2,
                 FillPrice = 11,
@@ -79,8 +162,15 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsFalse(serializeObject.Contains("order-fee-amount", StringComparison.InvariantCulture));
             Assert.IsFalse(serializeObject.Contains("order-fee-currency", StringComparison.InvariantCulture));
             Assert.AreEqual(isInTheMoney, serializeObject.Contains("isInTheMoney", StringComparison.InvariantCulture));
+            Assert.IsTrue(serializeObject.Contains("\"orderType\":\"stopLimit\"", StringComparison.InvariantCulture));
+            Assert.IsTrue(serializeObject.Contains("\"groupId\":7", StringComparison.InvariantCulture));
 
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
+            Assert.AreEqual(orderEvent.OrderType, deserializeObject.OrderType);
+            Assert.AreEqual(orderEvent.GroupId, deserializeObject.GroupId);
+            // the order tag is not part of the payload, it comes from the order
+            Assert.AreEqual("entry", orderEvent.Tag);
+            Assert.IsNull(deserializeObject.Tag);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
@@ -169,6 +259,24 @@ namespace QuantConnect.Tests.Common.Orders
 
             Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
+            // payloads that predate the order type must not be read back as market orders
+            Assert.IsNull(deserializeObject.OrderType);
+            Assert.IsNull(deserializeObject.GroupId);
+        }
+
+        [Test]
+        public void NullOrderTypeAndGroupIdAreNotSerialized()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { OrderType = null };
+
+            var json = JsonConvert.SerializeObject(orderEvent, new OrderEventJsonConverter("id"));
+            Assert.IsFalse(json.Contains("orderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("groupId", StringComparison.InvariantCulture));
+
+            json = JsonConvert.SerializeObject(orderEvent);
+            Assert.IsFalse(json.Contains("OrderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("GroupId", StringComparison.InvariantCulture));
         }
 
         [Test]

@@ -50,5 +50,50 @@ namespace QuantConnect.Tests.Common.Orders
         }
 
         private static Leg[] CreateLegs(params int[] quantities) => [.. quantities.Select(q => Leg.Create(null, q))];
+
+        [Test]
+        public void GetGroupIdOfTheLegTickets()
+        {
+            var groupOrderManager = new GroupOrderManager(33, 2, 10);
+            var tickets = new List<OrderTicket>
+            {
+                CreateLegTicket(groupOrderManager, Symbols.SPY_C_192_Feb19_2016, 10, OrderStatus.Submitted, 1),
+                CreateLegTicket(groupOrderManager, Symbols.SPY_P_192_Feb19_2016, -10, OrderStatus.Submitted, 2)
+            };
+
+            Assert.AreEqual(33, tickets.GetGroupId());
+            Assert.IsNull(new List<OrderTicket>().GetGroupId());
+        }
+
+        [Test]
+        public void IsFilledOnlyWhenEveryLegTicketIsFilled()
+        {
+            var groupOrderManager = new GroupOrderManager(33, 2, 10);
+            var tickets = new List<OrderTicket>
+            {
+                CreateLegTicket(groupOrderManager, Symbols.SPY_C_192_Feb19_2016, 10, OrderStatus.Filled, 1),
+                CreateLegTicket(groupOrderManager, Symbols.SPY_P_192_Feb19_2016, -10, OrderStatus.PartiallyFilled, 2)
+            };
+            Assert.IsFalse(tickets.IsFilled());
+
+            tickets[1] = CreateLegTicket(groupOrderManager, Symbols.SPY_P_192_Feb19_2016, -10, OrderStatus.Filled, 2);
+            Assert.IsTrue(tickets.IsFilled());
+
+            Assert.IsFalse(new List<OrderTicket>().IsFilled());
+        }
+
+        private static OrderTicket CreateLegTicket(GroupOrderManager groupOrderManager, Symbol symbol, decimal quantity, OrderStatus status, int orderId)
+        {
+            var request = new SubmitOrderRequest(OrderType.ComboMarket, symbol.SecurityType, symbol, quantity, 0, 0,
+                new DateTime(2016, 2, 16, 11, 53, 30), "", groupOrderManager: groupOrderManager);
+            request.SetOrderId(orderId);
+
+            var ticket = new OrderTicket(null, request);
+            var order = Order.CreateOrder(request);
+            order.Status = status;
+            ticket.SetOrder(order);
+
+            return ticket;
+        }
     }
 }

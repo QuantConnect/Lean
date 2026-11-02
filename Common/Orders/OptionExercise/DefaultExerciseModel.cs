@@ -52,7 +52,8 @@ namespace QuantConnect.Orders.OptionExercise
             )
             {
                 IsAssignment = isAssignment,
-                IsInTheMoney = inTheMoney
+                IsInTheMoney = inTheMoney,
+                OrderType = order.Type
             };
 
             // TODO : Support Manual Exercise of OTM contracts [ inTheMoney = false ]
@@ -70,7 +71,7 @@ namespace QuantConnect.Orders.OptionExercise
                     exerciseQuantity,
                     OrderFee.Zero,
                     isAssignment ? Messages.DefaultExerciseModel.OptionAssignment : Messages.DefaultExerciseModel.OptionExercise
-                ) { IsInTheMoney = true };
+                ) { IsInTheMoney = true, OrderType = order.Type };
             }
         }
     }
