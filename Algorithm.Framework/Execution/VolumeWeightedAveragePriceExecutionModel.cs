@@ -105,6 +105,17 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             foreach (var added in changes.AddedSecurities)
             {
+                // A security can leave the algorithm and be selected again later. The removal notification is
+                // only sent when the security is deselected; if the removal is deferred because a position is
+                // still open, the data subscription is removed later without another notification. Rebuild the
+                // cached symbol data when its consolidator is not part of the security subscriptions anymore,
+                // otherwise the VWAP would never be updated again.
+                if (_symbolData.TryGetValue(added.Symbol, out var data) && !IsConsolidatorRegistered(added, data.Consolidator))
+                {
+                    _symbolData.Remove(added.Symbol);
+                    algorithm.SubscriptionManager.RemoveConsolidator(added.Symbol, data.Consolidator);
+                }
+
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
                     _symbolData[added.Symbol] = new SymbolData(algorithm, added);
@@ -124,6 +135,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines whether the given consolidator is still attached to one of the security data subscriptions
+        /// </summary>
+        private static bool IsConsolidatorRegistered(Security security, IDataConsolidator consolidator)
+        {
+            return security.Subscriptions.Any(subscription => subscription.Consolidators.Contains(consolidator));
         }
 
         /// <summary>
