@@ -411,6 +411,38 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2022, 1, 3, 16, 15, 0), nextMarketOpen);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void GetNextMarketCloseForContinuousScheduleBeforeEarlyClose(bool hasLateOpen)
+        {
+            var earlyCloseDate = new DateTime(2023, 11, 23);
+            MarketHoursSegment Segment(int start, int end) =>
+                new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(start), TimeSpan.FromHours(end));
+            var marketHours = new[]
+            {
+                new LocalMarketHours(DayOfWeek.Sunday, Segment(17, 24)),
+                new LocalMarketHours(DayOfWeek.Monday, Segment(0, 16), Segment(17, 24)),
+                new LocalMarketHours(DayOfWeek.Tuesday, Segment(0, 16), Segment(17, 24)),
+                new LocalMarketHours(DayOfWeek.Wednesday, Segment(0, 16), Segment(17, 24)),
+                new LocalMarketHours(DayOfWeek.Thursday, Segment(0, 16), Segment(17, 24)),
+                new LocalMarketHours(DayOfWeek.Friday, Segment(0, 16)),
+                LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday)
+            }.ToDictionary(x => x.DayOfWeek);
+            var lateOpens = hasLateOpen
+                ? new Dictionary<DateTime, TimeSpan> { { earlyCloseDate, TimeSpan.FromHours(17) } }
+                : new Dictionary<DateTime, TimeSpan>();
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.Chicago,
+                Enumerable.Empty<DateTime>(),
+                marketHours,
+                new Dictionary<DateTime, TimeSpan> { { earlyCloseDate, TimeSpan.FromHours(12) } },
+                lateOpens);
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(earlyCloseDate.AddDays(-1).AddHours(17), true);
+
+            Assert.AreEqual(earlyCloseDate.AddHours(12), nextMarketClose);
+        }
+
         [Test]
         public void GetNextMarketOpenForEarlyCloses()
         {

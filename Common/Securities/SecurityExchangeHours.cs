@@ -435,11 +435,6 @@ namespace QuantConnect.Securities
         {
             var nextOrPrevious = isNextDay ? 1 : -1;
             var nextOrPreviousDay = time.Date.AddDays(nextOrPrevious);
-            if (_earlyCloses.ContainsKey(nextOrPreviousDay.Date))
-            {
-                return null;
-            }
-
             var segments = GetMarketHours(nextOrPreviousDay).Segments;
             return isNextDay ? segments.FirstOrDefault() : segments.LastOrDefault();
         }
