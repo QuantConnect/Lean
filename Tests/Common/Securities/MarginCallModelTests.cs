@@ -257,6 +257,64 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated()
+        {
+            const int quantity = 1000;
+            const decimal leverage = 1m;
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+
+            var security = GetSecurity(Symbols.AAPL);
+            portfolio.Securities.Add(security);
+
+            var time = DateTime.Now;
+            const decimal buyPrice = 1m;
+            security.SetMarketPrice(new Tick(time, Symbols.AAPL, buyPrice, buyPrice));
+
+            var order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
+            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+                { FillPrice = buyPrice, FillQuantity = quantity, Status = OrderStatus.Filled };
+            orderProcessor.AddOrder(order);
+            var request = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, order.Quantity, 0, 0, order.Time, null);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
+
+            // the stock doubles
+            time = time.AddDays(1);
+            security.SetMarketPrice(new Tick(time, Symbols.AAPL, buyPrice * 2, buyPrice * 2));
+            portfolio.InvalidateTotalPortfolioValue();
+
+            // and then plummets
+            time = time.AddDays(1);
+            const decimal lowPrice = buyPrice / 2;
+            security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
+            portfolio.InvalidateTotalPortfolioValue();
+
+            // leverage up and simulate a loan, buying more shares
+            security.SetLeverage(leverage * 2);
+            portfolio.CashBook[Currencies.USD].SetAmount(-250);
+
+            order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
+            fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { FillPrice = buyPrice, FillQuantity = quantity };
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(1, marginCallOrders.Count);
+
+            // the margin call order hasn't been filled yet, the position is still the same
+            var liquidationRequest = marginCallOrders[0];
+            liquidationRequest.SetOrderId(1);
+            orderProcessor.AddTicket(new OrderTicket(null, liquidationRequest));
+
+            // scanning the portfolio again must not duplicate the liquidation, which would flip the position
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(0, marginCallOrders.Count);
+        }
+
+        [Test]
         public void GenerateMarginCallOrdersForPositionGroup()
         {
             const int cash = 22000;
