@@ -27,8 +27,10 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         private readonly Trading212BrokerageModel _brokerageModel = new();
 
-        // Trading 212's public API accepts market, limit, stop and stop-limit orders for equities.
+        // Trading 212's public API accepts market, limit, stop and stop-limit orders for equities,
+        // and a market order placed outside trading hours fills at the open (MarketOnOpen).
         [TestCase(SecurityType.Equity, OrderType.Market)]
+        [TestCase(SecurityType.Equity, OrderType.MarketOnOpen)]
         [TestCase(SecurityType.Equity, OrderType.Limit)]
         [TestCase(SecurityType.Equity, OrderType.StopMarket)]
         [TestCase(SecurityType.Equity, OrderType.StopLimit)]
@@ -64,7 +66,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(SecurityType.Equity, OrderType.MarketOnClose)]
-        [TestCase(SecurityType.Equity, OrderType.MarketOnOpen)]
         [TestCase(SecurityType.Equity, OrderType.TrailingStop)]
         [TestCase(SecurityType.Equity, OrderType.LimitIfTouched)]
         [TestCase(SecurityType.Equity, OrderType.ComboMarket)]
@@ -81,16 +82,21 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message.Message, Does.Contain(orderType.ToString()));
         }
 
-        // Trading 212 is long only: a sell may reduce an existing position but never flip it through zero.
+        // Trading 212 is long only: a sell may reduce an existing position but never flip it through zero,
+        // while a buy is always allowed, including one that covers a short position.
         [TestCase(OrderType.Market, 1, -2, false)]
+        [TestCase(OrderType.MarketOnOpen, 1, -2, false)]
         [TestCase(OrderType.Limit, 1, -2, false)]
         [TestCase(OrderType.StopMarket, 1, -2, false)]
         [TestCase(OrderType.StopLimit, 1, -2, false)]
         [TestCase(OrderType.Market, 2, -1, true)]
+        [TestCase(OrderType.MarketOnOpen, 2, -1, true)]
         [TestCase(OrderType.Limit, 2, -1, true)]
         [TestCase(OrderType.StopMarket, 2, -1, true)]
         [TestCase(OrderType.StopLimit, 2, -1, true)]
-        public void CanSubmitOrderCrossZeroReturnsExpected(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool expected)
+        [TestCase(OrderType.Market, -1, 1, true)]
+        [TestCase(OrderType.Market, -1, 2, true)]
+        public void CanSubmitOrderLongOnlyReturnsExpected(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, bool expected)
         {
             var security = TestsHelpers.InitializeSecurity(SecurityType.Equity, (Symbols.AAPL, 209m, holdingQuantity))[Symbols.AAPL];
             var order = CreateOrder(orderType, security.Symbol, orderQuantity);
@@ -110,8 +116,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         // Trading 212 is long only. OrderCrossesZero only flags a position passing through zero, so a
-        // sell from a flat (or already short) position would open or add to a short unless the resulting
-        // position is checked too.
+        // sell from a flat (or already short) position needs the resulting position checked too.
         [TestCase(AccountType.Cash)]
         [TestCase(AccountType.Margin)]
         public void CanSubmitOrderSellFromFlatReturnsFalse(AccountType accountType)
@@ -140,6 +145,57 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(canSubmit, Is.False);
             Assert.That(message, Is.Not.Null);
             Assert.That(message.Message, Does.Contain("short"));
+        }
+
+        [Test]
+        public void CanSubmitOrderContingentOrderReturnsFalse()
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            var order = CreateOrder(OrderType.Market, security.Symbol);
+            order.Contingency = new OrderContingency(2, new[] { new ContingencyLink(0, ContingencyType.OneCancelsOther) });
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.False);
+            Assert.That(message, Is.Not.Null);
+            Assert.That(message.Code, Is.EqualTo("NotSupported"));
+            Assert.That(message.Message, Is.EqualTo(Messages.DefaultBrokerageModel.UnsupportedContingentOrders(_brokerageModel)));
+        }
+
+        // Trading 212's order API only accepts DAY and GOOD_TILL_CANCEL orders.
+        [TestCase(OrderType.Market)]
+        [TestCase(OrderType.MarketOnOpen)]
+        [TestCase(OrderType.Limit)]
+        public void CanSubmitOrderSupportedTimeInForceReturnsTrue(OrderType orderType)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+
+            foreach (var timeInForce in new[] { TimeInForce.Day, TimeInForce.GoodTilCanceled })
+            {
+                var order = CreateOrder(orderType, security.Symbol);
+                order.Properties.TimeInForce = timeInForce;
+
+                var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+                Assert.That(canSubmit, Is.True, $"Expected {timeInForce.GetType().Name} to be supported");
+                Assert.That(message, Is.Null);
+            }
+        }
+
+        [TestCase(OrderType.Market)]
+        [TestCase(OrderType.Limit)]
+        public void CanSubmitOrderUnsupportedTimeInForceReturnsFalse(OrderType orderType)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            var order = CreateOrder(orderType, security.Symbol);
+            order.Properties.TimeInForce = TimeInForce.GoodTilDate(DateTime.UtcNow.AddDays(7));
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.False);
+            Assert.That(message, Is.Not.Null);
+            Assert.That(message.Code, Is.EqualTo("NotSupported"));
+            Assert.That(message.Message, Is.EqualTo(Messages.DefaultBrokerageModel.UnsupportedTimeInForce(_brokerageModel, order)));
         }
 
         [TestCase(AccountType.Cash)]
@@ -175,11 +231,33 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void DefaultAccountTypeUsesDelayedEquitySettlement()
+        public void DefaultAccountTypeUsesImmediateEquitySettlement()
         {
             var security = GetSecurityForType(SecurityType.Equity);
 
-            Assert.That(_brokerageModel.GetSettlementModel(security), Is.InstanceOf<DelayedSettlementModel>());
+            Assert.That(_brokerageModel.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
+        }
+
+        // Trading 212's Invest Terms clause 8.3 allow sale proceeds to be used before the settlement date to
+        // buy more shares, so equity proceeds settle immediately whichever account type the model was created
+        // with, including the margin account that SetBrokerageModel(BrokerageName.Trading212) selects.
+        [TestCase(AccountType.Cash)]
+        [TestCase(AccountType.Margin)]
+        public void GetSettlementModelReturnsImmediateSettlementForEquity(AccountType accountType)
+        {
+            var model = new Trading212BrokerageModel(accountType);
+            var security = GetSecurityForType(SecurityType.Equity);
+
+            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
+        }
+
+        [Test]
+        public void CreateWithMarginAccountTypeUsesImmediateEquitySettlement()
+        {
+            var model = BrokerageModel.Create(new OrderProvider(), BrokerageName.Trading212, AccountType.Margin);
+            var security = GetSecurityForType(SecurityType.Equity);
+
+            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
         }
 
         [Test]
