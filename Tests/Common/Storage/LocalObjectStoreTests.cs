@@ -27,6 +27,8 @@ using QuantConnect.Research;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Storage;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
+using System.Reflection;
 using Python.Runtime;
 
 namespace QuantConnect.Tests.Common.Storage
@@ -594,7 +596,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("résumé.pdf", "r_sum_.pdf")]
         [TestCase("a..", "a__")]
         [TestCase("100%.json", "100_.json")]
-        public void UnsupportedKeysAreSanitizedOnEveryReadAndSave(string key, string sanitizedKey)
+        public void UnsupportedKeysAreSanitizedOnSaveAndFoundByTheKeyTheyWereSavedWith(string key, string sanitizedKey)
         {
             Assert.IsTrue(_store.Save(key, "abc"));
 
@@ -626,8 +628,8 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'. " +
                 "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
                 "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'. " +
-                "Using 'trade log_ AI _ Cloud.csv' instead, now and on every other read or save of this key. " +
-                "Any other unsupported key is sanitized the same way, without further warnings", warnings[0]);
+                "Using 'trade log_ AI _ Cloud.csv' instead. Any other unsupported key is sanitized the same way, " +
+                "with a warning only when it overwrites an existing object", warnings[0]);
 
             // the next unsupported key is sanitized silently
             Assert.IsFalse(store.ContainsKey("trade log: AI.v2.csv"));
@@ -673,18 +675,110 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [Test]
-        public void SanitizationIsLossyAndDistinctKeysCanCollide()
+        [TestCase("model.tar.gz")]
+        [TestCase("SPY (1).csv")]
+        [TestCase("BRK.B.csv")]
+        public void ExistingUnsupportedKeysAreUsedAsGiven(string key)
         {
-            // both sanitize to 'trade_log_ai_cloud.csv': the second save silently overwrites the first
-            Assert.IsTrue(_store.Save("trade_log_ai&cloud.csv", "first"));
-            Assert.IsTrue(_store.Save("trade_log_ai:cloud.csv", "second"));
+            // an object put in the store by other means (uploaded, copied into the folder) under an unsupported name
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            var filePath = Path.Combine(TestStorageRoot, key);
+            File.WriteAllText(filePath, "abc");
 
-            Assert.AreEqual("second", _store.Read("trade_log_ai&cloud.csv"));
-            Assert.AreEqual("second", _store.Read("trade_log_ai_cloud.csv"));
-            Assert.AreEqual(1, _store.Keys.Count(key => key.StartsWith("trade_log_ai")));
+            Assert.IsTrue(store.ContainsKey(key));
+            Assert.AreEqual("abc", store.Read(key));
+            Assert.IsTrue(store.Keys.Contains(key), string.Join(", ", store.Keys));
+            Assert.AreEqual(Path.GetFullPath(filePath), Path.GetFullPath(store.GetFilePath(key)));
+            Assert.IsEmpty(warnings, string.Join("\n", warnings));
+            Assert.IsTrue(store.Delete(key));
+            Assert.IsFalse(File.Exists(filePath));
 
-            _store.Delete("trade_log_ai_cloud.csv");
+            // gone from the store, the key falls back to its sanitized name like any other unsupported key
+            Assert.IsFalse(store.ContainsKey(key));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith($"ObjectStore: key '{key}' is not supported:"));
+        }
+
+        [Test]
+        public void CustomDataIsReadFromAnExistingUnsupportedKey()
+        {
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            File.WriteAllText(Path.Combine(TestStorageRoot, "BRK.B.csv"), "2013-10-07,167.42\n2013-10-08,165.48\n");
+
+            // the data feed reads custom data through the algorithm's store
+            using var reader = new ObjectStoreSubscriptionStreamReader(store, "BRK.B.csv");
+
+            Assert.IsFalse(reader.EndOfStream);
+            Assert.AreEqual("2013-10-07,167.42", reader.ReadLine());
+            Assert.AreEqual("2013-10-08,165.48", reader.ReadLine());
+            store.Delete("BRK.B.csv");
+        }
+
+        [Test]
+        public void SavingAnUnsupportedKeyOverAnotherObjectWarnsEveryTime()
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.Save("trade_log_ai_cloud.csv", "existing"));
+            Assert.IsEmpty(warnings);
+
+            // sanitizes to the existing object's key: the general warning, then the overwrite one
+            Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "first"));
+            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported: unsupported character '&'."));
+            Assert.AreEqual("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported and is saved as 'trade_log_ai_cloud.csv', " +
+                "overwriting the existing object 'trade_log_ai_cloud.csv'", warnings[1]);
+
+            // updating its own object is silent
+            Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "second"));
+            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+
+            // a different unsupported key sanitizing to the same object warns again
+            Assert.IsTrue(store.Save("trade_log_ai:cloud.csv", "third"));
+            Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("ObjectStore: key 'trade_log_ai:cloud.csv' is not supported and is saved as 'trade_log_ai_cloud.csv', " +
+                "overwriting the existing object 'trade_log_ai_cloud.csv'", warnings[2]);
+            Assert.AreEqual("third", store.Read("trade_log_ai_cloud.csv"));
+            Assert.AreEqual(1, store.Keys.Count(key => key.StartsWith("trade_log_ai")));
+
+            store.Delete("trade_log_ai_cloud.csv");
+        }
+
+        [Test]
+        public void QuantBookWarnsThroughTheEngineLog()
+        {
+            var traces = new List<string>();
+            Log.LogHandler = new FunctionalLogHandler(null, traces.Add, null);
+            var quantBook = new QuantBook();
+            Assert.AreEqual(typeof(ObjectStore), quantBook.ObjectStore.GetType());
+
+            Assert.IsTrue(quantBook.ObjectStore.Save("trade log: AI & Cloud.csv", "abc"));
+
+            Assert.AreEqual(1, traces.Count(trace => trace.Contains("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'.")),
+                string.Join("\n", traces));
+            quantBook.ObjectStore.Delete("trade log: AI & Cloud.csv");
+        }
+
+        [Test]
+        public void QuantBookUsesThePythonObjectStoreInPythonNotebooks()
+        {
+            // the notebook kernel is detected once, in the static constructor
+            var isPythonNotebook = typeof(QuantBook).GetField("_isPythonNotebook", BindingFlags.NonPublic | BindingFlags.Static);
+            isPythonNotebook.SetValue(null, true);
+            try
+            {
+                var quantBook = new QuantBook();
+
+                Assert.IsInstanceOf<PythonObjectStore>(quantBook.ObjectStore);
+            }
+            finally
+            {
+                isPythonNotebook.SetValue(null, false);
+            }
         }
 
         [Test]

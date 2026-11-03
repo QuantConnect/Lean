@@ -33,8 +33,9 @@ namespace QuantConnect.Storage
     /// <summary>
     /// Helper class for easier access to <see cref="IObjectStore"/> methods. A key that does not follow the key
     /// format (english letters, numbers, spaces and the characters '/', '\', '_', '#', '-', '$' and '=', plus at
-    /// most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv') is
-    /// replaced by its sanitized version on every read and save, with a single warning the first time it happens
+    /// most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv') is saved
+    /// under its sanitized version and found by either name, with a warning the first time it happens and whenever
+    /// the sanitized name overwrites an existing object. An object already stored under an unsupported name is used as is
     /// </summary>
     public class ObjectStore : IObjectStore
     {
@@ -46,8 +47,8 @@ namespace QuantConnect.Storage
         private readonly IObjectStore _store;
         private readonly Action<string> _warn;
         private int _warned;
-        // every key used so far, mapped to the key the store is asked for, so each one is checked once
-        private readonly ConcurrentDictionary<string, string> _keys = new();
+        // the unsupported keys this store saved: overwriting what they produced is an update, not a collision
+        private readonly ConcurrentDictionary<string, string> _savedKeys = new();
 
         /// <summary>
         /// Gets the maximum storage limit in bytes
@@ -72,8 +73,7 @@ namespace QuantConnect.Storage
         /// Initializes a new instance of the <see cref="ObjectStore"/> class
         /// </summary>
         /// <param name="store">The <see cref="IObjectStore"/> instance to wrap</param>
-        /// <param name="warn">Receives the single warning logged the first time an unsupported key is sanitized,
-        /// the engine log by default</param>
+        /// <param name="warn">Receives the warnings about sanitized keys, the engine log by default</param>
         public ObjectStore(IObjectStore store, Action<string> warn = null)
         {
             _store = store;
@@ -110,7 +110,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the key was found</returns>
         public bool ContainsKey(string path)
         {
-            return _store.ContainsKey(GetKey(path));
+            return _store.ContainsKey(KeyToRead(path));
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace QuantConnect.Storage
         /// <returns>A byte array containing the data</returns>
         public byte[] ReadBytes(string path)
         {
-            return _store.ReadBytes(GetKey(path));
+            return _store.ReadBytes(KeyToRead(path));
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
         {
-            return _store.SaveBytes(GetKey(path), contents);
+            return _store.SaveBytes(KeyToSave(path), contents);
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the delete operation was successful</returns>
         public bool Delete(string path)
         {
-            return _store.Delete(GetKey(path));
+            return _store.Delete(KeyToRead(path));
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace QuantConnect.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string path)
         {
-            return _store.GetFilePath(GetKey(path));
+            return _store.GetFilePath(KeyToRead(path));
         }
 
         /// <summary>
@@ -357,28 +357,60 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// The key the store is asked for: the given one when it follows the key format, else its sanitized
-        /// version, warning only the first time any key is sanitized. Null and empty keys are left for the store to reject
+        /// The key a save goes to: the given one when it follows the key format, else its sanitized version.
+        /// Null and empty keys are left for the store to reject
         /// </summary>
-        private string GetKey(string path)
+        private string KeyToSave(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
                 return path;
             }
-            if (_keys.TryGetValue(path, out var key))
+            var issues = GetKeyIssues(path);
+            if (issues == null)
             {
-                return key;
+                return path;
             }
 
-            var issues = GetKeyIssues(path);
-            key = issues == null ? path : SanitizeKey(path);
-            if (_keys.TryAdd(path, key) && issues != null && Interlocked.Exchange(ref _warned, 1) == 0)
+            var key = SanitizeKey(path);
+            WarnOnce(path, issues, key);
+            // the rejection used to prevent this: silently replacing an object saved under another key
+            if (!_savedKeys.ContainsKey(path) && _store.ContainsKey(key))
             {
-                _warn($"ObjectStore: key '{path}' is not supported: {issues}. Using '{key}' instead, now and on every" +
-                    " other read or save of this key. Any other unsupported key is sanitized the same way, without further warnings");
+                _warn($"ObjectStore: key '{path}' is not supported and is saved as '{key}', overwriting the existing object '{key}'");
             }
+            _savedKeys[path] = key;
             return key;
+        }
+
+        /// <summary>
+        /// The key the other operations use: the given one when it follows the key format or the store already has
+        /// it, else its sanitized version, so an object is found by the key it was saved with
+        /// </summary>
+        private string KeyToRead(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+            var issues = GetKeyIssues(path);
+            if (issues == null || _store.ContainsKey(path))
+            {
+                return path;
+            }
+
+            var key = SanitizeKey(path);
+            WarnOnce(path, issues, key);
+            return key;
+        }
+
+        private void WarnOnce(string path, string issues, string key)
+        {
+            if (Interlocked.Exchange(ref _warned, 1) == 0)
+            {
+                _warn($"ObjectStore: key '{path}' is not supported: {issues}. Using '{key}' instead. Any other unsupported key" +
+                    " is sanitized the same way, with a warning only when it overwrites an existing object");
+            }
         }
 
         private static bool IsSupportedKey(string key)
