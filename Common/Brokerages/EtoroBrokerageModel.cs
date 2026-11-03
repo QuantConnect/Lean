@@ -58,8 +58,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Constructor for eToro brokerage model
         /// </summary>
-        /// <param name="accountType">Cash or Margin</param>
-        public EtoroBrokerageModel(AccountType accountType = AccountType.Margin)
+        /// <param name="accountType">Cash or Margin; a cash account gives every security leverage 1</param>
+        public EtoroBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         {
         }
@@ -72,17 +72,6 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new EtoroFeeModel();
-        }
-
-        /// <summary>
-        /// eToro global leverage rule
-        /// </summary>
-        /// <param name="security">Security</param>
-        /// <returns>1, the leverage eToro opens every position at</returns>
-        public override decimal GetLeverage(Security security)
-        {
-            // no leverage is sent with an order, so eToro opens every position at 1
-            return 1m;
         }
 
         /// <summary>
@@ -113,11 +102,19 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity) == OrderPosition.SellToOpen
-                && order.Properties is not EtoroOrderProperties { StopLossRate: > 0 })
+            var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity);
+            var hasStopLossRate = order.Properties is EtoroOrderProperties { StopLossRate: > 0 };
+            if (orderPosition == OrderPosition.SellToOpen && !hasStopLossRate)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.EtoroBrokerageModel.ShortSaleRequiresStopLossRate(order));
+                return false;
+            }
+
+            if ((orderPosition is OrderPosition.BuyToOpen or OrderPosition.SellToOpen) && security.Leverage > 1 && !hasStopLossRate)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.EtoroBrokerageModel.LeverageRequiresStopLossRate(order, security.Leverage));
                 return false;
             }
 

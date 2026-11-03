@@ -704,6 +704,15 @@ namespace QuantConnect
             {
                 return Invariant($"A short sale of {order.Symbol.Value} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the short position.");
             }
+
+            /// <summary>
+            /// Returns a message explaining that a position with leverage above 1 needs the stop loss rate in the eToro order properties.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string LeverageRequiresStopLossRate(Orders.Order order, decimal leverage)
+            {
+                return Invariant($"A position in {order.Symbol.Value} at leverage {leverage} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the position.");
+            }
         }
 
         /// <summary>

@@ -135,14 +135,47 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(_brokerageModel.GetFeeModel(security), Is.InstanceOf<EtoroFeeModel>());
         }
 
-        [TestCase(SecurityType.Equity)]
-        [TestCase(SecurityType.Crypto)]
-        [TestCase(SecurityType.Forex)]
-        public void GetLeverageReturnsOne(SecurityType securityType)
+        [TestCase(1, null, true)]
+        [TestCase(2, null, false)]
+        [TestCase(2, 0, false)]
+        [TestCase(2, 150, true)]
+        public void CanSubmitOrderLeverageAboveOneRequiresStopLossRate(decimal leverage, decimal? stopLossRate, bool expectedCanSubmit)
         {
+            var security = GetSecurityForType(SecurityType.Equity);
+            security.SetLeverage(leverage);
+            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow, properties: new EtoroOrderProperties { StopLossRate = stopLossRate });
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.EqualTo(expectedCanSubmit));
+            if (expectedCanSubmit)
+            {
+                Assert.That(message, Is.Null);
+            }
+            else
+            {
+                Assert.That(message.Message, Does.Contain(nameof(EtoroOrderProperties.StopLossRate)));
+            }
+        }
+
+        [TestCase(AccountType.Cash, SecurityType.Equity, 1)]
+        [TestCase(AccountType.Cash, SecurityType.Crypto, 1)]
+        [TestCase(AccountType.Cash, SecurityType.Forex, 1)]
+        [TestCase(AccountType.Margin, SecurityType.Equity, 2)]
+        [TestCase(AccountType.Margin, SecurityType.Crypto, 1)]
+        [TestCase(AccountType.Margin, SecurityType.Forex, 50)]
+        public void GetLeverageReturnsTheDefaultOfTheAccountType(AccountType accountType, SecurityType securityType, decimal expectedLeverage)
+        {
+            var brokerageModel = new EtoroBrokerageModel(accountType);
             var security = GetSecurityForType(securityType);
 
-            Assert.That(_brokerageModel.GetLeverage(security), Is.EqualTo(1m));
+            Assert.That(brokerageModel.GetLeverage(security), Is.EqualTo(expectedLeverage));
+        }
+
+        [Test]
+        public void ConstructorWithoutAccountTypeUsesCash()
+        {
+            Assert.That(new EtoroBrokerageModel().AccountType, Is.EqualTo(AccountType.Cash));
         }
 
         private static Security GetSecurityForType(SecurityType securityType)

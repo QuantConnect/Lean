@@ -25,8 +25,7 @@ namespace QuantConnect.Orders
     {
         /// <summary>
         /// The absolute price at which eToro closes the position when the market moves against it.
-        /// eToro requires it for a short sale and for any position with leverage above 1;
-        /// Lean sends every order at leverage 1, so it is needed for short sales only.
+        /// eToro requires it for a short sale and for a position with leverage above 1, the leverage of the security.
         /// </summary>
         public decimal? StopLossRate { get; set; }
 
