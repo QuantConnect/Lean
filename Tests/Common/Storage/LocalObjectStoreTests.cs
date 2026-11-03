@@ -630,7 +630,7 @@ namespace QuantConnect.Tests.Common.Storage
                 "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
                 "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'. " +
                 "Using 'trade log_ AI _ Cloud.csv' instead. Any other unsupported key is sanitized the same way, " +
-                "with a warning only when it overwrites an existing object", warnings[0]);
+                "with a warning only when an object already exists under it or under its sanitized name", warnings[0]);
 
             // the next unsupported key is sanitized silently
             Assert.IsFalse(store.ContainsKey("trade log: AI.v2.csv"));
@@ -701,6 +701,103 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsFalse(store.ContainsKey(key));
             Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.That(warnings[0], Does.StartWith($"ObjectStore: key '{key}' is not supported:"));
+        }
+
+        [Test]
+        public void SavingToAnExistingUnsupportedKeyGoesToTheSanitizedNameWithAWarningEveryTime()
+        {
+            // an uploaded object under an unsupported name, which the algorithm loads, retrains and saves back
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            var warnings = new List<string>();
+            using (var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+
+                Assert.IsTrue(store.Save("model.tar.gz", "new"));
+
+                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'model.tar.gz' is not supported: it has 2 '.' but at most one '.extension' is allowed."));
+                Assert.AreEqual("ObjectStore: key 'model.tar.gz' is not supported: the object stored under that name is left as is," +
+                    " this save goes to 'model_tar.gz'", warnings[1]);
+                // read after write within the run follows the save
+                Assert.AreEqual("new", store.Read("model.tar.gz"));
+                Assert.AreEqual("new", store.Read("model_tar.gz"));
+                Assert.AreEqual("old", File.ReadAllText(filePath));
+                Assert.IsTrue(store.Keys.Contains("model.tar.gz") && store.Keys.Contains("model_tar.gz"), string.Join(", ", store.Keys));
+
+                // every such save warns, not only the first
+                Assert.IsTrue(store.Save("model.tar.gz", "newer"));
+                Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
+                Assert.AreEqual(warnings[1], warnings[2]);
+                Assert.AreEqual("newer", store.Read("model.tar.gz"));
+            }
+
+            // a fresh store, the next run: the object under the name as given comes first again, and the save warns again
+            warnings.Clear();
+            using (var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+                Assert.IsEmpty(warnings);
+
+                Assert.IsTrue(store.Save("model.tar.gz", "third"));
+
+                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                Assert.That(warnings[1], Does.Contain("the object stored under that name is left as is, this save goes to 'model_tar.gz'"));
+                Assert.AreEqual("third", store.Read("model.tar.gz"));
+                Assert.AreEqual("third", store.Read("model_tar.gz"));
+
+                // within the run the key follows the save: the first delete removes it and the original is back
+                Assert.IsTrue(store.Delete("model.tar.gz"));
+                Assert.IsFalse(store.ContainsKey("model_tar.gz"));
+                Assert.AreEqual("old", File.ReadAllText(filePath));
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+                Assert.IsTrue(store.Delete("model.tar.gz"));
+                Assert.IsFalse(store.ContainsKey("model.tar.gz"));
+            }
+            Assert.IsFalse(File.Exists(filePath));
+        }
+
+        [Test]
+        public void DeletingASavedUnsupportedKeyRemovesTheSavedObjectThenTheOriginal()
+        {
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            using var store = new ObjectStore(new TestLocalObjectStore(), _ => { });
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.Save("model.tar.gz", "new"));
+            Assert.AreEqual("new", store.Read("model.tar.gz"));
+
+            // the first delete removes what this store saved, and the key resolves like a fresh store's from then on
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(File.Exists(Path.Combine(TestStorageRoot, "model_tar.gz")));
+            Assert.IsTrue(store.ContainsKey("model.tar.gz"));
+            Assert.AreEqual("old", store.Read("model.tar.gz"));
+
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(store.ContainsKey("model.tar.gz"));
+            Assert.IsFalse(File.Exists(filePath));
+        }
+
+        [Test]
+        public void AFailedSaveToAnUnsupportedKeyDoesNotRedirectItsReads()
+        {
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            using var store = new ObjectStore(new TestLocalObjectStore(), _ => { });
+            // the 3 bytes stored fill the storage: the save is rejected, not thrown, in backtesting
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1, StorageLimit = 3 }, AlgorithmMode.Backtesting);
+
+            Assert.IsFalse(store.Save("model.tar.gz", "new"));
+
+            Assert.IsTrue(store.ContainsKey("model.tar.gz"));
+            Assert.AreEqual("old", store.Read("model.tar.gz"));
+            Assert.IsFalse(store.ContainsKey("model_tar.gz"));
+
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(File.Exists(filePath));
         }
 
         [Test]
