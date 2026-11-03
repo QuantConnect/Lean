@@ -468,9 +468,13 @@ namespace QuantConnect.Storage
                     issues.Add($"the extension '{extension}' may only contain letters and numbers");
                 }
             }
-            if (name.Length == 0 || name[0] == '.')
+            if (name.Length == 0)
             {
                 issues.Add("it has no name before the '.'");
+            }
+            else if (key.StartsWith("..", StringComparison.Ordinal))
+            {
+                issues.Add("it starts with more than one '.'");
             }
 
             if (key.Count(c => c == '/') > 100 || key.Count(c => c == '\\') > 100)

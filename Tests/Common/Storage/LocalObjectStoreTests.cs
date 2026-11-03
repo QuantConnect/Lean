@@ -596,6 +596,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("résumé.pdf", "r_sum_.pdf")]
         [TestCase("a..", "a__")]
         [TestCase("100%.json", "100_.json")]
+        [TestCase("..model.pkl", "__model.pkl")]
         public void UnsupportedKeysAreSanitizedOnSaveAndFoundByTheKeyTheyWereSavedWith(string key, string sanitizedKey)
         {
             Assert.IsTrue(_store.Save(key, "abc"));
@@ -646,6 +647,7 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("folder.v1/file", "the extension 'v1/file' may only contain letters and numbers")]
         [TestCase("trade log: AI.v2.csv", "unsupported character ':'; it has 2 '.' but at most one '.extension' is allowed")]
         [TestCase(".", "it has no name before the '.'")]
+        [TestCase("..model.pkl", "it starts with more than one '.'")]
         public void UnsupportedKeyWarningStatesTheIssue(string key, string expectedIssue)
         {
             var warnings = new List<string>();
