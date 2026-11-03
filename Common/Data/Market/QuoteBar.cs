@@ -36,14 +36,14 @@ namespace QuantConnect.Data.Market
         private const decimal _scaleFactor = 1 / 10000m;
 
         /// <summary>
-        /// Average bid size
+        /// Last bid size
         /// </summary>
         [ProtoMember(201)]
         [PandasColumn("bidsize")]
         public decimal LastBidSize { get; set; }
 
         /// <summary>
-        /// Average ask size
+        /// Last ask size
         /// </summary>
         [ProtoMember(202)]
         [PandasColumn("asksize")]
@@ -238,9 +238,9 @@ namespace QuantConnect.Data.Market
         /// <param name="time">DateTime Timestamp of the bar</param>
         /// <param name="symbol">Market MarketType Symbol</param>
         /// <param name="bid">Bid OLHC bar</param>
-        /// <param name="lastBidSize">Average bid size over period</param>
+        /// <param name="lastBidSize">Last bid size of the period</param>
         /// <param name="ask">Ask OLHC bar</param>
-        /// <param name="lastAskSize">Average ask size over period</param>
+        /// <param name="lastAskSize">Last ask size of the period</param>
         /// <param name="period">The period of this bar, specify null for default of 1 minute</param>
         public QuoteBar(DateTime time, Symbol symbol, IBar bid, decimal lastBidSize, IBar ask, decimal lastAskSize, TimeSpan? period = null)
         {
