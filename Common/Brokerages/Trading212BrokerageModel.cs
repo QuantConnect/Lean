@@ -36,7 +36,7 @@ namespace QuantConnect.Brokerages
     /// before the brokerage model sees it. <see cref="OrderType.MarketOnClose"/> is not accepted,
     /// because Trading 212 has no order that fills at the close. The leveraged CFD product is a
     /// separate account type and is out of scope for this model.
-    /// Sale proceeds settle immediately for equities, see <see cref="GetSettlementModel"/>.
+    /// Equity sale proceeds settle immediately in the account currency, see <see cref="GetSettlementModel"/>.
     /// The long-only rule is evaluated against the security's holdings when the order is submitted,
     /// matching the other LEAN brokerage models, so it does not account for other pending unfilled orders.
     /// The broker rejects an over-sell with <c>SellingEquityNotOwned</c>, so a same-slice duplicate is
@@ -112,15 +112,21 @@ namespace QuantConnect.Brokerages
         /// Gets a new settlement model for the security
         /// </summary>
         /// <remarks>
-        /// Trading 212's Invest Terms clause 8.3 allow sale proceeds to be used before the settlement date
-        /// for the purpose of buying more shares; only withdrawals have to wait for settlement
-        /// (https://www.trading212.com/legal-documentation/uk/invest/Invest-Terms_EN.pdf). Lean's
-        /// settlement model controls buying power, not withdrawals, so equity proceeds settle immediately.
+        /// Trading 212 converts every trade to the account currency, so cash settles in the account
+        /// currency instead of the instrument's quote currency. A GBP account trading a USD equity
+        /// therefore does not accrue a USD balance.
+        /// The settlement is immediate: Trading 212's Invest Terms clause 8.3 allow sale proceeds to be
+        /// used before the settlement date for the purpose of buying more shares; only withdrawals have
+        /// to wait for settlement (https://www.trading212.com/legal-documentation/uk/invest/Invest-Terms_EN.pdf).
+        /// Lean's settlement model controls buying power, not withdrawals.
         /// This is returned for every account type because <see cref="BrokerageModel.Create"/> passes
         /// <see cref="QuantConnect.AccountType.Margin"/> when the model is selected with
         /// <c>SetBrokerageModel(BrokerageName.Trading212)</c> while the default constructor uses
         /// <see cref="QuantConnect.AccountType.Cash"/>: inheriting the account type based settlement would
         /// make settlement depend on how the model was selected.
+        /// Only equities are covered; other security types fall back to the base model, because
+        /// <see cref="SecurityPortfolioModel.ProcessFill"/> also applies a base-currency leg for
+        /// forex and crypto fills, which this model must not convert.
         /// </remarks>
         /// <param name="security">The security to get a settlement model for</param>
         /// <returns>The settlement model for this brokerage</returns>
@@ -128,7 +134,7 @@ namespace QuantConnect.Brokerages
         {
             if (security.Type == SecurityType.Equity)
             {
-                return new ImmediateSettlementModel();
+                return new AccountCurrencyImmediateSettlementModel();
             }
 
             return base.GetSettlementModel(security);

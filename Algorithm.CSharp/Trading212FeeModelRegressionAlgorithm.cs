@@ -33,8 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
         private int _day;
         private OrderTicket _buyTicket;
         private OrderTicket _sellTicket;
-        private decimal _buyValue;
-        private decimal _sellValue;
         private decimal _feesInAccountCurrency;
         private int _fills;
 
@@ -94,11 +92,6 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 expected += 0.0000206m * tradeValueInQuoteCurrency
                     + Math.Min(0.000195m * orderEvent.AbsoluteFillQuantity, 9.79m);
-                _sellValue = tradeValueInQuoteCurrency;
-            }
-            else
-            {
-                _buyValue = tradeValueInQuoteCurrency;
             }
             expected *= conversionRate;
 
@@ -114,24 +107,8 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Expected two fills, but there were {_fills}.");
             }
 
-            // The fees are the only GBP cash movements: the trade cash is still booked in USD by the
-            // settlement model from the brokerage model PR.
-            var expectedGbpCash = 100000 - _feesInAccountCurrency;
-            var actualGbpCash = Portfolio.CashBook[Currencies.GBP].Amount;
-            if (Math.Abs(actualGbpCash - expectedGbpCash) > 0.000001m)
-            {
-                throw new RegressionTestException(
-                    $"Expected {expectedGbpCash} GBP after {_feesInAccountCurrency} of fees, but the cash book has {actualGbpCash} GBP.");
-            }
-
-            // The buy cost and the sale proceeds are in USD, so the USD balance nets out.
-            var usdCash = Portfolio.CashBook[Currencies.USD].Amount;
-            if (Math.Abs(usdCash - (_sellValue - _buyValue)) > 0.000001m)
-            {
-                throw new RegressionTestException(
-                    $"Expected {_sellValue - _buyValue} USD from the two fills, but the cash book has {usdCash} USD.");
-            }
-
+            // Cash placement is covered by Trading212SettlementModelRegressionAlgorithm; this
+            // algorithm pins the fees and reports the resulting cash book.
             Log($"Fees in GBP: {_feesInAccountCurrency}; cash: {Portfolio.CashBook}");
         }
 
