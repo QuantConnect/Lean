@@ -231,11 +231,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void DefaultAccountTypeUsesImmediateEquitySettlement()
+        public void DefaultAccountTypeUsesAccountCurrencyImmediateEquitySettlement()
         {
             var security = GetSecurityForType(SecurityType.Equity);
 
-            Assert.That(_brokerageModel.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
+            Assert.That(_brokerageModel.GetSettlementModel(security), Is.InstanceOf<AccountCurrencyImmediateSettlementModel>());
         }
 
         // Trading 212's Invest Terms clause 8.3 allow sale proceeds to be used before the settlement date to
@@ -243,21 +243,35 @@ namespace QuantConnect.Tests.Common.Brokerages
         // with, including the margin account that SetBrokerageModel(BrokerageName.Trading212) selects.
         [TestCase(AccountType.Cash)]
         [TestCase(AccountType.Margin)]
-        public void GetSettlementModelReturnsImmediateSettlementForEquity(AccountType accountType)
+        public void GetSettlementModelReturnsAccountCurrencyImmediateSettlementForEquity(AccountType accountType)
         {
             var model = new Trading212BrokerageModel(accountType);
             var security = GetSecurityForType(SecurityType.Equity);
 
-            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
+            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<AccountCurrencyImmediateSettlementModel>());
         }
 
         [Test]
-        public void CreateWithMarginAccountTypeUsesImmediateEquitySettlement()
+        public void CreateWithMarginAccountTypeUsesAccountCurrencyImmediateEquitySettlement()
         {
             var model = BrokerageModel.Create(new OrderProvider(), BrokerageName.Trading212, AccountType.Margin);
             var security = GetSecurityForType(SecurityType.Equity);
 
-            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<ImmediateSettlementModel>());
+            Assert.That(model.GetSettlementModel(security), Is.InstanceOf<AccountCurrencyImmediateSettlementModel>());
+        }
+
+        // Non-equity fills also carry a base-currency leg in SecurityPortfolioModel.ProcessFill, so they
+        // must keep the base settlement model instead of converting that leg to the account currency.
+        [TestCase(SecurityType.Forex)]
+        [TestCase(SecurityType.Crypto)]
+        public void GetSettlementModelFallsBackToTheBaseModelForNonEquities(SecurityType securityType)
+        {
+            var security = GetSecurityForType(securityType);
+
+            var settlementModel = _brokerageModel.GetSettlementModel(security);
+
+            Assert.That(settlementModel, Is.InstanceOf<ImmediateSettlementModel>());
+            Assert.That(settlementModel, Is.Not.InstanceOf<AccountCurrencyImmediateSettlementModel>());
         }
 
         [Test]
