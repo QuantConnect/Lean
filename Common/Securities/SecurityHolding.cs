@@ -503,9 +503,20 @@ namespace QuantConnect.Securities
                 price = _security.Price;
             }
 
-            var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
-            var potentialExitValue = GetQuantityValue(quantityToUse, exitPrice ?? price).InAccountCurrency;
-            return potentialExitValue - entryValue - feesInAccountCurrency;
+            var profit = GetQuantityProfit(quantityToUse, entryPrice ?? AveragePrice, exitPrice ?? price);
+            return profit.InAccountCurrency - feesInAccountCurrency;
+        }
+
+        /// <summary>
+        /// Computes the profit of holding <paramref name="quantity"/> of this security between
+        /// <paramref name="entryPrice"/> and <paramref name="exitPrice"/>. The default is the
+        /// exit value minus the entry value; inverse (coin-margined) futures override this.
+        /// </summary>
+        public virtual ConvertibleCashAmount GetQuantityProfit(decimal quantity, decimal entryPrice, decimal exitPrice)
+        {
+            var entryValue = GetQuantityValue(quantity, entryPrice);
+            var exitValue = GetQuantityValue(quantity, exitPrice);
+            return new ConvertibleCashAmount(exitValue.Amount - entryValue.Amount, exitValue.Cash);
         }
 
         /// <summary>

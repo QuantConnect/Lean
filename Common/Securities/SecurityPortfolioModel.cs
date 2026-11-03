@@ -183,10 +183,7 @@ namespace QuantConnect.Securities
             // cost = quantity closed * average holdings price        SELLS are deemed positive cash flow
             var absoluteQuantityClosed = Math.Min(fill.AbsoluteFillQuantity, absoluteHoldingsQuantity);
             var quantityClosed = Math.Sign(-fill.FillQuantity) * absoluteQuantityClosed;
-            var closedCost = security.Holdings.GetQuantityValue(quantityClosed, security.Holdings.AveragePrice);
-            var closedSaleValueInQuoteCurrency = security.Holdings.GetQuantityValue(quantityClosed, fill.FillPrice);
-
-            var lastTradeProfit = new ConvertibleCashAmount(closedSaleValueInQuoteCurrency.Amount - closedCost.Amount, closedSaleValueInQuoteCurrency.Cash);
+            var lastTradeProfit = security.Holdings.GetQuantityProfit(quantityClosed, security.Holdings.AveragePrice, fill.FillPrice);
 
             // Reflect account cash adjustment for futures/CFD position
             if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd || security.Type == SecurityType.CryptoFuture)

@@ -71,5 +71,29 @@ namespace QuantConnect.Securities.CryptoFuture
 
             return new ConvertibleCashAmount(notionalPositionValue, cash);
         }
+
+        /// <summary>
+        /// Computes the profit of holding <paramref name="quantity"/> of this crypto future between
+        /// <paramref name="entryPrice"/> and <paramref name="exitPrice"/>. For coin-margined (inverse)
+        /// futures the value falls as the price rises, so the profit sign is reversed relative to the
+        /// default exit-minus-entry calculation (dYdX uses the linear convention).
+        /// </summary>
+        public override ConvertibleCashAmount GetQuantityProfit(decimal quantity, decimal entryPrice, decimal exitPrice)
+        {
+            if (Symbol.ID.Market == Market.DYDX)
+            {
+                return base.GetQuantityProfit(quantity, entryPrice, exitPrice);
+            }
+
+            var cryptoFuture = (CryptoFuture)Security;
+            if (!cryptoFuture.IsCryptoCoinFuture())
+            {
+                return base.GetQuantityProfit(quantity, entryPrice, exitPrice);
+            }
+
+            var entryValue = GetQuantityValue(quantity, entryPrice);
+            var exitValue = GetQuantityValue(quantity, exitPrice);
+            return new ConvertibleCashAmount(entryValue.Amount - exitValue.Amount, exitValue.Cash);
+        }
     }
 }
