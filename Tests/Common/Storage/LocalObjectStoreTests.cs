@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Algorithm;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Storage;
@@ -36,7 +37,8 @@ namespace QuantConnect.Tests.Common.Storage
         private static readonly string TestStorageRoot = $"{Directory.GetCurrentDirectory()}/{nameof(LocalObjectStoreTests)}";
         private static readonly string StorageRootConfigurationValue = LocalObjectStore.DefaultObjectStore;
 
-        private ObjectStore _store;
+        // the Python store so the Python tests share it, the C# tests only reach the base members
+        private PythonObjectStore _store;
         private ILogHandler _logHandler;
 
         [OneTimeSetUp]
@@ -44,7 +46,7 @@ namespace QuantConnect.Tests.Common.Storage
         {
             LocalObjectStore.DefaultObjectStore = TestStorageRoot;
 #pragma warning disable CA2000
-            _store = new ObjectStore(new TestLocalObjectStore());
+            _store = new PythonObjectStore(new TestLocalObjectStore());
 #pragma warning restore CA2000
             _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 }, AlgorithmMode.Backtesting);
 
@@ -231,9 +233,9 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase("../prefix/")]
-        [TestCase("..\\prefix/")]
-        public void InvalidCustomPathsStore(string path)
+        [TestCase("../prefix/", "__/prefix/")]
+        [TestCase("..\\prefix/", "__/prefix/")]
+        public void InvalidCustomPathsStore(string path, string sanitizedPath)
         {
 #pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
@@ -242,7 +244,12 @@ namespace QuantConnect.Tests.Common.Storage
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
-                Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
+                // '..' cannot leave the storage root: it is sanitized away
+                Assert.IsTrue(store.SaveString($"{path}ILove", "Pizza"));
+                Assert.AreEqual(new[] { $"{sanitizedPath}ILove" }, store.Keys);
+                Assert.That(Path.GetFullPath(store.GetFilePath($"{path}ILove")), Does.StartWith(Path.GetFullPath(TestStorageRoot)));
+
+                store.Delete($"{path}ILove");
             }
         }
 
@@ -580,41 +587,54 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase("my_key", true)]
-        [TestCase("./my_key/nested\\file.csv", true)]
-        [TestCase("file with spaces #1-$=.txt", true)]
-        [TestCase("trade_log_ai_hardware_&_cloud.csv", false)]
-        [TestCase("file.tar.gz", false)]
-        [TestCase("file.name_v2", false)]
-        [TestCase("**abc**", false)]
-        [TestCase("", false)]
-        [TestCase(null, false)]
-        public void ValidatesKeys(string key, bool isSupported)
+        [TestCase("my_key/file.csv", "my_key/file.csv")]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", "trade_log_ai_hardware___cloud.csv")]
+        [TestCase("trade log: AI & Cloud.csv", "trade log_ AI _ Cloud.csv")]
+        [TestCase("file.tar.gz", "file_tar.gz")]
+        [TestCase("résumé.pdf", "r_sum_.pdf")]
+        [TestCase("a..", "a__")]
+        [TestCase("100%.json", "100_.json")]
+        public void UnsupportedKeysAreSanitizedOnEveryReadAndSave(string key, string sanitizedKey)
         {
-            Assert.AreEqual(isSupported, ObjectStore.IsSupportedKey(key));
-            if (isSupported)
-            {
-                Assert.DoesNotThrow(() => ObjectStore.ValidateKey(key));
-                Assert.IsNull(ObjectStore.GetKeyIssues(key));
-            }
-            else
-            {
-                var error = Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
-                var issues = ObjectStore.GetKeyIssues(key);
-                Assert.IsNotNull(issues);
-                Assert.IsTrue(error.Message.EndsWith(issues), error.Message);
-            }
+            Assert.IsTrue(_store.Save(key, "abc"));
+
+            Assert.IsTrue(_store.Keys.Contains(sanitizedKey), string.Join(", ", _store.Keys));
+            Assert.AreEqual(key == sanitizedKey, _store.Keys.Contains(key));
+            Assert.IsTrue(_store.ContainsKey(key));
+            Assert.IsTrue(_store.ContainsKey(sanitizedKey));
+            Assert.AreEqual("abc", _store.Read(key));
+            Assert.AreEqual("abc", _store.Read(sanitizedKey));
+
+            Assert.IsTrue(_store.Delete(key));
+            Assert.IsFalse(_store.ContainsKey(sanitizedKey));
         }
 
         [Test]
-        public void UnsupportedKeyErrorStatesTheKeyRules()
+        public void UnsupportedKeysAreWarnedAboutOnceStatingTheIssueAndTheKeyUsed()
         {
-            var error = Assert.Throws<ArgumentException>(
-                () => _store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
-            Assert.IsTrue(error.Message.Contains("path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'."), error.Message);
-            Assert.IsTrue(error.Message.Contains("keys may only contain english letters, numbers, spaces and the characters"), error.Message);
-            Assert.IsTrue(error.Message.Contains("SanitizeKey"), error.Message);
+            Assert.IsTrue(store.Save("trade log: AI & Cloud.csv", "abc"));
+            Assert.IsTrue(store.ContainsKey("trade log: AI & Cloud.csv"));
+            Assert.AreEqual("abc", store.Read("trade log: AI & Cloud.csv"));
+            Assert.IsTrue(store.Save("trade log: AI & Cloud.csv", "abcd"));
+            Assert.IsTrue(store.Save("supported.csv", "abc"));
+
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'. " +
+                "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
+                "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'. " +
+                "Using 'trade log_ AI _ Cloud.csv' instead, now and on every other read or save of this key. " +
+                "Any other unsupported key is sanitized the same way, without further warnings", warnings[0]);
+
+            // the next unsupported key is sanitized silently
+            Assert.IsFalse(store.ContainsKey("trade log: AI.v2.csv"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+
+            store.Delete("trade log: AI & Cloud.csv");
+            store.Delete("supported.csv");
         }
 
         [TestCase("trade log: AI & Cloud.csv", "unsupported characters ':', '&'")]
@@ -624,56 +644,90 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("folder.v1/file", "the extension 'v1/file' may only contain letters and numbers")]
         [TestCase("trade log: AI.v2.csv", "unsupported character ':'; it has 2 '.' but at most one '.extension' is allowed")]
         [TestCase(".", "it has no name before the '.'")]
-        [TestCase("", "the key is empty")]
-        [TestCase(null, "the key is empty")]
-        public void UnsupportedKeyErrorStatesTheIssue(string key, string expectedIssue)
+        public void UnsupportedKeyWarningStatesTheIssue(string key, string expectedIssue)
         {
-            var error = Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
-            Assert.IsTrue(error.Message.Contains($"'{key}': {expectedIssue}."), error.Message);
+            Assert.IsFalse(store.ContainsKey(key));
+
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.StartWith($"ObjectStore: key '{key}' is not supported: {expectedIssue}."));
         }
 
-        [TestCase("my_key/file.csv", "my_key/file.csv")]
-        [TestCase("trade_log_ai_hardware_&_cloud.csv", "trade_log_ai_hardware___cloud.csv")]
-        [TestCase("trade log: AI & Cloud.csv", "trade log_ AI _ Cloud.csv")]
-        [TestCase("file.tar.gz", "file_tar.gz")]
-        [TestCase("résumé.pdf", "r_sum_.pdf")]
-        [TestCase("a..", "a__")]
-        [TestCase("100%.json", "100_.json")]
-        public void SanitizeKeyReturnsAStorableKey(string key, string expectedSanitizedKey)
-        {
-            var sanitized = ObjectStore.SanitizeKey(key);
-
-            Assert.AreEqual(expectedSanitizedKey, sanitized);
-            Assert.IsTrue(ObjectStore.IsSupportedKey(sanitized));
-            Assert.IsTrue(_store.SaveBytes(sanitized, new byte[] { 1 }));
-
-            _store.Delete(sanitized);
-        }
-
-        [TestCase(null)]
         [TestCase("")]
-        public void SanitizeKeyThrowsOnNullOrEmptyKey(string key)
+        [TestCase(null)]
+        public void EmptyAndNullKeysAreRejected(string key)
         {
-            Assert.Throws<ArgumentException>(() => ObjectStore.SanitizeKey(key));
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+            var error = Assert.Catch<ArgumentException>(() => store.Save(key, "abc"));
+
+            Assert.IsEmpty(warnings);
+            if (key != null)
+            {
+                Assert.That(error.Message, Does.Contain("path is not supported: '': the key is empty."));
+            }
         }
 
         [Test]
-        public void SanitizeKeyIsLossyAndDistinctNamesCanCollide()
+        public void SanitizationIsLossyAndDistinctKeysCanCollide()
         {
-            var first = ObjectStore.SanitizeKey("trade_log_ai&cloud.csv");
-            var second = ObjectStore.SanitizeKey("trade_log_ai:cloud.csv");
+            // both sanitize to 'trade_log_ai_cloud.csv': the second save silently overwrites the first
+            Assert.IsTrue(_store.Save("trade_log_ai&cloud.csv", "first"));
+            Assert.IsTrue(_store.Save("trade_log_ai:cloud.csv", "second"));
 
-            Assert.AreEqual("trade_log_ai_cloud.csv", first);
-            Assert.AreEqual(first, second);
-            Assert.AreEqual(first, ObjectStore.SanitizeKey("trade_log_ai_cloud.csv"));
+            Assert.AreEqual("second", _store.Read("trade_log_ai&cloud.csv"));
+            Assert.AreEqual("second", _store.Read("trade_log_ai_cloud.csv"));
+            Assert.AreEqual(1, _store.Keys.Count(key => key.StartsWith("trade_log_ai")));
 
-            // the second save silently overwrites the first: collision checks are up to the caller
-            Assert.IsTrue(_store.Save(first, "first"));
-            Assert.IsTrue(_store.Save(second, "second"));
-            Assert.AreEqual("second", _store.Read(first));
+            _store.Delete("trade_log_ai_cloud.csv");
+        }
 
-            _store.Delete(first);
+        [Test]
+        public void LocalObjectStoreRejectsUnsupportedKeysStatingTheIssue()
+        {
+            // the implementation is the last line of defense, only the wrapper sanitizes
+            using var store = new TestLocalObjectStore();
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+
+            var error = Assert.Throws<ArgumentException>(() => store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
+
+            Assert.AreEqual("ObjectStore: path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'. " +
+                "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
+                "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'", error.Message);
+        }
+
+        [Test]
+        public void AlgorithmWrapsTheStoreAndWarnsThroughDebug()
+        {
+            using var localStore = new TestLocalObjectStore();
+            localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            var algorithm = new QCAlgorithm();
+
+            algorithm.SetObjectStore(localStore);
+
+            Assert.AreEqual(typeof(ObjectStore), algorithm.ObjectStore.GetType());
+            Assert.IsTrue(algorithm.ObjectStore.Save("trade_log_ai_hardware_&_cloud.csv", "abc"));
+            Assert.IsTrue(algorithm.DebugMessages.TryDequeue(out var warning));
+            Assert.That(warning, Does.Contain("ObjectStore: key 'trade_log_ai_hardware_&_cloud.csv' is not supported: unsupported character '&'."));
+            Assert.That(warning, Does.Contain("Using 'trade_log_ai_hardware___cloud.csv' instead"));
+
+            algorithm.ObjectStore.Delete("trade_log_ai_hardware_&_cloud.csv");
+        }
+
+        [Test]
+        public void AlgorithmKeepsAnAlreadyWrappedStore()
+        {
+            using var pythonStore = new PythonObjectStore(new TestLocalObjectStore());
+            var algorithm = new QCAlgorithm();
+
+            algorithm.SetObjectStore(pythonStore);
+
+            Assert.AreSame(pythonStore, algorithm.ObjectStore);
         }
 
         [Test]
@@ -688,20 +742,13 @@ namespace QuantConnect.Tests.Common.Storage
 
         [TestCase("my_key", "./LocalObjectStoreTests/my_key")]
         [TestCase("test/123", "./LocalObjectStoreTests/test/123")]
-        [TestCase("**abc**", null)]
-        [TestCase("<random>", null)]
-        [TestCase("|", null)]
+        [TestCase("**abc**", "./LocalObjectStoreTests/__abc__")]
+        [TestCase("<random>", "./LocalObjectStoreTests/_random_")]
+        [TestCase("|", "./LocalObjectStoreTests/_")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
-            if (expectedRelativePath == null)
-            {
-                Assert.Throws<ArgumentException>(() => _store.GetFilePath(key));
-            }
-            else
-            {
-                var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
-                Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
-            }
+            var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
+            Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
         }
 
         [Test]
@@ -1478,11 +1525,15 @@ def test(object_store):
         }
 
         [Test]
-        public void PythonSanitizeKeyIsReachableFromTheInstance()
+        public void PythonHelpersSanitizeUnsupportedKeys()
         {
             RunPythonTest(@"
 def test(object_store):
-    assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
+    object_store.save_json('ergonomics/trade log: AI & Cloud.json', {'a': 1})
+    assert 'ergonomics/trade log_ AI _ Cloud.json' in list(object_store.keys), list(object_store.keys)
+    assert object_store.read_json('ergonomics/trade log: AI & Cloud.json') == {'a': 1}
+    object_store.delete('ergonomics/trade log: AI & Cloud.json')
+    assert not object_store.contains_key('ergonomics/trade log_ AI _ Cloud.json')
 ");
         }
 

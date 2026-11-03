@@ -20,9 +20,8 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting the ObjectStore ergonomics: unsupported keys are rejected with the
-    /// key rules stated in the error, <see cref="Storage.ObjectStore.SanitizeKey"/> converts arbitrary names
-    /// into supported keys, <see cref="Storage.ObjectStore.SaveText"/> and <see cref="Storage.ObjectStore.ReadText"/>
+    /// Regression algorithm asserting the ObjectStore ergonomics: an unsupported key is sanitized and used on
+    /// every save and read, <see cref="Storage.ObjectStore.SaveText"/> and <see cref="Storage.ObjectStore.ReadText"/>
     /// are aliases of Save and Read, and reading a missing key lists the available keys in the error. The Python
     /// version of this algorithm additionally covers the tolerant save_json/read_json and save_dataframe/read_dataframe helpers
     /// </summary>
@@ -46,46 +45,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfAlgorithm()
         {
-            // an unsupported key, e.g. built from a user-facing name, is rejected stating the rules and the fix
+            // an unsupported key, e.g. built from a user-facing name, is sanitized and used on every save and read
             const string invalidKey = "trade_log_ai_hardware_&_cloud.csv";
-            var errorMessage = string.Empty;
-            try
+            const string sanitizedKey = "trade_log_ai_hardware___cloud.csv";
+            if (!ObjectStore.Save(invalidKey, "a,b\n1,2"))
             {
-                ObjectStore.Save(invalidKey, "a,b\n1,2");
+                throw new RegressionTestException("Expected the unsupported key to be sanitized and saved");
             }
-            catch (ArgumentException exception)
+            if (!ObjectStore.Keys.Contains(sanitizedKey) || ObjectStore.Keys.Contains(invalidKey))
             {
-                errorMessage = exception.Message;
+                throw new RegressionTestException($"Expected the object to be stored under '{sanitizedKey}', keys: {string.Join(", ", ObjectStore.Keys)}");
             }
-            if (!errorMessage.Contains("unsupported character '&'") || !errorMessage.Contains("keys may only contain") ||
-                !errorMessage.Contains("SanitizeKey"))
+            if (!ObjectStore.ContainsKey(invalidKey) || ObjectStore.Read(invalidKey) != "a,b\n1,2" || ObjectStore.Read(sanitizedKey) != "a,b\n1,2")
             {
-                throw new RegressionTestException($"Expected the key issue and rules in the unsupported key error, got: '{errorMessage}'");
-            }
-            // ValidateKey states the same error eagerly, when the key is built
-            errorMessage = string.Empty;
-            try
-            {
-                Storage.ObjectStore.ValidateKey(invalidKey);
-            }
-            catch (ArgumentException exception)
-            {
-                errorMessage = exception.Message;
-            }
-            if (!errorMessage.Contains("unsupported character '&'"))
-            {
-                throw new RegressionTestException($"Expected ValidateKey to reject the key stating the issue, got: '{errorMessage}'");
-            }
-
-            // SanitizeKey converts the arbitrary name into a supported key
-            var sanitized = Storage.ObjectStore.SanitizeKey(invalidKey);
-            if (sanitized != "trade_log_ai_hardware___cloud.csv")
-            {
-                throw new RegressionTestException($"Unexpected sanitized key: '{sanitized}'");
-            }
-            if (!Storage.ObjectStore.IsSupportedKey(sanitized) || !ObjectStore.Save(sanitized, "a,b\n1,2"))
-            {
-                throw new RegressionTestException("Expected the sanitized key to be storable");
+                throw new RegressionTestException("Expected the object to be read through both the original and the sanitized key");
             }
 
             // SaveText and ReadText are aliases of Save and Read
@@ -97,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // reading a missing key lists the available keys in the error
-            errorMessage = string.Empty;
+            var errorMessage = string.Empty;
             try
             {
                 ObjectStore.ReadBytes("ergonomics_missing.json");
@@ -106,13 +79,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 errorMessage = exception.Message;
             }
-            if (!errorMessage.Contains("Keys: [") || !errorMessage.Contains($"'{sanitized}'"))
+            if (!errorMessage.Contains("Keys: [") || !errorMessage.Contains($"'{sanitizedKey}'"))
             {
                 throw new RegressionTestException($"Expected the available keys in the missing key error, got: '{errorMessage}'");
             }
 
-            ObjectStore.Delete(sanitized);
+            ObjectStore.Delete(invalidKey);
             ObjectStore.Delete("ergonomics_report.txt");
+            if (ObjectStore.ContainsKey(sanitizedKey))
+            {
+                throw new RegressionTestException("Expected the delete through the original key to remove the sanitized one");
+            }
         }
 
         /// <summary>

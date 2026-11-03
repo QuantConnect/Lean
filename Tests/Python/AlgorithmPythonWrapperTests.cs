@@ -21,6 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Orders;
+using QuantConnect.Lean.Engine.Storage;
+using QuantConnect.Packets;
+using QuantConnect.Storage;
 
 namespace QuantConnect.Tests.Python
 {
@@ -146,6 +149,30 @@ namespace QuantConnect.Tests.Python
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay(Symbols.SPY));
                 Assert.NotNull(algorithm.RunTimeError);
+            }
+        }
+
+        [Test]
+        public void PythonAlgorithmGetsAPythonObjectStoreWarningThroughDebug()
+        {
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm("def on_end_of_algorithm(self): self.object_store.save_json('trade log: AI & Cloud.json', {'a': 1})");
+                using var localStore = new LocalObjectStore();
+                localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+                algorithm.SetObjectStore(localStore);
+
+                Assert.IsInstanceOf<PythonObjectStore>(algorithm.ObjectStore);
+                // the Python helpers are reachable through self.object_store and the key warning lands in the algorithm's log
+                algorithm.OnEndOfAlgorithm();
+                Assert.Null(algorithm.RunTimeError);
+                Assert.IsTrue(localStore.Keys.Contains("trade log_ AI _ Cloud.json"), string.Join(", ", localStore.Keys));
+                Assert.IsTrue(algorithm.BaseAlgorithm.DebugMessages.TryDequeue(out var warning));
+                Assert.That(warning, Does.Contain("ObjectStore: key 'trade log: AI & Cloud.json' is not supported: unsupported characters ':', '&'."));
+                Assert.That(warning, Does.Contain("Using 'trade log_ AI _ Cloud.json' instead"));
+
+                localStore.Delete("trade log_ AI _ Cloud.json");
             }
         }
 

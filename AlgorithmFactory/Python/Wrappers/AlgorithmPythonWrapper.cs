@@ -1231,7 +1231,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Sets the object store
         /// </summary>
         /// <param name="objectStore">The object store</param>
-        public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(objectStore);
+        public void SetObjectStore(IObjectStore objectStore) => _baseAlgorithm.SetObjectStore(new PythonObjectStore(objectStore, _baseAlgorithm.Debug));
 
         /// <summary>
         /// Determines if the Symbol is shortable at the brokerage
