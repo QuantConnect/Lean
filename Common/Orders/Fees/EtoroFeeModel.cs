@@ -40,7 +40,7 @@ namespace QuantConnect.Orders.Fees
         /// Gets the order fee for a given security and order.
         /// </summary>
         /// <param name="parameters">The parameters including the security and order details.</param>
-        /// <returns>A <see cref="OrderFee"/> in USD for the order.</returns>
+        /// <returns>A <see cref="OrderFee"/> in the quote currency of the security.</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
@@ -53,7 +53,7 @@ namespace QuantConnect.Orders.Fees
             }
 
             var tradeValue = security.Price * security.SymbolProperties.ContractMultiplier * order.AbsoluteQuantity;
-            return new OrderFee(new CashAmount(tradeValue * _cryptoFeeRate, Currencies.USD));
+            return new OrderFee(new CashAmount(tradeValue * _cryptoFeeRate, security.QuoteCurrency.Symbol));
         }
     }
 }

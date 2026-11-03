@@ -58,7 +58,21 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
         }
 
-        private static Security CreateSecurity(Symbol symbol, decimal price)
+        // The trade value of a pair is in its quote currency, so the fee is too.
+        [TestCase("BTCUSD", Currencies.USD)]
+        [TestCase("BTCEUR", Currencies.EUR)]
+        public void GetOrderFeeCryptoReturnsTheFeeInTheQuoteCurrency(string ticker, string quoteCurrency)
+        {
+            var security = CreateSecurity(Symbol.Create(ticker, SecurityType.Crypto, Market.Coinbase), 100m, quoteCurrency);
+            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
+
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.That(fee.Value.Amount, Is.EqualTo(1m));
+            Assert.That(fee.Value.Currency, Is.EqualTo(quoteCurrency));
+        }
+
+        private static Security CreateSecurity(Symbol symbol, decimal price, string quoteCurrency = Currencies.USD)
         {
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute,
                 TimeZones.Utc, TimeZones.Utc, false, true, false);
@@ -66,8 +80,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
+                new Cash(quoteCurrency, 0, 1m),
+                SymbolProperties.GetDefault(quoteCurrency),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
