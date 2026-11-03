@@ -34,9 +34,9 @@ namespace QuantConnect.Storage
     /// Helper class for easier access to <see cref="IObjectStore"/> methods. A key that does not follow the key
     /// format (english letters, numbers, spaces and the characters '/', '\', '_', '#', '-', '$' and '=', plus at
     /// most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv') is saved
-    /// under its sanitized version and found by either name, with a warning the first time it happens and whenever
-    /// an object already exists under the key or its sanitized name. An object already stored under an unsupported
-    /// name is read as is; a save to that name goes to the sanitized name, warning every time
+    /// under its sanitized version and found by either name, with a warning the first time it happens. A save whose
+    /// sanitized name already holds an object this store did not write from that key is rejected with a warning. An object
+    /// already stored under an unsupported name is read as is; a save to that name goes to the sanitized name, warning every time
     /// </summary>
     public class ObjectStore : IObjectStore
     {
@@ -48,7 +48,7 @@ namespace QuantConnect.Storage
         private readonly IObjectStore _store;
         private readonly Action<string> _warn;
         private int _warned;
-        // the unsupported keys this store saved and where they went: reads follow them, and overwriting them is an update
+        // the unsupported keys this store last wrote each sanitized name from: their saves are updates, and reads follow them
         private readonly ConcurrentDictionary<string, string> _savedKeys = new();
 
         /// <summary>
@@ -132,11 +132,11 @@ namespace QuantConnect.Storage
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
         {
-            var key = KeyToSave(path);
-            if (!_store.SaveBytes(key, contents))
+            if (!TryGetKeyToSave(path, out var key) || !_store.SaveBytes(key, contents))
             {
                 return false;
             }
+            ForgetSavesTo(key, exceptFrom: path);
             if (key != path)
             {
                 _savedKeys[path] = key;
@@ -151,7 +151,13 @@ namespace QuantConnect.Storage
         /// <returns>True if the delete operation was successful</returns>
         public bool Delete(string path)
         {
-            return _store.Delete(KeyToRead(path));
+            var key = KeyToRead(path);
+            if (!_store.Delete(key))
+            {
+                return false;
+            }
+            ForgetSavesTo(key);
+            return true;
         }
 
         /// <summary>
@@ -367,29 +373,46 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// The key a save goes to: the given one when it follows the key format, else its sanitized version.
-        /// Null and empty keys are left for the store to reject
+        /// The key a save goes to: the given one when it follows the key format, else its sanitized version, unless that
+        /// already holds an object this store did not last write from the given key. Null and empty keys are left for the store to reject
         /// </summary>
-        private string KeyToSave(string path)
+        private bool TryGetKeyToSave(string path, out string key)
         {
+            key = path;
             if (string.IsNullOrEmpty(path) || IsSupportedKey(path))
             {
-                return path;
+                return true;
             }
 
-            var key = SanitizeKey(path);
+            key = SanitizeKey(path);
             WarnOnce(path, key);
+            if (!_savedKeys.ContainsKey(path) && _store.ContainsKey(key))
+            {
+                // the rejection used to prevent this: silently replacing an object saved under another key
+                _warn($"ObjectStore: key '{path}' is not supported and its sanitized name '{key}' already holds another object:" +
+                    $" the save is rejected. Delete '{key}' or save to it directly to replace it");
+                return false;
+            }
             if (_store.ContainsKey(path))
             {
                 // the object under the name as given stays: reads of it from another store still return it
                 _warn($"ObjectStore: key '{path}' is not supported: the object stored under that name is left as is, this save goes to '{key}'");
             }
-            else if (!_savedKeys.ContainsKey(path) && _store.ContainsKey(key))
+            return true;
+        }
+
+        /// <summary>
+        /// Forgets the unsupported keys whose object under the given key is gone or replaced from another key
+        /// </summary>
+        private void ForgetSavesTo(string key, string exceptFrom = null)
+        {
+            foreach (var entry in _savedKeys)
             {
-                // the rejection used to prevent this: silently replacing an object saved under another key
-                _warn($"ObjectStore: key '{path}' is not supported and is saved as '{key}', overwriting the existing object '{key}'");
+                if (entry.Value == key && entry.Key != exceptFrom)
+                {
+                    _savedKeys.TryRemove(entry.Key, out _);
+                }
             }
-            return key;
         }
 
         /// <summary>
@@ -402,14 +425,9 @@ namespace QuantConnect.Storage
             {
                 return path;
             }
-            if (_savedKeys.TryGetValue(path, out var key))
+            if (_savedKeys.TryGetValue(path, out var key) && _store.ContainsKey(key))
             {
-                if (_store.ContainsKey(key))
-                {
-                    return key;
-                }
-                // what this store saved under the key is gone: the key resolves like a fresh store's again
-                _savedKeys.TryRemove(path, out _);
+                return key;
             }
             if (IsSupportedKey(path) || _store.ContainsKey(path))
             {
@@ -426,7 +444,7 @@ namespace QuantConnect.Storage
             if (Interlocked.Exchange(ref _warned, 1) == 0)
             {
                 _warn($"ObjectStore: key '{path}' is not supported: {GetKeyIssues(path)}. Using '{key}' instead. Any other unsupported" +
-                    " key is sanitized the same way, with a warning only when an object already exists under it or under its sanitized name");
+                    " key is sanitized the same way; a save is rejected, with a warning, when its sanitized name already holds another object");
             }
         }
 
