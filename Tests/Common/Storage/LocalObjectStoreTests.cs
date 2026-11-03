@@ -630,7 +630,7 @@ namespace QuantConnect.Tests.Common.Storage
                 "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
                 "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'. " +
                 "Using 'trade log_ AI _ Cloud.csv' instead. Any other unsupported key is sanitized the same way; " +
-                "a save is rejected, with a warning, when its sanitized name already holds another object", warnings[0]);
+                "a save throws when its sanitized name already holds an object not written from that key in this run", warnings[0]);
 
             // the next unsupported key is sanitized silently
             Assert.IsFalse(store.ContainsKey("trade log: AI.v2.csv"));
@@ -743,18 +743,17 @@ namespace QuantConnect.Tests.Common.Storage
                 Assert.AreEqual("old", store.Read("model.tar.gz"));
                 Assert.IsEmpty(warnings);
 
-                Assert.IsFalse(store.Save("model.tar.gz", "third"));
-
-                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                var exception = Assert.Throws<ArgumentException>(() => store.Save("model.tar.gz", "third"));
                 Assert.AreEqual("ObjectStore: key 'model.tar.gz' is not supported and its sanitized name 'model_tar.gz' already holds" +
-                    " another object: the save is rejected. Delete 'model_tar.gz' or save to it directly to replace it", warnings[1]);
+                    " another object. Delete 'model_tar.gz' or save to it directly to replace it", exception.Message);
+                Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
                 Assert.AreEqual("newer", store.Read("model_tar.gz"));
 
                 // once the sanitized name is free the save goes there, warning about the original every time
                 Assert.IsTrue(store.Delete("model_tar.gz"));
                 Assert.IsTrue(store.Save("model.tar.gz", "third"));
-                Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
-                Assert.That(warnings[2], Does.Contain("the object stored under that name is left as is, this save goes to 'model_tar.gz'"));
+                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                Assert.That(warnings[1], Does.Contain("the object stored under that name is left as is, this save goes to 'model_tar.gz'"));
                 Assert.AreEqual("third", store.Read("model.tar.gz"));
                 Assert.AreEqual("third", store.Read("model_tar.gz"));
 
@@ -826,7 +825,7 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void SavingAnUnsupportedKeyWhoseSanitizedNameHoldsAnotherObjectIsRejectedWithAWarningEveryTime()
+        public void SavingAnUnsupportedKeyWhoseSanitizedNameHoldsAnotherObjectThrowsEveryTime()
         {
             var warnings = new List<string>();
             using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
@@ -834,33 +833,58 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(store.Save("trade_log_ai_cloud.csv", "existing"));
             Assert.IsEmpty(warnings);
 
-            // sanitizes to the existing object's key: the general warning, then the rejection
-            Assert.IsFalse(store.Save("trade_log_ai&cloud.csv", "first"));
-            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
-            Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported: unsupported character '&'."));
+            // sanitizes to the existing object's key: the general warning, then the exception
+            var exception = Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai&cloud.csv", "first"));
             Assert.AreEqual("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported and its sanitized name 'trade_log_ai_cloud.csv' " +
-                "already holds another object: the save is rejected. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", warnings[1]);
+                "already holds another object. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", exception.Message);
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported: unsupported character '&'."));
             Assert.AreEqual("existing", store.Read("trade_log_ai_cloud.csv"));
 
-            // every such save is rejected with the warning, from this key or another one sanitizing to the same name
-            Assert.IsFalse(store.Save("trade_log_ai&cloud.csv", "first"));
-            Assert.IsFalse(store.Save("trade_log_ai:cloud.csv", "second"));
-            Assert.AreEqual(4, warnings.Count, string.Join("\n", warnings));
-            Assert.AreEqual(warnings[1], warnings[2]);
+            // every such save throws, from this key or another one sanitizing to the same name
+            Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai&cloud.csv", "first"));
+            exception = Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai:cloud.csv", "second"));
             Assert.AreEqual("ObjectStore: key 'trade_log_ai:cloud.csv' is not supported and its sanitized name 'trade_log_ai_cloud.csv' " +
-                "already holds another object: the save is rejected. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", warnings[3]);
+                "already holds another object. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", exception.Message);
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.AreEqual("existing", store.Read("trade_log_ai_cloud.csv"));
 
             // once the name is free the key is saved there and updated silently
             Assert.IsTrue(store.Delete("trade_log_ai_cloud.csv"));
             Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "first"));
             Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "second"));
-            Assert.AreEqual(4, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.AreEqual("second", store.Read("trade_log_ai_cloud.csv"));
             Assert.AreEqual(1, store.Keys.Count(key => key.StartsWith("trade_log_ai")));
 
             Assert.IsTrue(store.Delete("trade_log_ai&cloud.csv"));
             Assert.IsFalse(store.ContainsKey("trade_log_ai_cloud.csv"));
+        }
+
+        [Test]
+        public void ANewRunThrowsOnSavingAnUnsupportedKeyAPreviousRunSanitized()
+        {
+            // nothing records that a previous run wrote the sanitized object, so no later run replaces it through the unsupported key
+            using (var firstRun = new ObjectStore(new TestLocalObjectStore(), _ => { }))
+            {
+                firstRun.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.IsTrue(firstRun.Save("trade log: AI & Cloud.csv", "run1"));
+            }
+
+            using (var secondRun = new ObjectStore(new TestLocalObjectStore(), _ => { }))
+            {
+                secondRun.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                var exception = Assert.Throws<ArgumentException>(() => secondRun.Save("trade log: AI & Cloud.csv", "run2"));
+                Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported and its sanitized name 'trade log_ AI _ Cloud.csv'" +
+                    " already holds another object. Delete 'trade log_ AI _ Cloud.csv' or save to it directly to replace it", exception.Message);
+                Assert.AreEqual("run1", secondRun.Read("trade log: AI & Cloud.csv"));
+
+                // the exact sanitized key is a supported key: the user replaces the object through it
+                Assert.IsTrue(secondRun.Save("trade log_ AI _ Cloud.csv", "run2"));
+                Assert.AreEqual("run2", secondRun.Read("trade log: AI & Cloud.csv"));
+                Assert.Throws<ArgumentException>(() => secondRun.Save("trade log: AI & Cloud.csv", "run2 again"));
+                Assert.IsTrue(secondRun.Delete("trade log_ AI _ Cloud.csv"));
+            }
         }
 
         [Test]
@@ -873,26 +897,23 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(store.Save("p&q.csv", "A1"));
             Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
 
-            // another unsupported key sanitizing to the same name is rejected, and the first key keeps updating silently
-            Assert.IsFalse(store.Save("p:q.csv", "B1"));
-            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
-            Assert.That(warnings[1], Does.StartWith("ObjectStore: key 'p:q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
+            // another unsupported key sanitizing to the same name throws, and the first key keeps updating silently
+            var exception = Assert.Throws<ArgumentException>(() => store.Save("p:q.csv", "B1"));
+            Assert.That(exception.Message, Does.StartWith("ObjectStore: key 'p:q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
             Assert.AreEqual("A1", store.Read("p_q.csv"));
             Assert.IsTrue(store.Save("p&q.csv", "A2"));
-            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.AreEqual("A2", store.Read("p_q.csv"));
 
-            // a save through the valid name takes the object over: the unsupported key is now rejected
+            // a save through the valid name takes the object over: the unsupported key now throws
             Assert.IsTrue(store.Save("p_q.csv", "C1"));
-            Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
-            Assert.IsFalse(store.Save("p&q.csv", "A3"));
-            Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
-            Assert.That(warnings[2], Does.StartWith("ObjectStore: key 'p&q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
+            exception = Assert.Throws<ArgumentException>(() => store.Save("p&q.csv", "A3"));
+            Assert.That(exception.Message, Does.StartWith("ObjectStore: key 'p&q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
             Assert.AreEqual("C1", store.Read("p_q.csv"));
 
             Assert.IsTrue(store.Delete("p_q.csv"));
             Assert.IsTrue(store.Save("p&q.csv", "A3"));
-            Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.AreEqual("A3", store.Read("p&q.csv"));
             Assert.IsTrue(store.Delete("p&q.csv"));
             Assert.IsFalse(store.ContainsKey("p_q.csv"));

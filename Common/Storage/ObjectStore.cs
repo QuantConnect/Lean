@@ -35,8 +35,9 @@ namespace QuantConnect.Storage
     /// format (english letters, numbers, spaces and the characters '/', '\', '_', '#', '-', '$' and '=', plus at
     /// most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv') is saved
     /// under its sanitized version and found by either name, with a warning the first time it happens. A save whose
-    /// sanitized name already holds an object this store did not write from that key is rejected with a warning. An object
-    /// already stored under an unsupported name is read as is; a save to that name goes to the sanitized name, warning every time
+    /// sanitized name already holds an object this store did not write from that key throws, since nothing records who
+    /// wrote that object. An object already stored under an unsupported name is read as is; a save to that name goes
+    /// to the sanitized name, warning every time
     /// </summary>
     public class ObjectStore : IObjectStore
     {
@@ -132,7 +133,8 @@ namespace QuantConnect.Storage
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
         {
-            if (!TryGetKeyToSave(path, out var key) || !_store.SaveBytes(key, contents))
+            var key = KeyToSave(path);
+            if (!_store.SaveBytes(key, contents))
             {
                 return false;
             }
@@ -373,32 +375,30 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// The key a save goes to: the given one when it follows the key format, else its sanitized version, unless that
-        /// already holds an object this store did not last write from the given key. Null and empty keys are left for the store to reject
+        /// The key a save goes to: the given one when it follows the key format, else its sanitized version. Throws when
+        /// that already holds an object this store did not last write from the given key. Null and empty keys are left for the store to reject
         /// </summary>
-        private bool TryGetKeyToSave(string path, out string key)
+        private string KeyToSave(string path)
         {
-            key = path;
             if (string.IsNullOrEmpty(path) || IsSupportedKey(path))
             {
-                return true;
+                return path;
             }
 
-            key = SanitizeKey(path);
+            var key = SanitizeKey(path);
             WarnOnce(path, key);
             if (!_savedKeys.ContainsKey(path) && _store.ContainsKey(key))
             {
-                // the rejection used to prevent this: silently replacing an object saved under another key
-                _warn($"ObjectStore: key '{path}' is not supported and its sanitized name '{key}' already holds another object:" +
-                    $" the save is rejected. Delete '{key}' or save to it directly to replace it");
-                return false;
+                // nothing records who wrote that object, a previous run, another algorithm or an upload: it is never replaced through another key
+                throw new ArgumentException($"ObjectStore: key '{path}' is not supported and its sanitized name '{key}' already holds" +
+                    $" another object. Delete '{key}' or save to it directly to replace it");
             }
             if (_store.ContainsKey(path))
             {
                 // the object under the name as given stays: reads of it from another store still return it
                 _warn($"ObjectStore: key '{path}' is not supported: the object stored under that name is left as is, this save goes to '{key}'");
             }
-            return true;
+            return key;
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace QuantConnect.Storage
             if (Interlocked.Exchange(ref _warned, 1) == 0)
             {
                 _warn($"ObjectStore: key '{path}' is not supported: {GetKeyIssues(path)}. Using '{key}' instead. Any other unsupported" +
-                    " key is sanitized the same way; a save is rejected, with a warning, when its sanitized name already holds another object");
+                    " key is sanitized the same way; a save throws when its sanitized name already holds an object not written from that key in this run");
             }
         }
 
