@@ -1740,6 +1740,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void SyncOptionHoldings()
         {
+            if (_brokerage is Brokerage { OptionHoldingsSyncEnabled: false })
+            {
+                return;
+            }
+
             try
             {
                 var brokerageHoldings = default(Dictionary<Symbol, decimal>);

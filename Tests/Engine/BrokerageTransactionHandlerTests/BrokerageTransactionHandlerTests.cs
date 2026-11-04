@@ -2297,6 +2297,45 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(200));
         }
 
+        [TestCase(true, 1, 0, -600, Description = "Short Call -> ITM, not listed at the brokerage, the sync books the assignment")]
+        [TestCase(false, 0, -7, 100, Description = "Short Call -> ITM, not listed at the brokerage, the brokerage reports option position changes itself, nothing booked")]
+        public void ProcessSynchronousEventsSyncsTheOptionHoldingsOnlyWhenTheBrokerageEnablesIt(
+            bool optionHoldingsSyncEnabled,
+            int expectedTickets,
+            int expectedOptionPosition,
+            int expectedUnderlyingPosition
+            )
+        {
+            // Arrange: a short SPY call, ITM before its expiry, with 100 shares of the underlying, in live mode
+            var algorithm = new TestAlgorithm();
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2021, 9, 10));
+            var option = algorithm.AddOptionContract(optionSymbol);
+            algorithm.Portfolio[equity.Symbol].SetHoldings(455m, 100);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, -7);
+            equity.SetMarketPrice(new Tick { Value = 455m });
+            algorithm.SetLiveMode(true);
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm, optionHoldingsSyncEnabled);
+            // the brokerage does not list the contract, as a stale holdings read does after a reconnect
+            brokerage.AccountHoldings = new List<Holding> { new Holding { Symbol = equity.Symbol, Quantity = 100 } };
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 8 AM ET on 2021-09-09, inside the daily cash sync window
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
+
+            // Act
+            _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.Exit();
+
+            // Assert
+            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(expectedTickets));
+            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
+            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
+        }
+
         // Short Call --> OTM (expired worthless)
         [TestCase(-1, OptionRight.Call, 455, 100, 450, 1, 0, 100, "OTM")]
         // Short Put --> OTM (expired worthless)
@@ -3459,9 +3498,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
-            public NoSubmitTestBrokerage(IAlgorithm algorithm) : base("NoSubmitTestBrokerage")
+            public override bool OptionHoldingsSyncEnabled { get; }
+
+            public NoSubmitTestBrokerage(IAlgorithm algorithm, bool optionHoldingsSyncEnabled = true) : base("NoSubmitTestBrokerage")
             {
                 _underlyingBrokerage = new BacktestingBrokerage(algorithm);
+                OptionHoldingsSyncEnabled = optionHoldingsSyncEnabled;
             }
             public override bool PlaceOrder(Order order)
             {
