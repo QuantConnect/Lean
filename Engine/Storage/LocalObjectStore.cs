@@ -292,7 +292,14 @@ namespace QuantConnect.Lean.Engine.Storage
             // Ensure we have the key, also takes care of null or improper access
             if (!ContainsKey(path))
             {
-                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. " +
+                // list the available keys so a near-miss (typo, wrong extension) is visible in the error itself
+                var keys = Keys;
+                var sample = string.Join(", ", keys.Take(10).Select(key => $"'{key}'"));
+                if (keys.Count > 10)
+                {
+                    sample += ", ...";
+                }
+                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. Keys: [{sample}]. " +
                     "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
                 );
             }

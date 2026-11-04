@@ -21,6 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Orders;
+using QuantConnect.Lean.Engine.Storage;
+using QuantConnect.Packets;
+using QuantConnect.Storage;
 
 namespace QuantConnect.Tests.Python
 {
@@ -146,6 +149,27 @@ namespace QuantConnect.Tests.Python
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay(Symbols.SPY));
                 Assert.NotNull(algorithm.RunTimeError);
+            }
+        }
+
+        [Test]
+        public void PythonAlgorithmGetsAPythonObjectStore()
+        {
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm("def on_end_of_algorithm(self): self.object_store.save_json('trade_log.json', {'a': 1})");
+                using var localStore = new LocalObjectStore();
+                localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+                algorithm.SetObjectStore(localStore);
+
+                Assert.IsInstanceOf<PythonObjectStore>(algorithm.ObjectStore);
+                // the Python helpers are reachable through self.object_store
+                algorithm.OnEndOfAlgorithm();
+                Assert.Null(algorithm.RunTimeError);
+                Assert.AreEqual("{\"a\": 1}", algorithm.ObjectStore.Read("trade_log.json"));
+
+                localStore.Delete("trade_log.json");
             }
         }
 

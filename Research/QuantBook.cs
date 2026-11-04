@@ -27,6 +27,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
+using QuantConnect.Storage;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -165,7 +166,9 @@ namespace QuantConnect.Research
                         StorageAccess = Config.GetValue("storage-permissions", new Packets.StoragePermissions())
                     },
                     AlgorithmMode.Research);
-                SetObjectStore(algorithmHandlers.ObjectStore);
+                SetObjectStore(_isPythonNotebook
+                    ? new PythonObjectStore(algorithmHandlers.ObjectStore)
+                    : new ObjectStore(algorithmHandlers.ObjectStore));
 
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
                 _dataProvider = algorithmHandlers.DataProvider;

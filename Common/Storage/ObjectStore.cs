@@ -160,6 +160,17 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Returns the object data for the specified path as a string. Alias of <see cref="Read(string, Encoding)"/>
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
+        /// <returns>A string containing the data</returns>
+        public string ReadText(string path, Encoding encoding = null)
+        {
+            return Read(path, encoding);
+        }
+
+        /// <summary>
         /// Returns the JSON deserialized object data for the specified path
         /// </summary>
         /// <param name="path">The object path</param>
@@ -237,6 +248,19 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             return _store.SaveBytes(path, encoding.GetBytes(text));
+        }
+
+        /// <summary>
+        /// Saves the object data in text format for the specified path.
+        /// Alias of <see cref="Save(string, string, Encoding)"/>
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool SaveText(string path, string text, Encoding encoding = null)
+        {
+            return Save(path, text, encoding);
         }
 
         /// <summary>
