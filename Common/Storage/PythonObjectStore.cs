@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Interfaces;
 
@@ -34,8 +35,9 @@ namespace QuantConnect.Storage
         /// Initializes a new instance of the <see cref="PythonObjectStore"/> class
         /// </summary>
         /// <param name="store">The <see cref="IObjectStore"/> instance to wrap</param>
-        public PythonObjectStore(IObjectStore store)
-            : base(store)
+        /// <param name="warn">Receives the warnings about sanitized keys, the engine log by default</param>
+        public PythonObjectStore(IObjectStore store, Action<string> warn = null)
+            : base(store, warn)
         {
         }
 

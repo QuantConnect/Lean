@@ -27,6 +27,7 @@ using QuantConnect.Research;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Storage;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using System.Reflection;
 using Python.Runtime;
 
@@ -234,9 +235,9 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
-        [TestCase("../prefix/")]
-        [TestCase("..\\prefix/")]
-        public void InvalidCustomPathsStore(string path)
+        [TestCase("../prefix/", "__/prefix/")]
+        [TestCase("..\\prefix/", "__/prefix/")]
+        public void InvalidCustomPathsStore(string path, string sanitizedPath)
         {
 #pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
@@ -245,7 +246,12 @@ namespace QuantConnect.Tests.Common.Storage
                 store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
-                Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
+                // '..' cannot leave the storage root: it is sanitized away
+                Assert.IsTrue(store.SaveString($"{path}ILove", "Pizza"));
+                Assert.AreEqual(new[] { $"{sanitizedPath}ILove" }, store.Keys);
+                Assert.That(Path.GetFullPath(store.GetFilePath($"{path}ILove")), Does.StartWith(Path.GetFullPath(TestStorageRoot)));
+
+                store.Delete($"{path}ILove");
             }
         }
 
@@ -622,22 +628,392 @@ namespace QuantConnect.Tests.Common.Storage
             _store.Delete("save_text_alias.txt");
         }
 
+        [TestCase("my_key/file.csv", "my_key/file.csv")]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", "trade_log_ai_hardware___cloud.csv")]
+        [TestCase("trade log: AI & Cloud.csv", "trade log_ AI _ Cloud.csv")]
+        [TestCase("file.tar.gz", "file_tar.gz")]
+        [TestCase("résumé.pdf", "r_sum_.pdf")]
+        [TestCase("a..", "a__")]
+        [TestCase("100%.json", "100_.json")]
+        [TestCase("..model.pkl", "__model.pkl")]
+        public void UnsupportedKeysAreSanitizedOnSaveAndFoundByTheKeyTheyWereSavedWith(string key, string sanitizedKey)
+        {
+            Assert.IsTrue(_store.Save(key, "abc"));
+
+            Assert.IsTrue(_store.Keys.Contains(sanitizedKey), string.Join(", ", _store.Keys));
+            Assert.AreEqual(key == sanitizedKey, _store.Keys.Contains(key));
+            Assert.IsTrue(_store.ContainsKey(key));
+            Assert.IsTrue(_store.ContainsKey(sanitizedKey));
+            Assert.AreEqual("abc", _store.Read(key));
+            Assert.AreEqual("abc", _store.Read(sanitizedKey));
+
+            Assert.IsTrue(_store.Delete(key));
+            Assert.IsFalse(_store.ContainsKey(sanitizedKey));
+        }
+
+        [Test]
+        public void UnsupportedKeysAreWarnedAboutOnceStatingTheIssueAndTheKeyUsed()
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+            Assert.IsTrue(store.Save("trade log: AI & Cloud.csv", "abc"));
+            Assert.IsTrue(store.ContainsKey("trade log: AI & Cloud.csv"));
+            Assert.AreEqual("abc", store.Read("trade log: AI & Cloud.csv"));
+            Assert.IsTrue(store.Save("trade log: AI & Cloud.csv", "abcd"));
+            Assert.IsTrue(store.Save("supported.csv", "abc"));
+
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'. " +
+                "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
+                "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'. " +
+                "Using 'trade log_ AI _ Cloud.csv' instead. Any other unsupported key is sanitized the same way; " +
+                "a save throws when its sanitized name already holds an object not written from that key in this run", warnings[0]);
+
+            // the next unsupported key is sanitized silently
+            Assert.IsFalse(store.ContainsKey("trade log: AI.v2.csv"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+
+            store.Delete("trade log: AI & Cloud.csv");
+            store.Delete("supported.csv");
+        }
+
+        [TestCase("trade log: AI & Cloud.csv", "unsupported characters ':', '&'")]
+        [TestCase("résumé.pdf", "unsupported character 'é'")]
+        [TestCase("file.tar.gz", "it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase("file.name_v2", "the extension 'name_v2' may only contain letters and numbers")]
+        [TestCase("folder.v1/file", "the extension 'v1/file' may only contain letters and numbers")]
+        [TestCase("trade log: AI.v2.csv", "unsupported character ':'; it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase(".", "it has no name before the '.'")]
+        [TestCase("..model.pkl", "it starts with more than one '.'")]
+        public void UnsupportedKeyWarningStatesTheIssue(string key, string expectedIssue)
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+            Assert.IsFalse(store.ContainsKey(key));
+
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.StartWith($"ObjectStore: key '{key}' is not supported: {expectedIssue}."));
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        public void EmptyAndNullKeysAreRejected(string key)
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+            var error = Assert.Catch<ArgumentException>(() => store.Save(key, "abc"));
+
+            Assert.IsEmpty(warnings);
+            if (key != null)
+            {
+                Assert.That(error.Message, Does.Contain("path is not supported: '': the key is empty."));
+            }
+        }
+
+        [TestCase("model.tar.gz")]
+        [TestCase("SPY (1).csv")]
+        [TestCase("BRK.B.csv")]
+        public void ExistingUnsupportedKeysAreUsedAsGiven(string key)
+        {
+            // an object put in the store by other means (uploaded, copied into the folder) under an unsupported name
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            var filePath = Path.Combine(TestStorageRoot, key);
+            File.WriteAllText(filePath, "abc");
+
+            Assert.IsTrue(store.ContainsKey(key));
+            Assert.AreEqual("abc", store.Read(key));
+            Assert.IsTrue(store.Keys.Contains(key), string.Join(", ", store.Keys));
+            Assert.AreEqual(Path.GetFullPath(filePath), Path.GetFullPath(store.GetFilePath(key)));
+            Assert.IsEmpty(warnings, string.Join("\n", warnings));
+            Assert.IsTrue(store.Delete(key));
+            Assert.IsFalse(File.Exists(filePath));
+
+            // gone from the store, the key falls back to its sanitized name like any other unsupported key
+            Assert.IsFalse(store.ContainsKey(key));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith($"ObjectStore: key '{key}' is not supported:"));
+        }
+
+        [Test]
+        public void SavingToAnExistingUnsupportedKeyGoesToTheSanitizedNameWithAWarningEveryTime()
+        {
+            // an uploaded object under an unsupported name, which the algorithm loads, retrains and saves back
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            var warnings = new List<string>();
+            using (var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+
+                Assert.IsTrue(store.Save("model.tar.gz", "new"));
+
+                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'model.tar.gz' is not supported: it has 2 '.' but at most one '.extension' is allowed."));
+                Assert.AreEqual("ObjectStore: key 'model.tar.gz' is not supported: the object stored under that name is left as is," +
+                    " this save goes to 'model_tar.gz'", warnings[1]);
+                // read after write within the run follows the save
+                Assert.AreEqual("new", store.Read("model.tar.gz"));
+                Assert.AreEqual("new", store.Read("model_tar.gz"));
+                Assert.AreEqual("old", File.ReadAllText(filePath));
+                Assert.IsTrue(store.Keys.Contains("model.tar.gz") && store.Keys.Contains("model_tar.gz"), string.Join(", ", store.Keys));
+
+                // every such save warns, not only the first
+                Assert.IsTrue(store.Save("model.tar.gz", "newer"));
+                Assert.AreEqual(3, warnings.Count, string.Join("\n", warnings));
+                Assert.AreEqual(warnings[1], warnings[2]);
+                Assert.AreEqual("newer", store.Read("model.tar.gz"));
+            }
+
+            // a fresh store, the next run: the object under the name as given comes first again, and the save finds
+            // the previous run's object under the sanitized name, which nothing ties to this key any more
+            warnings.Clear();
+            using (var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add))
+            {
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+                Assert.IsEmpty(warnings);
+
+                var exception = Assert.Throws<ArgumentException>(() => store.Save("model.tar.gz", "third"));
+                Assert.AreEqual("ObjectStore: key 'model.tar.gz' is not supported and its sanitized name 'model_tar.gz' already holds" +
+                    " another object. Delete 'model_tar.gz' or save to it directly to replace it", exception.Message);
+                Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+                Assert.AreEqual("newer", store.Read("model_tar.gz"));
+
+                // once the sanitized name is free the save goes there, warning about the original every time
+                Assert.IsTrue(store.Delete("model_tar.gz"));
+                Assert.IsTrue(store.Save("model.tar.gz", "third"));
+                Assert.AreEqual(2, warnings.Count, string.Join("\n", warnings));
+                Assert.That(warnings[1], Does.Contain("the object stored under that name is left as is, this save goes to 'model_tar.gz'"));
+                Assert.AreEqual("third", store.Read("model.tar.gz"));
+                Assert.AreEqual("third", store.Read("model_tar.gz"));
+
+                // within the run the key follows the save: the first delete removes it and the original is back
+                Assert.IsTrue(store.Delete("model.tar.gz"));
+                Assert.IsFalse(store.ContainsKey("model_tar.gz"));
+                Assert.AreEqual("old", File.ReadAllText(filePath));
+                Assert.AreEqual("old", store.Read("model.tar.gz"));
+                Assert.IsTrue(store.Delete("model.tar.gz"));
+                Assert.IsFalse(store.ContainsKey("model.tar.gz"));
+            }
+            Assert.IsFalse(File.Exists(filePath));
+        }
+
+        [Test]
+        public void DeletingASavedUnsupportedKeyRemovesTheSavedObjectThenTheOriginal()
+        {
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            using var store = new ObjectStore(new TestLocalObjectStore(), _ => { });
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.Save("model.tar.gz", "new"));
+            Assert.AreEqual("new", store.Read("model.tar.gz"));
+
+            // the first delete removes what this store saved, and the key resolves like a fresh store's from then on
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(File.Exists(Path.Combine(TestStorageRoot, "model_tar.gz")));
+            Assert.IsTrue(store.ContainsKey("model.tar.gz"));
+            Assert.AreEqual("old", store.Read("model.tar.gz"));
+
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(store.ContainsKey("model.tar.gz"));
+            Assert.IsFalse(File.Exists(filePath));
+        }
+
+        [Test]
+        public void AFailedSaveToAnUnsupportedKeyDoesNotRedirectItsReads()
+        {
+            var filePath = Path.Combine(TestStorageRoot, "model.tar.gz");
+            File.WriteAllText(filePath, "old");
+            using var store = new ObjectStore(new TestLocalObjectStore(), _ => { });
+            // the 3 bytes stored fill the storage: the save is rejected, not thrown, in backtesting
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1, StorageLimit = 3 }, AlgorithmMode.Backtesting);
+
+            Assert.IsFalse(store.Save("model.tar.gz", "new"));
+
+            Assert.IsTrue(store.ContainsKey("model.tar.gz"));
+            Assert.AreEqual("old", store.Read("model.tar.gz"));
+            Assert.IsFalse(store.ContainsKey("model_tar.gz"));
+
+            Assert.IsTrue(store.Delete("model.tar.gz"));
+            Assert.IsFalse(File.Exists(filePath));
+        }
+
+        [Test]
+        public void CustomDataIsReadFromAnExistingUnsupportedKey()
+        {
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            File.WriteAllText(Path.Combine(TestStorageRoot, "BRK.B.csv"), "2013-10-07,167.42\n2013-10-08,165.48\n");
+
+            // the data feed reads custom data through the algorithm's store
+            using var reader = new ObjectStoreSubscriptionStreamReader(store, "BRK.B.csv");
+
+            Assert.IsFalse(reader.EndOfStream);
+            Assert.AreEqual("2013-10-07,167.42", reader.ReadLine());
+            Assert.AreEqual("2013-10-08,165.48", reader.ReadLine());
+            store.Delete("BRK.B.csv");
+        }
+
+        [Test]
+        public void SavingAnUnsupportedKeyWhoseSanitizedNameHoldsAnotherObjectThrowsEveryTime()
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.Save("trade_log_ai_cloud.csv", "existing"));
+            Assert.IsEmpty(warnings);
+
+            // sanitizes to the existing object's key: the general warning, then the exception
+            var exception = Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai&cloud.csv", "first"));
+            Assert.AreEqual("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported and its sanitized name 'trade_log_ai_cloud.csv' " +
+                "already holds another object. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", exception.Message);
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.That(warnings[0], Does.StartWith("ObjectStore: key 'trade_log_ai&cloud.csv' is not supported: unsupported character '&'."));
+            Assert.AreEqual("existing", store.Read("trade_log_ai_cloud.csv"));
+
+            // every such save throws, from this key or another one sanitizing to the same name
+            Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai&cloud.csv", "first"));
+            exception = Assert.Throws<ArgumentException>(() => store.Save("trade_log_ai:cloud.csv", "second"));
+            Assert.AreEqual("ObjectStore: key 'trade_log_ai:cloud.csv' is not supported and its sanitized name 'trade_log_ai_cloud.csv' " +
+                "already holds another object. Delete 'trade_log_ai_cloud.csv' or save to it directly to replace it", exception.Message);
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("existing", store.Read("trade_log_ai_cloud.csv"));
+
+            // once the name is free the key is saved there and updated silently
+            Assert.IsTrue(store.Delete("trade_log_ai_cloud.csv"));
+            Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "first"));
+            Assert.IsTrue(store.Save("trade_log_ai&cloud.csv", "second"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("second", store.Read("trade_log_ai_cloud.csv"));
+            Assert.AreEqual(1, store.Keys.Count(key => key.StartsWith("trade_log_ai")));
+
+            Assert.IsTrue(store.Delete("trade_log_ai&cloud.csv"));
+            Assert.IsFalse(store.ContainsKey("trade_log_ai_cloud.csv"));
+        }
+
+        [Test]
+        public void ANewRunThrowsOnSavingAnUnsupportedKeyAPreviousRunSanitized()
+        {
+            // nothing records that a previous run wrote the sanitized object, so no later run replaces it through the unsupported key
+            using (var firstRun = new ObjectStore(new TestLocalObjectStore(), _ => { }))
+            {
+                firstRun.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                Assert.IsTrue(firstRun.Save("trade log: AI & Cloud.csv", "run1"));
+            }
+
+            using (var secondRun = new ObjectStore(new TestLocalObjectStore(), _ => { }))
+            {
+                secondRun.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                var exception = Assert.Throws<ArgumentException>(() => secondRun.Save("trade log: AI & Cloud.csv", "run2"));
+                Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported and its sanitized name 'trade log_ AI _ Cloud.csv'" +
+                    " already holds another object. Delete 'trade log_ AI _ Cloud.csv' or save to it directly to replace it", exception.Message);
+                Assert.AreEqual("run1", secondRun.Read("trade log: AI & Cloud.csv"));
+
+                // the exact sanitized key is a supported key: the user replaces the object through it
+                Assert.IsTrue(secondRun.Save("trade log_ AI _ Cloud.csv", "run2"));
+                Assert.AreEqual("run2", secondRun.Read("trade log: AI & Cloud.csv"));
+                Assert.Throws<ArgumentException>(() => secondRun.Save("trade log: AI & Cloud.csv", "run2 again"));
+                Assert.IsTrue(secondRun.Delete("trade log_ AI _ Cloud.csv"));
+            }
+        }
+
+        [Test]
+        public void ASaveToTheSanitizedNameFromAnotherKeyEndsTheSilentUpdatesOfAnUnsupportedKey()
+        {
+            var warnings = new List<string>();
+            using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+            Assert.IsTrue(store.Save("p&q.csv", "A1"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+
+            // another unsupported key sanitizing to the same name throws, and the first key keeps updating silently
+            var exception = Assert.Throws<ArgumentException>(() => store.Save("p:q.csv", "B1"));
+            Assert.That(exception.Message, Does.StartWith("ObjectStore: key 'p:q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
+            Assert.AreEqual("A1", store.Read("p_q.csv"));
+            Assert.IsTrue(store.Save("p&q.csv", "A2"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("A2", store.Read("p_q.csv"));
+
+            // a save through the valid name takes the object over: the unsupported key now throws
+            Assert.IsTrue(store.Save("p_q.csv", "C1"));
+            exception = Assert.Throws<ArgumentException>(() => store.Save("p&q.csv", "A3"));
+            Assert.That(exception.Message, Does.StartWith("ObjectStore: key 'p&q.csv' is not supported and its sanitized name 'p_q.csv' already holds another object"));
+            Assert.AreEqual("C1", store.Read("p_q.csv"));
+
+            Assert.IsTrue(store.Delete("p_q.csv"));
+            Assert.IsTrue(store.Save("p&q.csv", "A3"));
+            Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
+            Assert.AreEqual("A3", store.Read("p&q.csv"));
+            Assert.IsTrue(store.Delete("p&q.csv"));
+            Assert.IsFalse(store.ContainsKey("p_q.csv"));
+        }
+
+        [Test]
+        public void QuantBookWarnsThroughTheEngineLog()
+        {
+            var traces = new List<string>();
+            Log.LogHandler = new FunctionalLogHandler(null, traces.Add, null);
+            var quantBook = new QuantBook();
+            Assert.AreEqual(typeof(ObjectStore), quantBook.ObjectStore.GetType());
+
+            Assert.IsTrue(quantBook.ObjectStore.Save("trade log: AI & Cloud.csv", "abc"));
+
+            Assert.AreEqual(1, traces.Count(trace => trace.Contains("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'.")),
+                string.Join("\n", traces));
+            quantBook.ObjectStore.Delete("trade log: AI & Cloud.csv");
+        }
+
+        [Test]
+        public void LocalObjectStoreRejectsUnsupportedKeysStatingTheIssue()
+        {
+            // the implementation is the last line of defense, only the wrapper sanitizes
+            using var store = new TestLocalObjectStore();
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+
+            var error = Assert.Throws<ArgumentException>(() => store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
+
+            Assert.AreEqual("ObjectStore: path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'. " +
+                "Keys may only contain english letters, numbers, spaces and the characters '/', '\\', '_', '#', '-', '$' and '=', " +
+                "plus at most one '.' followed by a letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'", error.Message);
+        }
+
+        [Test]
+        public void AlgorithmWrapsTheStoreAndWarnsThroughDebug()
+        {
+            using var localStore = new TestLocalObjectStore();
+            localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            var algorithm = new QCAlgorithm();
+
+            algorithm.SetObjectStore(localStore);
+
+            Assert.AreEqual(typeof(ObjectStore), algorithm.ObjectStore.GetType());
+            Assert.IsTrue(algorithm.ObjectStore.Save("trade_log_ai_hardware_&_cloud.csv", "abc"));
+            Assert.IsTrue(algorithm.DebugMessages.TryDequeue(out var warning));
+            Assert.That(warning, Does.Contain("ObjectStore: key 'trade_log_ai_hardware_&_cloud.csv' is not supported: unsupported character '&'."));
+            Assert.That(warning, Does.Contain("Using 'trade_log_ai_hardware___cloud.csv' instead"));
+
+            algorithm.ObjectStore.Delete("trade_log_ai_hardware_&_cloud.csv");
+        }
+
         [TestCase("my_key", "./LocalObjectStoreTests/my_key")]
         [TestCase("test/123", "./LocalObjectStoreTests/test/123")]
-        [TestCase("**abc**", null)]
-        [TestCase("<random>", null)]
-        [TestCase("|", null)]
+        [TestCase("**abc**", "./LocalObjectStoreTests/__abc__")]
+        [TestCase("<random>", "./LocalObjectStoreTests/_random_")]
+        [TestCase("|", "./LocalObjectStoreTests/_")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
-            if (expectedRelativePath == null)
-            {
-                Assert.Throws<ArgumentException>(() => _store.GetFilePath(key));
-            }
-            else
-            {
-                var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
-                Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
-            }
+            var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
+            Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
         }
 
         [Test]

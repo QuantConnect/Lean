@@ -166,6 +166,7 @@ namespace QuantConnect.Research
                         StorageAccess = Config.GetValue("storage-permissions", new Packets.StoragePermissions())
                     },
                     AlgorithmMode.Research);
+                // key warnings go to the engine log, like every other QuantBook message: nothing drains the debug messages here
                 SetObjectStore(_isPythonNotebook
                     ? new PythonObjectStore(algorithmHandlers.ObjectStore)
                     : new ObjectStore(algorithmHandlers.ObjectStore));
