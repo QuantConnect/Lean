@@ -20,12 +20,12 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting the ObjectStore ergonomics: <see cref="Storage.ObjectStore.SaveText"/> and
+    /// Regression algorithm asserting the ObjectStore helpers: <see cref="Storage.ObjectStore.SaveText"/> and
     /// <see cref="Storage.ObjectStore.ReadText"/> are aliases of Save and Read, and reading a missing key lists the
     /// available keys in the error. The Python version of this algorithm additionally covers the tolerant
     /// save_json/read_json and save_dataframe/read_dataframe helpers
     /// </summary>
-    public class ObjectStoreErgonomicsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class ObjectStoreHelpersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialize the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -46,9 +46,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             // SaveText and ReadText are aliases of Save and Read
-            if (!ObjectStore.SaveText("ergonomics_report.txt", "The strategy went up") ||
-                ObjectStore.Read("ergonomics_report.txt") != "The strategy went up" ||
-                ObjectStore.ReadText("ergonomics_report.txt") != "The strategy went up")
+            if (!ObjectStore.SaveText("helpers_report.txt", "The strategy went up") ||
+                ObjectStore.Read("helpers_report.txt") != "The strategy went up" ||
+                ObjectStore.ReadText("helpers_report.txt") != "The strategy went up")
             {
                 throw new RegressionTestException("Expected the SaveText/ReadText round trip to succeed");
             }
@@ -57,18 +57,18 @@ namespace QuantConnect.Algorithm.CSharp
             var errorMessage = string.Empty;
             try
             {
-                ObjectStore.ReadBytes("ergonomics_missing.json");
+                ObjectStore.ReadBytes("helpers_missing.json");
             }
             catch (KeyNotFoundException exception)
             {
                 errorMessage = exception.Message;
             }
-            if (!errorMessage.Contains("Keys: [") || !errorMessage.Contains("'ergonomics_report.txt'"))
+            if (!errorMessage.Contains("Keys: [") || !errorMessage.Contains("'helpers_report.txt'"))
             {
                 throw new RegressionTestException($"Expected the available keys in the missing key error, got: '{errorMessage}'");
             }
 
-            ObjectStore.Delete("ergonomics_report.txt");
+            ObjectStore.Delete("helpers_report.txt");
         }
 
         /// <summary>

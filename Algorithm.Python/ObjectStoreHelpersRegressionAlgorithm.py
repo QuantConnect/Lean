@@ -16,11 +16,11 @@ from System.Collections.Generic import KeyNotFoundException, List
 from decimal import Decimal
 
 ### <summary>
-### Regression algorithm asserting the ObjectStore ergonomics: save_text and read_text are aliases of save and read,
+### Regression algorithm asserting the ObjectStore helpers: save_text and read_text are aliases of save and read,
 ### reading a missing key lists the available keys in the error, and the tolerant save_json/read_json and
 ### save_dataframe/read_dataframe helpers handle datetime/date/Decimal/Symbol and data frames out of the box.
 ### </summary>
-class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
+class ObjectStoreHelpersRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2013, 10, 7)
@@ -42,9 +42,9 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             "returns": np.array([0.01, np.nan]),
             "bar_times": pd.DatetimeIndex([datetime(2013, 10, 10), datetime(2013, 10, 11)]).values
         }
-        if not self.object_store.save_json("ergonomics/trade_log.json", trade_log):
+        if not self.object_store.save_json("helpers/trade_log.json", trade_log):
             raise AssertionError("Expected save_json to succeed")
-        data = self.object_store.read_json("ergonomics/trade_log.json")
+        data = self.object_store.read_json("helpers/trade_log.json")
         expected = {
             "time": "2013-10-11T16:00:00",
             "date": "2013-10-11",
@@ -64,7 +64,7 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
         # save_json refuses what it cannot serialize faithfully instead of storing its string
         error = None
         try:
-            self.object_store.save_json("ergonomics/rejected.json", {"history": pd.Series([1.0, 2.0])})
+            self.object_store.save_json("helpers/rejected.json", {"history": pd.Series([1.0, 2.0])})
         except TypeError as e:
             error = str(e)
         if error is None or "save_dataframe" not in error:
@@ -73,7 +73,7 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
         # read_json throws on a missing key like every other read method
         error = None
         try:
-            self.object_store.read_json("ergonomics/missing.json")
+            self.object_store.read_json("helpers/missing.json")
         except KeyNotFoundException as e:
             error = str(e)
         if error is None:
@@ -81,29 +81,29 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
 
         # save_dataframe stores a pandas DataFrame as CSV and read_dataframe restores it, time index included
         frame = pd.DataFrame({"close": [167.42, 168.0]}, index=pd.to_datetime(["2013-10-10", "2013-10-11"]))
-        if not self.object_store.save_dataframe("ergonomics/history.csv", frame):
+        if not self.object_store.save_dataframe("helpers/history.csv", frame):
             raise AssertionError("Expected save_dataframe to succeed")
-        csv = self.object_store.read("ergonomics/history.csv")
+        csv = self.object_store.read("helpers/history.csv")
         if "close" not in csv or "2013-10-10" not in csv:
             raise AssertionError(f"Unexpected save_dataframe content: {csv}")
-        restored = self.object_store.read_dataframe("ergonomics/history.csv")
+        restored = self.object_store.read_dataframe("helpers/history.csv")
         if not restored.equals(frame):
             raise AssertionError(f"Unexpected read_dataframe round trip result: {restored}")
 
         # save_text/read_text are aliases of save/read
-        if not self.object_store.save_text("ergonomics/report.txt", "The strategy went up"):
+        if not self.object_store.save_text("helpers/report.txt", "The strategy went up"):
             raise AssertionError("Expected save_text to succeed")
-        if self.object_store.read_text("ergonomics/report.txt") != "The strategy went up":
+        if self.object_store.read_text("helpers/report.txt") != "The strategy went up":
             raise AssertionError("Expected the save_text/read_text round trip to succeed")
 
         # reading a missing key lists the available keys in the error
         error = None
         try:
-            self.object_store.read_bytes("ergonomics/missing.json")
+            self.object_store.read_bytes("helpers/missing.json")
         except BaseException as e:
             error = str(e)
-        if error is None or "Keys: [" not in error or "'ergonomics/report.txt'" not in error:
+        if error is None or "Keys: [" not in error or "'helpers/report.txt'" not in error:
             raise AssertionError(f"Expected the available keys in the missing key error, got: '{error}'")
 
-        for key in ["ergonomics/trade_log.json", "ergonomics/history.csv", "ergonomics/report.txt"]:
+        for key in ["helpers/trade_log.json", "helpers/history.csv", "helpers/report.txt"]:
             self.object_store.delete(key)

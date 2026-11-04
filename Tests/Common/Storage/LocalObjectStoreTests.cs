@@ -1105,14 +1105,14 @@ def test(object_store):
     symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
 
     # datetime/date/Decimal/Symbol values and non-string dictionary keys, which json.dumps rejects
-    object_store.save_json('ergonomics/log.json', {
+    object_store.save_json('helpers/log.json', {
         'time': datetime(2024, 1, 2, 3, 4, 5),
         'date': datetime(2024, 1, 1).date(),
         'qty': Decimal('1.5'),
         'symbol': symbol,
         'fills': [{symbol: 10}]
     })
-    data = object_store.read_json('ergonomics/log.json')
+    data = object_store.read_json('helpers/log.json')
     # a Symbol value is written like the C# SaveJson<T> does, a Symbol key as its string like a .NET dictionary key
     assert data == {
         'time': '2024-01-02T03:04:05',
@@ -1125,7 +1125,7 @@ def test(object_store):
     assert SymbolCache.get_symbol(data['symbol']['id']) == symbol
     assert SymbolCache.get_symbol(next(iter(data['fills'][0]))) == symbol
 
-    object_store.delete('ergonomics/log.json')
+    object_store.delete('helpers/log.json')
 ");
         }
 
@@ -1142,15 +1142,15 @@ def test(object_store):
     weights['a'] = 1.5
     point = IndicatorDataPoint(datetime(2020, 1, 1), 5)
 
-    object_store.save_json('ergonomics/dotnet.json', {'numbers': numbers, 'weights': weights, 'point': point})
-    data = object_store.read_json('ergonomics/dotnet.json')
+    object_store.save_json('helpers/dotnet.json', {'numbers': numbers, 'weights': weights, 'point': point})
+    data = object_store.read_json('helpers/dotnet.json')
     assert data == {
         'numbers': [1, 2],
         'weights': {'a': 1.5},
         'point': json.loads(newtonsoft.JsonConvert.serialize_object(point))
     }, data
 
-    object_store.delete('ergonomics/dotnet.json')
+    object_store.delete('helpers/dotnet.json')
 ");
         }
 
@@ -1161,16 +1161,16 @@ def test(object_store):
 import numpy as np
 
 def test(object_store):
-    object_store.save_json('ergonomics/numpy.json', {
+    object_store.save_json('helpers/numpy.json', {
         'weights': np.array([1.5, 2.5]),
         'grid': np.array([[1, 2], [3, 4]]),
         'count': np.int64(3),
         'ratio': np.float32(0.5)
     })
-    data = object_store.read_json('ergonomics/numpy.json')
+    data = object_store.read_json('helpers/numpy.json')
     assert data == {'weights': [1.5, 2.5], 'grid': [[1, 2], [3, 4]], 'count': 3, 'ratio': 0.5}, data
 
-    object_store.delete('ergonomics/numpy.json')
+    object_store.delete('helpers/numpy.json')
 ");
         }
 
@@ -1181,19 +1181,19 @@ def test(object_store):
 import numpy as np
 
 def test(object_store):
-    object_store.save_json('ergonomics/nan.json', {
+    object_store.save_json('helpers/nan.json', {
         'pnl': float('nan'),
         'ratio': float('inf'),
         'drawdown': -float('inf'),
         'series': np.array([1.0, np.nan]),
         'scalar': np.float64('nan')
     })
-    text = object_store.read('ergonomics/nan.json')
+    text = object_store.read('helpers/nan.json')
     assert 'NaN' not in text and 'Infinity' not in text, text
-    data = object_store.read_json('ergonomics/nan.json')
+    data = object_store.read_json('helpers/nan.json')
     assert data == {'pnl': None, 'ratio': None, 'drawdown': None, 'series': [1.0, None], 'scalar': None}, data
 
-    object_store.delete('ergonomics/nan.json')
+    object_store.delete('helpers/nan.json')
 ");
         }
 
@@ -1204,7 +1204,7 @@ def test(object_store):
 import numpy as np
 
 def test(object_store):
-    object_store.save_json('ergonomics/datetime64.json', {
+    object_store.save_json('helpers/datetime64.json', {
         'index': pd.DatetimeIndex([pd.Timestamp('2020-01-01'), pd.Timestamp('2020-01-02 03:04:05.000000006')]).values,
         'scalar': np.datetime64('2020-01-01T00:00:00.000000000'),
         'day': np.datetime64('2020-01-01'),
@@ -1214,7 +1214,7 @@ def test(object_store):
         'with_nat': pd.to_datetime(['2020-01-01', None]).values,
         'grid': np.array([['2020-01-01', '2020-01-02']], dtype='datetime64[D]')
     })
-    data = object_store.read_json('ergonomics/datetime64.json')
+    data = object_store.read_json('helpers/datetime64.json')
     assert data == {
         'index': ['2020-01-01T00:00:00', '2020-01-02T03:04:05.000000006'],
         'scalar': '2020-01-01T00:00:00',
@@ -1226,7 +1226,7 @@ def test(object_store):
         'grid': [['2020-01-01T00:00:00', '2020-01-02T00:00:00']]
     }, data
 
-    object_store.delete('ergonomics/datetime64.json')
+    object_store.delete('helpers/datetime64.json')
 ");
         }
 
@@ -1238,14 +1238,14 @@ import numpy as np
 from datetime import timedelta
 
 def test(object_store):
-    object_store.save_json('ergonomics/timedelta.json', {
+    object_store.save_json('helpers/timedelta.json', {
         'holding': timedelta(days=1, hours=2),
         'latency': np.timedelta64(1500, 'ms'),
         'spans': (pd.to_datetime(['2020-01-02', '2020-01-03']) - pd.Timestamp('2020-01-01')).values,
         'pandas': pd.Timedelta(seconds=1.5),
         'nat': np.timedelta64('NaT')
     })
-    data = object_store.read_json('ergonomics/timedelta.json')
+    data = object_store.read_json('helpers/timedelta.json')
     assert data == {
         'holding': 'P1DT2H0M0S',
         'latency': 'P0DT0H0M1.5S',
@@ -1255,7 +1255,7 @@ def test(object_store):
     }, data
     assert pd.Timedelta(data['holding']) == timedelta(days=1, hours=2)
 
-    object_store.delete('ergonomics/timedelta.json')
+    object_store.delete('helpers/timedelta.json')
 ");
         }
 
@@ -1266,11 +1266,11 @@ def test(object_store):
 def test(object_store):
     error = None
     try:
-        object_store.save_json('ergonomics/nan_key.json', {float('nan'): 1})
+        object_store.save_json('helpers/nan_key.json', {float('nan'): 1})
     except TypeError as e:
         error = str(e)
     assert error is not None and 'nan' in error and 'key' in error, error
-    assert not object_store.contains_key('ergonomics/nan_key.json')
+    assert not object_store.contains_key('helpers/nan_key.json')
 ");
         }
 
@@ -1282,11 +1282,11 @@ def test(object_store):
     for value in [pd.DataFrame({'a': [1, 2]}), pd.Series([1, 2])]:
         error = None
         try:
-            object_store.save_json('ergonomics/pandas.json', {'data': value})
+            object_store.save_json('helpers/pandas.json', {'data': value})
         except TypeError as e:
             error = str(e)
         assert error is not None and 'save_dataframe' in error and type(value).__name__ in error, error
-        assert not object_store.contains_key('ergonomics/pandas.json')
+        assert not object_store.contains_key('helpers/pandas.json')
 ");
         }
 
@@ -1301,11 +1301,11 @@ def test(object_store):
     for value in [TradeRecord(), object(), (x for x in [1])]:
         error = None
         try:
-            object_store.save_json('ergonomics/unsupported.json', {'data': value})
+            object_store.save_json('helpers/unsupported.json', {'data': value})
         except TypeError as e:
             error = str(e)
         assert error is not None and type(value).__name__ in error, error
-        assert not object_store.contains_key('ergonomics/unsupported.json')
+        assert not object_store.contains_key('helpers/unsupported.json')
 ");
         }
 
@@ -1318,23 +1318,23 @@ def test(object_store):
     try:
         for value in [None, [1, 'a'], (1, 2)]:
             expected = list(value) if isinstance(value, tuple) else value
-            object_store.save_json('ergonomics/container.json', value)
-            data = object_store.read_json('ergonomics/container.json')
+            object_store.save_json('helpers/container.json', value)
+            data = object_store.read_json('helpers/container.json')
             if data != expected:
                 failures.append(f'{value!r} -> {data!r}')
 
         # a top-level str/int/float/bool does not bind to the PyObject overload: the error names the mismatch
         for value in ['text', 42, 1.5, True]:
             try:
-                object_store.save_json('ergonomics/scalar.json', value)
+                object_store.save_json('helpers/scalar.json', value)
                 failures.append(f'{value!r} was accepted')
             except TypeError as e:
                 if 'No method matches' not in str(e):
                     failures.append(f'{value!r} -> {e}')
-        if object_store.contains_key('ergonomics/scalar.json'):
+        if object_store.contains_key('helpers/scalar.json'):
             failures.append('a rejected scalar was saved')
     finally:
-        for key in ['ergonomics/container.json', 'ergonomics/scalar.json']:
+        for key in ['helpers/container.json', 'helpers/scalar.json']:
             if object_store.contains_key(key):
                 object_store.delete(key)
     assert not failures, failures
@@ -1346,7 +1346,7 @@ def test(object_store):
         {
             RunPythonTest(@"
 def test(object_store):
-    assert_raises_key_not_found(lambda: object_store.read_json('ergonomics/missing.json'))
+    assert_raises_key_not_found(lambda: object_store.read_json('helpers/missing.json'))
 ");
         }
 
@@ -1355,11 +1355,11 @@ def test(object_store):
         {
             RunPythonTest(@"
 def test(object_store):
-    object_store.save_text('ergonomics/report.txt', 'hello')
-    assert object_store.read('ergonomics/report.txt') == 'hello'
-    assert object_store.read_text('ergonomics/report.txt') == 'hello'
+    object_store.save_text('helpers/report.txt', 'hello')
+    assert object_store.read('helpers/report.txt') == 'hello'
+    assert object_store.read_text('helpers/report.txt') == 'hello'
 
-    object_store.delete('ergonomics/report.txt')
+    object_store.delete('helpers/report.txt')
 ");
         }
 
@@ -1369,11 +1369,11 @@ def test(object_store):
             RunPythonTest(@"
 def test(object_store):
     frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
-    object_store.save_dataframe('ergonomics/frame.csv', frame)
-    assert 'a,b' in object_store.read('ergonomics/frame.csv')
-    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.csv'), frame)
+    object_store.save_dataframe('helpers/frame.csv', frame)
+    assert 'a,b' in object_store.read('helpers/frame.csv')
+    pd.testing.assert_frame_equal(object_store.read_dataframe('helpers/frame.csv'), frame)
 
-    object_store.delete('ergonomics/frame.csv')
+    object_store.delete('helpers/frame.csv')
 ");
         }
 
@@ -1383,11 +1383,11 @@ def test(object_store):
             RunPythonTest(@"
 def test(object_store):
     frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
-    object_store.save_dataframe('ergonomics/frame.json', frame)
-    assert object_store.read('ergonomics/frame.json') == frame.to_json()
-    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.json'), frame)
+    object_store.save_dataframe('helpers/frame.json', frame)
+    assert object_store.read('helpers/frame.json') == frame.to_json()
+    pd.testing.assert_frame_equal(object_store.read_dataframe('helpers/frame.json'), frame)
 
-    object_store.delete('ergonomics/frame.json')
+    object_store.delete('helpers/frame.json')
 ");
         }
 
@@ -1397,10 +1397,10 @@ def test(object_store):
             RunPythonTest(@"
 def test(object_store):
     frame = pd.DataFrame({'close': [167.42, 168.0]}, index=pd.to_datetime(['2013-10-10', '2013-10-11']))
-    object_store.save_dataframe('ergonomics/history.csv', frame)
-    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/history.csv'), frame)
+    object_store.save_dataframe('helpers/history.csv', frame)
+    pd.testing.assert_frame_equal(object_store.read_dataframe('helpers/history.csv'), frame)
 
-    object_store.delete('ergonomics/history.csv')
+    object_store.delete('helpers/history.csv')
 ");
         }
 
@@ -1409,7 +1409,7 @@ def test(object_store):
         {
             RunPythonTest(@"
 def test(object_store):
-    assert_raises_key_not_found(lambda: object_store.read_dataframe('ergonomics/missing.csv'))
+    assert_raises_key_not_found(lambda: object_store.read_dataframe('helpers/missing.csv'))
 ");
         }
 
@@ -1420,7 +1420,7 @@ def test(object_store):
         {
             using (Py.GIL())
             {
-                var testModule = PyModule.FromString("TestObjectStoreErgonomics", @"
+                var testModule = PyModule.FromString("TestObjectStoreHelpers", @"
 from AlgorithmImports import *
 from System.Collections.Generic import KeyNotFoundException
 from datetime import datetime
