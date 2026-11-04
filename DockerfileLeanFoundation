@@ -334,7 +334,8 @@ RUN conda install -c nvidia -y cuda-compiler=12.8.1 && conda clean -y --all
 ENV MKL_THREADING_LAYER=GNU
 ENV CUDA_MODULE_LOADING=LAZY
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
-ENV LD_LIBRARY_PATH=/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:$LD_LIBRARY_PATH
+# Prefer conda's OpenSSL so Python extensions use the same compatible libcrypto as the environment.
+ENV LD_LIBRARY_PATH=/opt/miniconda3/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/
 # reduces GPU memory usage
 ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
