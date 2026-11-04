@@ -223,6 +223,7 @@ namespace QuantConnect.Brokerages
             const int maximumWaitTimeOnError = 120 * 1000;
             const int minimumWaitTimeOnError = 2 * 1000;
             var waitTimeOnError = minimumWaitTimeOnError;
+            ClientWebSocket client = null;
             while (_cts is { IsCancellationRequested: false })
             {
                 Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): Connecting...");
@@ -233,7 +234,7 @@ namespace QuantConnect.Brokerages
                         lock (_locker)
                         {
                             _client.DisposeSafely();
-                            _client = new ClientWebSocket();
+                            _client = client = new ClientWebSocket();
                             if (_sessionToken != null)
                             {
                                 _client.Options.SetRequestHeader("x-session-token", _sessionToken);
@@ -280,6 +281,10 @@ namespace QuantConnect.Brokerages
                     }
                 }
             }
+
+            // Close() cancels the receive, which aborts the connection, but a cancellation that lands before the first receive,
+            // while the Open handlers run, leaves the connection open after Close() returns
+            client?.Abort();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
