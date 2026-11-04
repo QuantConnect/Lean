@@ -2977,7 +2977,8 @@ def RunTest():
             using (Py.GIL())
             {
                 using var sys = Py.Import("sys");
-                pythonPrefix = sys.GetAttr("prefix").As<string>();
+                // a virtual environment keeps using its base installation's native libraries
+                pythonPrefix = sys.GetAttr("base_prefix").As<string>();
             }
             var openSslLibraries = File.ReadLines("/proc/self/maps")
                 .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last())
