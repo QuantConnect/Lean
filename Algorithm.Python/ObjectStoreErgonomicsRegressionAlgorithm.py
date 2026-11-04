@@ -16,11 +16,9 @@ from System.Collections.Generic import KeyNotFoundException, List
 from decimal import Decimal
 
 ### <summary>
-### Regression algorithm asserting the ObjectStore ergonomics: an unsupported key is sanitized and used on
-### every save and read, save_text and read_text are aliases of save and read, reading a missing key lists the
-### available keys in the error, and
-### the tolerant save_json/read_json and save_dataframe/read_dataframe helpers handle datetime/date/Decimal/Symbol
-### and data frames out of the box.
+### Regression algorithm asserting the ObjectStore ergonomics: save_text and read_text are aliases of save and read,
+### reading a missing key lists the available keys in the error, and the tolerant save_json/read_json and
+### save_dataframe/read_dataframe helpers handle datetime/date/Decimal/Symbol and data frames out of the box.
 ### </summary>
 class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
 
@@ -33,18 +31,6 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
         self.spy = self.add_equity("SPY", Resolution.DAILY).symbol
 
     def on_end_of_algorithm(self):
-        # an unsupported key, e.g. built from a user-facing name, is sanitized and used on every save and read
-        invalid_key = "trade_log_ai_hardware_&_cloud.csv"
-        sanitized_key = "trade_log_ai_hardware___cloud.csv"
-        if not self.object_store.save(invalid_key, "a,b\n1,2"):
-            raise AssertionError("Expected the unsupported key to be sanitized and saved")
-        keys = list(self.object_store.keys)
-        if sanitized_key not in keys or invalid_key in keys:
-            raise AssertionError(f"Expected the object to be stored under '{sanitized_key}', keys: {keys}")
-        if not self.object_store.contains_key(invalid_key) or self.object_store.read(invalid_key) != "a,b\n1,2" \
-                or self.object_store.read(sanitized_key) != "a,b\n1,2":
-            raise AssertionError("Expected the object to be read through both the original and the sanitized key")
-
         # save_json tolerates datetime/date/Decimal/numpy/NaN values, .NET objects and non-string dictionary keys
         trade_log = {
             "time": datetime(2013, 10, 11, 16, 0, 0),
@@ -116,10 +102,8 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             self.object_store.read_bytes("ergonomics/missing.json")
         except BaseException as e:
             error = str(e)
-        if error is None or "Keys: [" not in error or f"'{sanitized_key}'" not in error:
+        if error is None or "Keys: [" not in error or "'ergonomics/report.txt'" not in error:
             raise AssertionError(f"Expected the available keys in the missing key error, got: '{error}'")
 
-        for key in [invalid_key, "ergonomics/trade_log.json", "ergonomics/history.csv", "ergonomics/report.txt"]:
+        for key in ["ergonomics/trade_log.json", "ergonomics/history.csv", "ergonomics/report.txt"]:
             self.object_store.delete(key)
-        if self.object_store.contains_key(sanitized_key):
-            raise AssertionError("Expected the delete through the original key to remove the sanitized one")

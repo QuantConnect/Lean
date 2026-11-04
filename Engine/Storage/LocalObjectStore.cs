@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -111,6 +112,7 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         private Timer _persistenceTimer;
+        private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
@@ -331,7 +333,15 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
-            ObjectStore.ValidateKey(path);
+            else if (!_pathRegex.IsMatch(path))
+            {
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
+            else if (path.Count(c => c == '/') > 100 || path.Count(c => c == '\\') > 100)
+            {
+                // just in case
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+            }
 
             // after we check the regex
             path = NormalizePath(path);
