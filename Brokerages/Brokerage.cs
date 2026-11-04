@@ -511,13 +511,6 @@ namespace QuantConnect.Brokerages
         public virtual bool AccountInstantlyUpdated => false;
 
         /// <summary>
-        /// True when Lean syncs the option holdings with the brokerage once a day, for the brokerages that report
-        /// nothing when a contract expires or is assigned. A brokerage that reports every option position change
-        /// itself returns false
-        /// </summary>
-        protected virtual bool HoldingsSyncEnabled => true;
-
-        /// <summary>
         /// Cache holding the legs of a combo order until all of them have been placed, so the brokerage can submit them together
         /// </summary>
         protected GroupOrderCacheManager GroupOrderCacheManager { get; } = new();
@@ -607,7 +600,7 @@ namespace QuantConnect.Brokerages
                     return false;
                 }
 
-                SyncOptionHoldings(algorithm, currentTimeUtc);
+                PerformOptionHoldingsSync(algorithm, currentTimeUtc);
 
                 Log.Trace("Brokerage.PerformCashSync(): Sync cash balance");
 
@@ -702,18 +695,16 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Syncs the option holdings with the brokerage once a day, with the cash sync, for the brokerages that report
-        /// nothing when a contract expires or is assigned: a contract the brokerage no longer lists is reported as position 0
+        /// Synchronizes the option holdings with the brokerage account, once a day with the cash sync, for the brokerages
+        /// that report nothing when a contract expires or is assigned: a contract the brokerage no longer lists is raised as
+        /// an option notification with position 0. A brokerage that reports every option position change itself overrides
+        /// this method and returns true
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="currentTimeUtc">The current time (UTC)</param>
-        private void SyncOptionHoldings(IAlgorithm algorithm, DateTime currentTimeUtc)
+        /// <returns>True if the option holdings sync was performed successfully</returns>
+        public virtual bool PerformOptionHoldingsSync(IAlgorithm algorithm, DateTime currentTimeUtc)
         {
-            if (!HoldingsSyncEnabled)
-            {
-                return;
-            }
-
             try
             {
                 var brokerageHoldings = default(Dictionary<Symbol, decimal>);
@@ -726,7 +717,7 @@ namespace QuantConnect.Brokerages
 
                     if (brokerageHoldings == null)
                     {
-                        Log.Trace("Brokerage.SyncOptionHoldings(): Start syncing option holdings...");
+                        Log.Trace("Brokerage.PerformOptionHoldingsSync(): Start syncing option holdings...");
                         brokerageHoldings = [];
                         foreach (var holding in GetAccountHoldings())
                         {
@@ -752,24 +743,27 @@ namespace QuantConnect.Brokerages
                             underlying.SetMarketPrice(lastKnownPrice);
                             if (underlying.Price == 0)
                             {
-                                Log.Error($"Brokerage.SyncOptionHoldings(): no price for {underlying.Symbol.Value}, {security.Symbol.Value} not synced.");
+                                Log.Error($"Brokerage.PerformOptionHoldingsSync(): no price for {underlying.Symbol.Value}, {security.Symbol.Value} not synced.");
                                 continue;
                             }
                         }
 
-                        Log.Trace($"Brokerage.SyncOptionHoldings(): syncing option holding: Symbol: {security.Symbol.Value}, Holdings: {security.Holdings.Quantity}, Position: {position}");
+                        Log.Trace($"Brokerage.PerformOptionHoldingsSync(): syncing option holding: Symbol: {security.Symbol.Value}, Holdings: {security.Holdings.Quantity}, Position: {position}");
                         OnOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
                     }
                 }
 
                 if (brokerageHoldings != null)
                 {
-                    Log.Trace($"Brokerage.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
+                    Log.Trace($"Brokerage.PerformOptionHoldingsSync(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
                 }
+
+                return true;
             }
             catch (Exception err)
             {
-                Log.Error(err, "Brokerage.SyncOptionHoldings(): failed to sync the option holdings.");
+                Log.Error(err, "Brokerage.PerformOptionHoldingsSync(): failed to sync the option holdings.");
+                return false;
             }
         }
 

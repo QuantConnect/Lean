@@ -2298,9 +2298,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [TestCase(true, 1, 0, -600, Description = "Short Call -> ITM, not listed at the brokerage, the sync books the assignment")]
-        [TestCase(false, 0, -7, 100, Description = "Short Call -> ITM, not listed at the brokerage, the brokerage reports option position changes itself, nothing booked")]
-        public void ProcessSynchronousEventsSyncsTheOptionHoldingsOnlyWhenTheBrokerageEnablesIt(
-            bool holdingsSyncEnabled,
+        [TestCase(false, 0, -7, 100, Description = "Short Call -> ITM, not listed at the brokerage, the brokerage overrides the sync away, nothing booked")]
+        public void ProcessSynchronousEventsSkipsTheOptionHoldingsSyncWhenTheBrokerageOverridesIt(
+            bool performOptionHoldingsSync,
             int expectedTickets,
             int expectedOptionPosition,
             int expectedUnderlyingPosition
@@ -2316,7 +2316,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             equity.SetMarketPrice(new Tick { Value = 455m });
             algorithm.SetLiveMode(true);
 
-            using var brokerage = new NoSubmitTestBrokerage(algorithm, holdingsSyncEnabled);
+            using var brokerage = new NoSubmitTestBrokerage(algorithm, performOptionHoldingsSync);
             // the brokerage does not list the contract, as a stale holdings read does after a reconnect
             brokerage.AccountHoldings = new List<Holding> { new Holding { Symbol = equity.Symbol, Quantity = 100 } };
             _transactionHandler = new TestBrokerageTransactionHandler();
@@ -3498,12 +3498,23 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
-            protected override bool HoldingsSyncEnabled { get; }
+            // false stands for a brokerage that reports every option position change itself and overrides the sync away
+            private readonly bool _performOptionHoldingsSync;
 
-            public NoSubmitTestBrokerage(IAlgorithm algorithm, bool holdingsSyncEnabled = true) : base("NoSubmitTestBrokerage")
+            public NoSubmitTestBrokerage(IAlgorithm algorithm, bool performOptionHoldingsSync = true) : base("NoSubmitTestBrokerage")
             {
                 _underlyingBrokerage = new BacktestingBrokerage(algorithm);
-                HoldingsSyncEnabled = holdingsSyncEnabled;
+                _performOptionHoldingsSync = performOptionHoldingsSync;
+            }
+
+            public override bool PerformOptionHoldingsSync(IAlgorithm algorithm, DateTime currentTimeUtc)
+            {
+                if (!_performOptionHoldingsSync)
+                {
+                    return true;
+                }
+
+                return base.PerformOptionHoldingsSync(algorithm, currentTimeUtc);
             }
             public override bool PlaceOrder(Order order)
             {
