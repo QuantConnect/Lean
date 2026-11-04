@@ -2300,7 +2300,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [TestCase(true, 1, 0, -600, Description = "Short Call -> ITM, not listed at the brokerage, the sync books the assignment")]
         [TestCase(false, 0, -7, 100, Description = "Short Call -> ITM, not listed at the brokerage, the brokerage reports option position changes itself, nothing booked")]
         public void ProcessSynchronousEventsSyncsTheOptionHoldingsOnlyWhenTheBrokerageEnablesIt(
-            bool optionHoldingsSyncEnabled,
+            bool holdingsSyncEnabled,
             int expectedTickets,
             int expectedOptionPosition,
             int expectedUnderlyingPosition
@@ -2316,7 +2316,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             equity.SetMarketPrice(new Tick { Value = 455m });
             algorithm.SetLiveMode(true);
 
-            using var brokerage = new NoSubmitTestBrokerage(algorithm, optionHoldingsSyncEnabled);
+            using var brokerage = new NoSubmitTestBrokerage(algorithm, holdingsSyncEnabled);
             // the brokerage does not list the contract, as a stale holdings read does after a reconnect
             brokerage.AccountHoldings = new List<Holding> { new Holding { Symbol = equity.Symbol, Quantity = 100 } };
             _transactionHandler = new TestBrokerageTransactionHandler();
@@ -3498,12 +3498,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
-            public override bool OptionHoldingsSyncEnabled { get; }
+            public override bool HoldingsSyncEnabled { get; }
 
-            public NoSubmitTestBrokerage(IAlgorithm algorithm, bool optionHoldingsSyncEnabled = true) : base("NoSubmitTestBrokerage")
+            public NoSubmitTestBrokerage(IAlgorithm algorithm, bool holdingsSyncEnabled = true) : base("NoSubmitTestBrokerage")
             {
                 _underlyingBrokerage = new BacktestingBrokerage(algorithm);
-                OptionHoldingsSyncEnabled = optionHoldingsSyncEnabled;
+                HoldingsSyncEnabled = holdingsSyncEnabled;
             }
             public override bool PlaceOrder(Order order)
             {

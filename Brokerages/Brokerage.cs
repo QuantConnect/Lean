@@ -514,7 +514,7 @@ namespace QuantConnect.Brokerages
         /// nothing when a contract expires or is assigned. A brokerage that reports every option position change
         /// itself returns false
         /// </summary>
-        public virtual bool OptionHoldingsSyncEnabled => true;
+        public virtual bool HoldingsSyncEnabled => true;
 
         /// <summary>
         /// Cache holding the legs of a combo order until all of them have been placed, so the brokerage can submit them together

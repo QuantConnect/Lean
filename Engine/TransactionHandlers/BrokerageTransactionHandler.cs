@@ -1740,7 +1740,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void SyncOptionHoldings()
         {
-            if (_brokerage is Brokerage { OptionHoldingsSyncEnabled: false })
+            if (_brokerage is Brokerage { HoldingsSyncEnabled: false })
             {
                 return;
             }
