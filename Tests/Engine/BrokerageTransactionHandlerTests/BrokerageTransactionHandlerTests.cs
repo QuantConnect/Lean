@@ -3498,7 +3498,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
-            public override bool HoldingsSyncEnabled { get; }
+            protected override bool HoldingsSyncEnabled { get; }
 
             public NoSubmitTestBrokerage(IAlgorithm algorithm, bool holdingsSyncEnabled = true) : base("NoSubmitTestBrokerage")
             {

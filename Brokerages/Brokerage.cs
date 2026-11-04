@@ -23,6 +23,7 @@ using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -514,7 +515,7 @@ namespace QuantConnect.Brokerages
         /// nothing when a contract expires or is assigned. A brokerage that reports every option position change
         /// itself returns false
         /// </summary>
-        public virtual bool HoldingsSyncEnabled => true;
+        protected virtual bool HoldingsSyncEnabled => true;
 
         /// <summary>
         /// Cache holding the legs of a combo order until all of them have been placed, so the brokerage can submit them together
@@ -589,7 +590,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Synchronizes the cashbook with the brokerage account
+        /// Synchronizes the cashbook, and the option holdings, with the brokerage account
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="currentTimeUtc">The current time (UTC)</param>
@@ -605,6 +606,8 @@ namespace QuantConnect.Brokerages
                     Log.Trace("Brokerage.PerformCashSync(): Reentrant call, cash sync not performed");
                     return false;
                 }
+
+                SyncOptionHoldings(algorithm, currentTimeUtc);
 
                 Log.Trace("Brokerage.PerformCashSync(): Sync cash balance");
 
@@ -696,6 +699,78 @@ namespace QuantConnect.Brokerages
                 });
 
             return true;
+        }
+
+        /// <summary>
+        /// Syncs the option holdings with the brokerage once a day, with the cash sync, for the brokerages that report
+        /// nothing when a contract expires or is assigned: a contract the brokerage no longer lists is reported as position 0
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="currentTimeUtc">The current time (UTC)</param>
+        private void SyncOptionHoldings(IAlgorithm algorithm, DateTime currentTimeUtc)
+        {
+            if (!HoldingsSyncEnabled)
+            {
+                return;
+            }
+
+            try
+            {
+                var brokerageHoldings = default(Dictionary<Symbol, decimal>);
+                foreach (var security in algorithm.Securities.Values)
+                {
+                    if (!security.Invested || !security.Symbol.SecurityType.IsOption())
+                    {
+                        continue;
+                    }
+
+                    if (brokerageHoldings == null)
+                    {
+                        Log.Trace("Brokerage.SyncOptionHoldings(): Start syncing option holdings...");
+                        brokerageHoldings = [];
+                        foreach (var holding in GetAccountHoldings())
+                        {
+                            if (holding.Symbol.SecurityType.IsOption())
+                            {
+                                brokerageHoldings.Add(holding.Symbol, holding.Quantity);
+                            }
+                        }
+                    }
+
+                    var position = 0m;
+                    if (!OptionSymbol.IsOptionContractExpired(security.Symbol, currentTimeUtc))
+                    {
+                        brokerageHoldings.TryGetValue(security.Symbol, out position);
+                    }
+
+                    if (position != security.Holdings.Quantity)
+                    {
+                        var underlying = (security as Option).Underlying;
+                        if (underlying.Price == 0)
+                        {
+                            var lastKnownPrice = algorithm.GetLastKnownPrice(underlying.Symbol);
+                            underlying.SetMarketPrice(lastKnownPrice);
+                            if (underlying.Price == 0)
+                            {
+                                Log.Error($"Brokerage.SyncOptionHoldings(): no price for {underlying.Symbol.Value}, {security.Symbol.Value} not synced.");
+                                continue;
+                            }
+                        }
+
+                        Log.Trace($"Brokerage.SyncOptionHoldings(): syncing option holding: Symbol: {security.Symbol.Value}, Holdings: {security.Holdings.Quantity}, Position: {position}");
+                        OnOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
+                    }
+                }
+
+                if (brokerageHoldings != null)
+                {
+                    Log.Trace($"Brokerage.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "Brokerage.SyncOptionHoldings(): failed to sync the option holdings.");
+            }
         }
 
         #endregion
