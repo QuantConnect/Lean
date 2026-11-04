@@ -510,6 +510,13 @@ namespace QuantConnect.Brokerages
         public virtual bool AccountInstantlyUpdated => false;
 
         /// <summary>
+        /// True when Lean syncs the option holdings with the brokerage once a day, for the brokerages that report
+        /// nothing when a contract expires or is assigned. A brokerage that reports every option position change
+        /// itself returns false
+        /// </summary>
+        public virtual bool HoldingsSyncEnabled => true;
+
+        /// <summary>
         /// Cache holding the legs of a combo order until all of them have been placed, so the brokerage can submit them together
         /// </summary>
         protected GroupOrderCacheManager GroupOrderCacheManager { get; } = new();
