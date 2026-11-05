@@ -1020,6 +1020,49 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
+        public void KeysListTheStoreOnFirstUseOnlyAndContainsNeverDoes()
+        {
+            var fileHandler = new ListingCountFileHandler();
+            var localStore = new TestLocalObjectStore();
+            using var store = new ObjectStore(localStore, _ => { });
+            localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, fileHandler);
+            Assert.IsTrue(store.Save("lazy keys: A & B.csv", "abc"));
+
+            var listings = fileHandler.Listings;
+            var keys = store.Keys;
+            Assert.IsTrue(keys.Contains("lazy keys: A & B.csv"));
+            Assert.IsTrue(keys.Contains("lazy keys_ A _ B.csv"));
+            Assert.IsFalse(keys.Contains("lazy keys missing.csv"));
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("TestLazyObjectStoreKeys", "def contains(keys, key):\n    return key in keys\n");
+                dynamic contains = module.GetAttr("contains");
+                PyObject found = contains(store.Keys, "lazy keys: A & B.csv");
+                PyObject missing = contains(store.Keys, "lazy keys missing.csv");
+                Assert.IsTrue(found.As<bool>());
+                Assert.IsFalse(missing.As<bool>());
+            }
+            Assert.AreEqual(listings, fileHandler.Listings);
+
+            // the listing is built on first use, once per collection
+            var listed = keys.ToList();
+            Assert.AreEqual(listed.Count, keys.Count);
+            Assert.AreEqual(listed, keys.ToList());
+            Assert.AreEqual(listings + 1, fileHandler.Listings);
+            Assert.That(listed, Does.Contain("lazy keys: A & B.csv"));
+            Assert.That(listed, Does.Contain("lazy keys_ A _ B.csv"));
+
+            // a new access lists again, so it sees what changed since
+            Assert.IsTrue(store.Save("lazy_keys_later.csv", "abc"));
+            listings = fileHandler.Listings;
+            Assert.That(store.Keys.ToList(), Does.Contain("lazy_keys_later.csv"));
+            Assert.AreEqual(listings + 1, fileHandler.Listings);
+
+            Assert.IsTrue(store.Delete("lazy keys: A & B.csv"));
+            Assert.IsTrue(store.Delete("lazy_keys_later.csv"));
+        }
+
+        [Test]
         public void QuantBookWarnsThroughTheEngineLog()
         {
             var traces = new List<string>();
@@ -1953,6 +1996,17 @@ def assert_raises_key_not_found(action):
                 return base.PersistData();
             }
             protected override string StorageRoot() => TestStorageRoot;
+        }
+
+        private sealed class ListingCountFileHandler : FileHandler
+        {
+            public int Listings { get; private set; }
+
+            public override IEnumerable<FileInfo> EnumerateFiles(string path, string pattern, SearchOption searchOption, out string rootfolder)
+            {
+                Listings++;
+                return base.EnumerateFiles(path, pattern, searchOption, out rootfolder);
+            }
         }
 
         public class TestFileHandler : FileHandler

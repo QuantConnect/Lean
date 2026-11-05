@@ -95,18 +95,10 @@ namespace QuantConnect.Storage
 
         /// <summary>
         /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory.
-        /// An unsupported key saved in this run is listed next to the sanitized name its object is stored under,
-        /// and Contains finds a key the way <see cref="ContainsKey"/> does
+        /// An unsupported key saved in this run is listed next to the sanitized name its object is stored under.
+        /// The store is listed on first use, and Contains finds a key the way <see cref="ContainsKey"/> does, without listing it
         /// </summary>
-        public ICollection<string> Keys
-        {
-            get
-            {
-                var keys = _store.Keys;
-                var unsupportedKeys = _sanitizedKeys.Where(pair => _store.ContainsKey(pair.Value)).Select(pair => pair.Key).ToList();
-                return new KeyCollection(unsupportedKeys.Count == 0 ? keys : keys.Union(unsupportedKeys).ToList(), ContainsKey);
-            }
-        }
+        public ICollection<string> Keys => new KeyCollection(ListKeys, ContainsKey);
 
         /// <summary>
         /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
@@ -369,6 +361,20 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// The names the objects are stored under, then the unsupported keys saved in this run whose object exists
+        /// </summary>
+        private ICollection<string> ListKeys()
+        {
+            var keys = _store.Keys;
+            if (_sanitizedKeys.IsEmpty)
+            {
+                return keys;
+            }
+            var unsupportedKeys = _sanitizedKeys.Where(pair => _store.ContainsKey(pair.Value)).Select(pair => pair.Key).ToList();
+            return unsupportedKeys.Count == 0 ? keys : keys.Union(unsupportedKeys).ToList();
+        }
+
+        /// <summary>
         /// The key a save goes to: the given one when it follows the key format, else its sanitized version, replacing
         /// the object stored there. Null and empty keys are left for the store to reject
         /// </summary>
@@ -498,20 +504,21 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// The keys of the object store, whose Contains finds a key the way <see cref="ContainsKey"/> does
+        /// The keys of the object store, listed on first use. Its Contains finds a key the way
+        /// <see cref="ContainsKey"/> does, without listing the store
         /// </summary>
         private sealed class KeyCollection : ICollection<string>
         {
-            private readonly ICollection<string> _keys;
+            private readonly Lazy<ICollection<string>> _keys;
             private readonly Func<string, bool> _containsKey;
 
-            public int Count => _keys.Count;
+            public int Count => _keys.Value.Count;
 
-            public bool IsReadOnly => _keys.IsReadOnly;
+            public bool IsReadOnly => _keys.Value.IsReadOnly;
 
-            public KeyCollection(ICollection<string> keys, Func<string, bool> containsKey)
+            public KeyCollection(Func<ICollection<string>> listKeys, Func<string, bool> containsKey)
             {
-                _keys = keys;
+                _keys = new Lazy<ICollection<string>>(listKeys);
                 _containsKey = containsKey;
             }
 
@@ -530,27 +537,27 @@ namespace QuantConnect.Storage
 
             public void Add(string item)
             {
-                _keys.Add(item);
+                _keys.Value.Add(item);
             }
 
             public void Clear()
             {
-                _keys.Clear();
+                _keys.Value.Clear();
             }
 
             public bool Remove(string item)
             {
-                return _keys.Remove(item);
+                return _keys.Value.Remove(item);
             }
 
             public void CopyTo(string[] array, int arrayIndex)
             {
-                _keys.CopyTo(array, arrayIndex);
+                _keys.Value.CopyTo(array, arrayIndex);
             }
 
             public IEnumerator<string> GetEnumerator()
             {
-                return _keys.GetEnumerator();
+                return _keys.Value.GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
