@@ -32,8 +32,8 @@ namespace QuantConnect.Storage
 {
     /// <summary>
     /// Helper class for easier access to <see cref="IObjectStore"/> methods. A key that does not follow the key
-    /// format (english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never two
-    /// '.' in a row, e.g. 'folder/trade_log-2024.v2.csv') is saved under its sanitized version and found by
+    /// format (english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never
+    /// two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv') is saved under its sanitized version and found by
     /// either name, with a warning the first time it happens. A save whose
     /// sanitized name already holds an object this store did not write from that key throws, since nothing records who
     /// wrote that object. An object already stored under an unsupported name is read as is; a save to that name goes
@@ -42,7 +42,7 @@ namespace QuantConnect.Storage
     public class ObjectStore : IObjectStore
     {
         // The single source of the key charset rules, also enforced by the LocalObjectStore implementation
-        private static readonly Regex UnsupportedKeyCharactersRegex = new(@"[^a-zA-Z0-9/_#\-\$= .]", RegexOptions.Compiled);
+        private static readonly Regex UnsupportedKeyCharactersRegex = new(@"[^a-zA-Z0-9\\/_#\-\$= .]", RegexOptions.Compiled);
         // '..' is never allowed: it would leave the storage root
         private static readonly Regex ConsecutiveDotsRegex = new(@"\.{2,}", RegexOptions.Compiled);
 
@@ -128,7 +128,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
@@ -254,7 +254,7 @@ namespace QuantConnect.Storage
         /// Saves the data from a local file path associated with the specified path
         /// </summary>
         /// <remarks>If the file does not exist it will throw an exception</remarks>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool Save(string path)
         {
@@ -272,7 +272,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -285,7 +285,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -300,7 +300,7 @@ namespace QuantConnect.Storage
         /// Saves the object data in text format for the specified path.
         /// Alias of <see cref="Save(string, string, Encoding)"/>
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -312,7 +312,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in JSON format for the specified path
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
@@ -328,7 +328,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in XML format for the specified path
         /// </summary>
-        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. '\' becomes '/', other characters '_'</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -462,7 +462,7 @@ namespace QuantConnect.Storage
         {
             return !string.IsNullOrEmpty(key) && !UnsupportedKeyCharactersRegex.IsMatch(key) && !key.Contains("..", StringComparison.Ordinal) && HasName(key)
                 // just in case
-                && key.Count(c => c == '/') <= 100;
+                && key.Count(c => c == '/') <= 100 && key.Count(c => c == '\\') <= 100;
         }
 
         /// <summary>
@@ -470,7 +470,7 @@ namespace QuantConnect.Storage
         /// </summary>
         private static bool HasName(string key)
         {
-            return key.Any(c => c != '.' && c != '/');
+            return key.Any(c => c != '.' && c != '/' && c != '\\');
         }
 
         /// <summary>
@@ -484,7 +484,7 @@ namespace QuantConnect.Storage
             }
             return string.Join("; ", FindKeyIssues(key)) +
                 ". Keys may only contain english letters, numbers, spaces and the characters" +
-                " '.', '/', '_', '#', '-', '$' and '=', never two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv'";
+                " '.', '/', '\\', '_', '#', '-', '$' and '=', never two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv'";
         }
 
         /// <summary>
@@ -514,9 +514,9 @@ namespace QuantConnect.Storage
                 issues.Add("it has no name, only '.' and separators");
             }
 
-            if (key.Count(c => c == '/') > 100)
+            if (key.Count(c => c == '/') > 100 || key.Count(c => c == '\\') > 100)
             {
-                issues.Add("it has more than 100 '/' separators");
+                issues.Add("it has more than 100 '/' or '\\' separators");
             }
 
             if (issues.Count == 0)
@@ -527,14 +527,13 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Converts an unsupported key into a supported one: '\' becomes '/', the separator it already was for the local
-        /// store, every other unsupported character and every '.' of a '..' run become '_', so 'trade log: AI &amp; Cloud.csv'
-        /// becomes 'trade log_ AI _ Cloud.csv'.
+        /// Converts an unsupported key into a supported one by replacing every unsupported character, and every '.'
+        /// of a '..' run, with '_': 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'.
         /// The mapping is lossy, distinct keys can sanitize to the same one. Throws when the key cannot be fixed
         /// </summary>
         private static string SanitizeKey(string key)
         {
-            var sanitized = UnsupportedKeyCharactersRegex.Replace(key.Replace('\\', '/'), "_");
+            var sanitized = UnsupportedKeyCharactersRegex.Replace(key, "_");
             sanitized = ConsecutiveDotsRegex.Replace(sanitized, match => new string('_', match.Length));
 
             ValidateKey(sanitized);

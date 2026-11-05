@@ -639,7 +639,6 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("..model.pkl", "__model.pkl")]
         [TestCase("a/../b.csv", "a/__/b.csv")]
         [TestCase("a...b.csv", "a___b.csv")]
-        [TestCase("folder\\file.csv", "folder/file.csv")]
         [TestCase("file.csv\n", "file.csv_")]
         public void UnsupportedKeysAreSanitizedOnSaveAndFoundByTheKeyTheyWereSavedWith(string key, string sanitizedKey)
         {
@@ -658,10 +657,10 @@ namespace QuantConnect.Tests.Common.Storage
 
         [TestCase("../secrets.json", "__/secrets.json")]
         [TestCase("../../secrets.json", "__/__/secrets.json")]
-        [TestCase("..\\secrets.json", "__/secrets.json")]
+        [TestCase("..\\secrets.json", "__\\secrets.json")]
         [TestCase("x/../secrets.json", "x/__/secrets.json")]
         [TestCase("x/../../secrets.json", "x/__/__/secrets.json")]
-        [TestCase("x\\..\\..\\secrets.json", "x/__/__/secrets.json")]
+        [TestCase("x\\..\\..\\secrets.json", "x\\__\\__\\secrets.json")]
         [TestCase("x/.../secrets.json", "x/___/secrets.json")]
         [TestCase("x/..", "x/__")]
         [TestCase("x/....", "x/____")]
@@ -676,7 +675,7 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.That(Path.GetFullPath(store.GetFilePath(key)), Does.StartWith(root));
             Assert.IsTrue(store.Save(key, "abc"));
 
-            Assert.IsTrue(store.Keys.Contains(sanitizedKey), string.Join(", ", store.Keys));
+            Assert.IsTrue(store.Keys.Contains(sanitizedKey.Replace('\\', '/')), string.Join(", ", store.Keys));
             Assert.IsFalse(store.Keys.Any(k => k.Contains("..")), string.Join(", ", store.Keys));
             Assert.That(Path.GetFullPath(store.GetFilePath(sanitizedKey)), Does.StartWith(root));
             Assert.AreEqual("abc", store.Read(key));
@@ -729,7 +728,7 @@ namespace QuantConnect.Tests.Common.Storage
 
             Assert.AreEqual(1, warnings.Count, string.Join("\n", warnings));
             Assert.AreEqual("ObjectStore: key 'trade log: AI & Cloud.csv' is not supported: unsupported characters ':', '&'. " +
-                "Keys may only contain english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', " +
+                "Keys may only contain english letters, numbers, spaces and the characters '.', '/', '\\', '_', '#', '-', '$' and '=', " +
                 "never two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv'. " +
                 "Using 'trade log_ AI _ Cloud.csv' instead. Any other unsupported key is sanitized the same way; " +
                 "a save throws when its sanitized name already holds an object not written from that key in this run", warnings[0]);
@@ -744,7 +743,6 @@ namespace QuantConnect.Tests.Common.Storage
 
         [TestCase("trade log: AI & Cloud.csv", "unsupported characters ':', '&'")]
         [TestCase("résumé.pdf", "unsupported character 'é'")]
-        [TestCase("folder\\file.csv", "unsupported character '\\'")]
         [TestCase("..model.pkl", "it contains '..'")]
         [TestCase("a/../b.csv", "it contains '..'")]
         [TestCase("trade log: AI..v2.csv", "unsupported character ':'; it contains '..'")]
@@ -992,6 +990,30 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
+        public void ABackslashKeyIsSavedInEveryRunAsOnTheStoreItAlwaysReadAsASeparator()
+        {
+            var warnings = new List<string>();
+            for (var run = 1; run <= 2; run++)
+            {
+                using var store = new ObjectStore(new TestLocalObjectStore(), warnings.Add);
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+                Assert.IsTrue(store.Save("backslash_folder\\results.csv", $"run{run}"));
+
+                Assert.AreEqual($"run{run}", store.Read("backslash_folder\\results.csv"));
+                Assert.AreEqual($"run{run}", store.Read("backslash_folder/results.csv"));
+                Assert.IsTrue(store.Keys.Contains("backslash_folder/results.csv"), string.Join(", ", store.Keys));
+                Assert.IsTrue(store.ContainsKey("backslash_folder\\results.csv"));
+            }
+            Assert.IsEmpty(warnings, string.Join("\n", warnings));
+
+            using var lastRun = new ObjectStore(new TestLocalObjectStore());
+            lastRun.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(lastRun.Delete("backslash_folder\\results.csv"));
+            Assert.IsFalse(lastRun.ContainsKey("backslash_folder/results.csv"));
+        }
+
+        [Test]
         public void ASaveToTheSanitizedNameFromAnotherKeyEndsTheSilentUpdatesOfAnUnsupportedKey()
         {
             var warnings = new List<string>();
@@ -1048,7 +1070,7 @@ namespace QuantConnect.Tests.Common.Storage
             var error = Assert.Throws<ArgumentException>(() => store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
 
             Assert.AreEqual("ObjectStore: path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'. " +
-                "Keys may only contain english letters, numbers, spaces and the characters '.', '/', '_', '#', '-', '$' and '=', " +
+                "Keys may only contain english letters, numbers, spaces and the characters '.', '/', '\\', '_', '#', '-', '$' and '=', " +
                 "never two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv'", error.Message);
         }
 
