@@ -47,6 +47,27 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
+        /// The order types of an exit order an entry triggers: a stop market order is the stop loss of the position the
+        /// entry opens, a limit order its take profit.
+        /// </summary>
+        private readonly HashSet<OrderType> _supportExitOrderTypes = new(
+            new[]
+            {
+                OrderType.StopMarket,
+                OrderType.Limit
+            });
+
+        /// <summary>
+        /// The contingency types supported: an entry which triggers its exits, and the two exits of a bracket where one
+        /// cancels the other.
+        /// </summary>
+        private readonly HashSet<ContingencyType> _supportedContingencyTypes = new()
+        {
+            ContingencyType.OneTriggersOther,
+            ContingencyType.OneCancelsOther
+        };
+
+        /// <summary>
         /// The order types that cannot cross zero holdings.
         /// eToro closes a position by units, so a sell beyond the long holdings is refused.
         /// </summary>
@@ -83,7 +104,7 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!this.ValidateContingentOrdersNotSupported(order, out message))
+            if (!CanSubmitContingentOrder(security, order, out message))
             {
                 return false;
             }
@@ -95,30 +116,35 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!_supportOrderTypes.Contains(order.Type))
+            var isExitOrder = order.GetContingencyLink(ContingencyRole.Child) != null;
+            var supportedOrderTypes = isExitOrder ? _supportExitOrderTypes : _supportOrderTypes;
+            if (!supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportedOrderTypes));
                 return false;
             }
 
-            var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity);
-            var hasStopLossRate = order.Properties is EtoroOrderProperties { StopLossRate: > 0 };
-            if (orderPosition == OrderPosition.SellToOpen && !hasStopLossRate)
+            if (!isExitOrder)
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.EtoroBrokerageModel.ShortSaleRequiresStopLossRate(order));
-                return false;
+                var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity);
+                var hasStopLoss = order.Contingency?.OrderTypes.Contains(OrderType.StopMarket) == true;
+                if (orderPosition == OrderPosition.SellToOpen && !hasStopLoss)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.EtoroBrokerageModel.ShortSaleRequiresStopLoss(order));
+                    return false;
+                }
+
+                if ((orderPosition is OrderPosition.BuyToOpen or OrderPosition.SellToOpen) && security.Leverage > 1 && !hasStopLoss)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.EtoroBrokerageModel.LeverageRequiresStopLoss(order, security.Leverage));
+                    return false;
+                }
             }
 
-            if ((orderPosition is OrderPosition.BuyToOpen or OrderPosition.SellToOpen) && security.Leverage > 1 && !hasStopLossRate)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.EtoroBrokerageModel.LeverageRequiresStopLossRate(order, security.Leverage));
-                return false;
-            }
-
-            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
+            if (!isExitOrder && !BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
             {
                 return false;
             }
@@ -127,18 +153,87 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Returns false: eToro has no order update, an order is cancelled and placed again instead.
+        /// Validates a set of contingent orders: a market entry which once filled triggers a stop market order (the stop loss),
+        /// a limit order (the take profit), or both where one cancels the other (a bracket). eToro sets them on the position
+        /// the entry opens, so the exits are on the opposite side of the entry and close the position whole.
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the order is not a contingent order or its set is supported</returns>
+        private bool CanSubmitContingentOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            if (!this.ValidateContingentOrder(order, _supportedContingencyTypes, out message, supportsComboOrders: false,
+                supportsMultipleSymbols: false, supportsNesting: false, maximumOrderCount: 3))
+            {
+                return false;
+            }
+
+            var contingency = order.Contingency;
+            if (contingency == null)
+            {
+                return true;
+            }
+
+            var isEntry = order.GetContingencyLink(ContingencyRole.Parent) != null;
+            var isExit = order.GetContingencyLink(ContingencyRole.Child) != null;
+            var isMember = order.GetSiblingLink() != null;
+            if (!isEntry && !isExit)
+            {
+                message = this.UnsupportedContingentOrdersShape("the exit orders have to be triggered by an entry order.");
+            }
+            else if (isEntry && isMember)
+            {
+                message = this.UnsupportedContingentOrdersShape("the entry order can not be part of a one cancels other contingency.");
+            }
+            else if (isEntry && BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity) is not (OrderPosition.BuyToOpen or OrderPosition.SellToOpen))
+            {
+                message = this.UnsupportedContingentOrdersShape("the entry order has to open a position.");
+            }
+            else if (contingency.Directions.Count != 2)
+            {
+                message = this.UnsupportedContingentOrdersShape("the exit orders have to be on the opposite side of the entry order.");
+            }
+            else if (contingency.AbsoluteQuantities.Count != 1)
+            {
+                message = this.UnsupportedContingentOrdersShape("the exit orders have to be for the quantity of the entry order: eToro closes the whole position at the stop loss or the take profit.");
+            }
+            else if (contingency.Count == 3 && (isExit && !isMember
+                || !contingency.OrderTypes.Contains(OrderType.Limit) || !contingency.OrderTypes.Contains(OrderType.StopMarket)))
+            {
+                message = this.UnsupportedContingentOrdersShape("3 orders are only supported as a bracket: an entry order which triggers a take profit limit order and a stop loss stop market order where one cancels the other.");
+            }
+            return message == null;
+        }
+
+        /// <summary>
+        /// Returns true for a price change of an exit order: eToro moves the stop loss or the take profit of the position.
+        /// Any other update is refused, eToro has no order update; an order is cancelled and placed again instead.
         /// </summary>
         /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
         /// <param name="request">The requested update to be made to the order</param>
-        /// <param name="message">A brokerage message detailing why the order may not be updated</param>
-        /// <returns>Always false</returns>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be updated</param>
+        /// <returns>True for a price change of an exit order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
-            return false;
+            message = null;
+            if (order.GetContingencyLink(ContingencyRole.Child) == null)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+                return false;
+            }
+
+            if (request.Quantity.HasValue && request.Quantity.Value != order.Quantity)
+            {
+                // the whole position closes at the stop loss or the take profit
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedContingentOrdersQuantityUpdate(this));
+                return false;
+            }
+
+            return true;
         }
     }
 }

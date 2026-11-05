@@ -697,21 +697,21 @@ namespace QuantConnect
         public static class EtoroBrokerageModel
         {
             /// <summary>
-            /// Returns a message explaining that a short sale needs the stop loss rate in the eToro order properties.
+            /// Returns a message explaining that a short sale needs a stop loss: a stop market order it triggers.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ShortSaleRequiresStopLossRate(Orders.Order order)
+            public static string ShortSaleRequiresStopLoss(Orders.Order order)
             {
-                return Invariant($"A short sale of {order.Symbol.Value} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the short position.");
+                return Invariant($"A short sale of {order.Symbol.Value} at eToro needs a stop loss: a stop market order the short sale triggers, as a one triggers other or a bracket order. eToro closes the short position at its stop price.");
             }
 
             /// <summary>
-            /// Returns a message explaining that a position with leverage above 1 needs the stop loss rate in the eToro order properties.
+            /// Returns a message explaining that a position with leverage above 1 needs a stop loss: a stop market order the entry triggers.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string LeverageRequiresStopLossRate(Orders.Order order, decimal leverage)
+            public static string LeverageRequiresStopLoss(Orders.Order order, decimal leverage)
             {
-                return Invariant($"A position in {order.Symbol.Value} at leverage {leverage} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the position.");
+                return Invariant($"A position in {order.Symbol.Value} at leverage {leverage} at eToro needs a stop loss: a stop market order the entry triggers, as a one triggers other or a bracket order. eToro closes the position at its stop price.");
             }
         }
 

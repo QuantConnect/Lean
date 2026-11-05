@@ -24,12 +24,6 @@ namespace QuantConnect.Orders
     public class EtoroOrderProperties : OrderProperties
     {
         /// <summary>
-        /// The absolute price at which eToro closes the position when the market moves against it.
-        /// eToro requires it for a short sale and for a position with leverage above 1, the leverage of the security.
-        /// </summary>
-        public decimal? StopLossRate { get; set; }
-
-        /// <summary>
         /// Returns a new instance clone of this object
         /// </summary>
         public override IOrderProperties Clone()

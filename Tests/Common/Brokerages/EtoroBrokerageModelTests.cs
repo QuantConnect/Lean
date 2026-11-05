@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages;
@@ -74,16 +76,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Not.Null);
         }
 
-        // A sell with no holdings opens a short position, which eToro accepts only with a positive stop loss rate.
-        [TestCase(false, null, false)]
-        [TestCase(true, null, false)]
-        [TestCase(true, 0, false)]
-        [TestCase(true, 150, true)]
-        public void CanSubmitOrderShortSaleRequiresStopLossRate(bool hasEtoroProperties, decimal? stopLossRate, bool expectedCanSubmit)
+        // A sell with no holdings opens a short position, which eToro accepts only with a stop loss: a stop market order it triggers.
+        [TestCase(false, false)]
+        [TestCase(true, true)]
+        public void CanSubmitOrderShortSaleRequiresStopLoss(bool triggersStopLoss, bool expectedCanSubmit)
         {
             var security = GetSecurityForType(SecurityType.Equity);
-            var properties = hasEtoroProperties ? new EtoroOrderProperties { StopLossRate = stopLossRate } : null;
-            var order = new MarketOrder(security.Symbol, -1m, DateTime.UtcNow, properties: properties);
+            var order = new MarketOrder(security.Symbol, -1m, DateTime.UtcNow);
+            if (triggersStopLoss)
+            {
+                OrderContingency.Trigger([order], [new StopMarketOrder(security.Symbol, 1m, 110m, DateTime.UtcNow)]);
+            }
 
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
@@ -94,7 +97,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
             else
             {
-                Assert.That(message.Message, Does.Contain(nameof(EtoroOrderProperties.StopLossRate)));
+                Assert.That(message.Message, Does.Contain("stop market order"));
             }
         }
 
@@ -127,6 +130,24 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Not.Null);
         }
 
+        // An exit order moves the stop loss or the take profit of the position; its quantity is the position's
+        [TestCase(false, true, Description = "A new stop price")]
+        [TestCase(true, false, Description = "A new quantity")]
+        public void CanUpdateOrderExitOrderAllowsThePriceOnly(bool changesQuantity, bool expectedCanUpdate)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            var entry = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
+            var stopLoss = new StopMarketOrder(security.Symbol, -1m, 90m, DateTime.UtcNow);
+            OrderContingency.Trigger([entry], [stopLoss]);
+            var fields = changesQuantity ? new UpdateOrderFields { Quantity = -2m } : new UpdateOrderFields { StopPrice = 95m };
+            var request = new UpdateOrderRequest(DateTime.UtcNow, stopLoss.Id, fields);
+
+            var canUpdate = _brokerageModel.CanUpdateOrder(security, stopLoss, request, out var message);
+
+            Assert.That(canUpdate, Is.EqualTo(expectedCanUpdate));
+            Assert.That(message, expectedCanUpdate ? Is.Null : Is.Not.Null);
+        }
+
         [Test]
         public void GetFeeModelReturnsEtoroFeeModel()
         {
@@ -135,15 +156,18 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(_brokerageModel.GetFeeModel(security), Is.InstanceOf<EtoroFeeModel>());
         }
 
-        [TestCase(1, null, true)]
-        [TestCase(2, null, false)]
-        [TestCase(2, 0, false)]
-        [TestCase(2, 150, true)]
-        public void CanSubmitOrderLeverageAboveOneRequiresStopLossRate(decimal leverage, decimal? stopLossRate, bool expectedCanSubmit)
+        [TestCase(1, false, true)]
+        [TestCase(2, false, false)]
+        [TestCase(2, true, true)]
+        public void CanSubmitOrderLeverageAboveOneRequiresStopLoss(decimal leverage, bool triggersStopLoss, bool expectedCanSubmit)
         {
             var security = GetSecurityForType(SecurityType.Equity);
             security.SetLeverage(leverage);
-            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow, properties: new EtoroOrderProperties { StopLossRate = stopLossRate });
+            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
+            if (triggersStopLoss)
+            {
+                OrderContingency.Trigger([order], [new StopMarketOrder(security.Symbol, -1m, 90m, DateTime.UtcNow)]);
+            }
 
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
@@ -154,7 +178,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
             else
             {
-                Assert.That(message.Message, Does.Contain(nameof(EtoroOrderProperties.StopLossRate)));
+                Assert.That(message.Message, Does.Contain("stop market order"));
             }
         }
 
@@ -176,6 +200,81 @@ namespace QuantConnect.Tests.Common.Brokerages
         public void ConstructorWithoutAccountTypeUsesCash()
         {
             Assert.That(new EtoroBrokerageModel().AccountType, Is.EqualTo(AccountType.Cash));
+        }
+
+        [TestCase("stop loss", 1, true, Description = "A market entry which triggers a stop market stop loss")]
+        [TestCase("take profit", 1, true, Description = "A market entry which triggers a limit take profit")]
+        [TestCase("bracket", 1, true, Description = "A market entry which triggers a take profit and a stop loss, one cancels the other")]
+        [TestCase("short stop loss", 1, true, Description = "A short sale which triggers a stop loss")]
+        [TestCase("short take profit", 1, false, Description = "A short sale needs a stop loss")]
+        [TestCase("stop loss", 2, true, Description = "A leveraged entry which triggers a stop loss")]
+        [TestCase("take profit", 2, false, Description = "A leveraged entry needs a stop loss")]
+        [TestCase("exits only", 1, false, Description = "The exits have to be triggered by an entry")]
+        [TestCase("same side exit", 1, false, Description = "The exits are on the opposite side of the entry")]
+        [TestCase("half exit", 1, false, Description = "The exits are for the quantity of the entry, the whole position closes at one of them")]
+        [TestCase("limit entry", 1, false, Description = "The entry has to be a market order")]
+        [TestCase("market exit", 1, false, Description = "An exit has to be a stop market or a limit order")]
+        [TestCase("two stop losses", 1, false, Description = "3 orders are only supported as a bracket")]
+        public void CanSubmitOrderContingentOrders(string shape, decimal leverage, bool expectedCanSubmit)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            security.SetLeverage(leverage);
+            var orders = CreateContingentOrders(shape, security.Symbol);
+
+            // the transaction handler submits the set only when every order of it can be submitted
+            var canSubmit = orders.All(order => _brokerageModel.CanSubmitOrder(security, order, out _));
+
+            Assert.That(canSubmit, Is.EqualTo(expectedCanSubmit));
+        }
+
+        // The exits close the position the entry opens, so the 2 shares held now do not make a 5 share exit cross zero
+        [Test]
+        public void CanSubmitOrderContingentOrdersExitsBeyondTheHoldings()
+        {
+            var equity = Symbols.AAPL;
+            var security = TestsHelpers.InitializeSecurity(SecurityType.Equity, (equity, 209m, 2m))[equity];
+            var entry = new MarketOrder(equity, 5m, DateTime.UtcNow);
+            var exits = new List<Order> { new LimitOrder(equity, -5m, 230m, DateTime.UtcNow), new StopMarketOrder(equity, -5m, 190m, DateTime.UtcNow) };
+            OrderContingency.Trigger([entry], exits);
+            OrderContingency.Relate(ContingencyType.OneCancelsOther, exits);
+
+            var canSubmit = exits.Prepend(entry).All(order => _brokerageModel.CanSubmitOrder(security, order, out _));
+
+            Assert.That(canSubmit, Is.True);
+        }
+
+        private static List<Order> CreateContingentOrders(string shape, Symbol symbol)
+        {
+            var time = DateTime.UtcNow;
+            var entryQuantity = shape.StartsWith("short") ? -2m : 2m;
+            var exitQuantity = shape switch
+            {
+                "same side exit" => entryQuantity,
+                "half exit" => -entryQuantity / 2,
+                _ => -entryQuantity
+            };
+            Order entry = shape == "limit entry" ? new LimitOrder(symbol, entryQuantity, 100m, time) : new MarketOrder(symbol, entryQuantity, time);
+            var stopLoss = new StopMarketOrder(symbol, exitQuantity, 90m, time);
+            var takeProfit = new LimitOrder(symbol, exitQuantity, 110m, time);
+
+            List<Order> exits = shape switch
+            {
+                "take profit" or "short take profit" => [takeProfit],
+                "bracket" or "exits only" => [takeProfit, stopLoss],
+                "market exit" => [new MarketOrder(symbol, exitQuantity, time)],
+                "two stop losses" => [stopLoss, new StopMarketOrder(symbol, exitQuantity, 80m, time)],
+                _ => [stopLoss]
+            };
+
+            if (shape != "exits only")
+            {
+                OrderContingency.Trigger([entry], exits);
+            }
+            if (exits.Count == 2)
+            {
+                OrderContingency.Relate(ContingencyType.OneCancelsOther, exits);
+            }
+            return shape == "exits only" ? exits : [entry, .. exits];
         }
 
         private static Security GetSecurityForType(SecurityType securityType)
