@@ -15,21 +15,41 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Storage
 {
     /// <summary>
-    /// Helper class for easier access to <see cref="IObjectStore"/> methods
+    /// Helper class for easier access to <see cref="IObjectStore"/> methods. A key that does not follow the key
+    /// format (english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never
+    /// two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv') is saved under its sanitized version, then found and
+    /// listed by either name, with a warning the first time it happens. An object already stored under an unsupported name
+    /// is read as is until a save through that name creates the sanitized one
     /// </summary>
     public class ObjectStore : IObjectStore
     {
+        // The single source of the key charset rules, also enforced by the LocalObjectStore implementation
+        private static readonly Regex UnsupportedKeyCharactersRegex = new(@"[^a-zA-Z0-9\\/_#\-\$= .]", RegexOptions.Compiled);
+        // '..' is never allowed: it would leave the storage root
+        private static readonly Regex ConsecutiveDotsRegex = new(@"\.{2,}", RegexOptions.Compiled);
+
+        private readonly IObjectStore _store;
+        private readonly Action<string> _warn;
+        // The unsupported keys saved in this run and the sanitized name each one is stored under
+        private readonly ConcurrentDictionary<string, string> _sanitizedKeys = new();
+        private int _warned;
+
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
@@ -49,15 +69,15 @@ namespace QuantConnect.Storage
             remove { _store.ErrorRaised -= value; }
         }
 
-        private readonly IObjectStore _store;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ObjectStore"/> class
         /// </summary>
         /// <param name="store">The <see cref="IObjectStore"/> instance to wrap</param>
-        public ObjectStore(IObjectStore store)
+        /// <param name="warn">Receives the warnings about sanitized keys, the engine log by default</param>
+        public ObjectStore(IObjectStore store, Action<string> warn = null)
         {
             _store = store;
+            _warn = warn ?? (message => Log.Trace(message));
         }
 
         /// <summary>
@@ -74,9 +94,11 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory.
+        /// An unsupported key saved in this run is listed next to the sanitized name its object is stored under.
+        /// The store is listed on first use, and Contains finds a key the way <see cref="ContainsKey"/> does, without listing it
         /// </summary>
-        public ICollection<string> Keys => _store.Keys;
+        public ICollection<string> Keys => new KeyCollection(ListKeys, ContainsKey);
 
         /// <summary>
         /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
@@ -90,7 +112,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the key was found</returns>
         public bool ContainsKey(string path)
         {
-            return _store.ContainsKey(path);
+            return _store.ContainsKey(KeyToRead(path));
         }
 
         /// <summary>
@@ -100,18 +122,18 @@ namespace QuantConnect.Storage
         /// <returns>A byte array containing the data</returns>
         public byte[] ReadBytes(string path)
         {
-            return _store.ReadBytes(path);
+            return _store.ReadBytes(KeyToRead(path));
         }
 
         /// <summary>
         /// Saves the object data for the specified path
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
         {
-            return _store.SaveBytes(path, contents);
+            return _store.SaveBytes(KeyToSave(path), contents);
         }
 
         /// <summary>
@@ -121,7 +143,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the delete operation was successful</returns>
         public bool Delete(string path)
         {
-            return _store.Delete(path);
+            return _store.Delete(KeyToRead(path));
         }
 
         /// <summary>
@@ -131,7 +153,7 @@ namespace QuantConnect.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string path)
         {
-            return _store.GetFilePath(path);
+            return _store.GetFilePath(KeyToRead(path));
         }
 
         /// <summary>
@@ -144,7 +166,7 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var data = _store.ReadBytes(path);
+            var data = ReadBytes(path);
             return data != null ? encoding.GetString(data) : null;
         }
 
@@ -208,7 +230,7 @@ namespace QuantConnect.Storage
         /// Saves the data from a local file path associated with the specified path
         /// </summary>
         /// <remarks>If the file does not exist it will throw an exception</remarks>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool Save(string path)
         {
@@ -220,26 +242,26 @@ namespace QuantConnect.Storage
             }
             var bytes = File.ReadAllBytes(filePath);
 
-            return _store.SaveBytes(path, bytes);
+            return SaveBytes(path, bytes);
         }
 
         /// <summary>
         /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool Save(string path, string text, Encoding encoding = null)
         {
             encoding ??= Encoding.UTF8;
-            return _store.SaveBytes(path, encoding.GetBytes(text));
+            return SaveBytes(path, encoding.GetBytes(text));
         }
 
         /// <summary>
         /// Saves the object data in text format for the specified path
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -247,14 +269,14 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return _store.SaveBytes(path, encoding.GetBytes(text));
+            return SaveBytes(path, encoding.GetBytes(text));
         }
 
         /// <summary>
         /// Saves the object data in text format for the specified path.
         /// Alias of <see cref="Save(string, string, Encoding)"/>
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -266,7 +288,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in JSON format for the specified path
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
@@ -282,7 +304,7 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in XML format for the specified path
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
@@ -321,6 +343,227 @@ namespace QuantConnect.Storage
         public void Dispose()
         {
             _store.Dispose();
+        }
+
+        /// <summary>
+        /// Throws if the given key does not follow the key format, stating every problem found and the rules.
+        /// The last line of defense of the store implementations, as this class only hands them supported keys
+        /// </summary>
+        /// <param name="key">The object store key to validate</param>
+        /// <exception cref="ArgumentException">The key is not supported</exception>
+        internal static void ValidateKey(string key)
+        {
+            var issues = GetKeyIssues(key);
+            if (issues != null)
+            {
+                throw new ArgumentException($"ObjectStore: path is not supported: '{key}': {issues}");
+            }
+        }
+
+        /// <summary>
+        /// The names the objects are stored under, then the unsupported keys saved in this run whose object exists
+        /// </summary>
+        private ICollection<string> ListKeys()
+        {
+            var keys = _store.Keys;
+            if (_sanitizedKeys.IsEmpty)
+            {
+                return keys;
+            }
+            var unsupportedKeys = _sanitizedKeys.Where(pair => _store.ContainsKey(pair.Value)).Select(pair => pair.Key).ToList();
+            return unsupportedKeys.Count == 0 ? keys : keys.Union(unsupportedKeys).ToList();
+        }
+
+        /// <summary>
+        /// The key a save goes to: the given one when it follows the key format, else its sanitized version, replacing
+        /// the object stored there. Null and empty keys are left for the store to reject
+        /// </summary>
+        private string KeyToSave(string path)
+        {
+            if (string.IsNullOrEmpty(path) || IsSupportedKey(path))
+            {
+                return path;
+            }
+
+            var key = SanitizeKey(path);
+            _sanitizedKeys[path] = key;
+            WarnOnce(path, key);
+            return key;
+        }
+
+        /// <summary>
+        /// The key the other operations use: the given one when it follows the key format, else its sanitized version,
+        /// so an object is found by the key it was saved with. An object stored under the name as given, before the
+        /// key format applied, is used while the sanitized one does not exist
+        /// </summary>
+        private string KeyToRead(string path)
+        {
+            if (string.IsNullOrEmpty(path) || IsSupportedKey(path))
+            {
+                return path;
+            }
+
+            var key = SanitizeKey(path);
+            if (!_store.ContainsKey(key) && _store.ContainsKey(path))
+            {
+                return path;
+            }
+            WarnOnce(path, key);
+            return key;
+        }
+
+        private void WarnOnce(string path, string key)
+        {
+            if (Interlocked.Exchange(ref _warned, 1) == 0)
+            {
+                _warn($"ObjectStore: key '{path}' is not supported: {GetKeyIssues(path)}. Using '{key}' instead." +
+                    " Any other unsupported key is sanitized the same way");
+            }
+        }
+
+        private static bool IsSupportedKey(string key)
+        {
+            return !string.IsNullOrEmpty(key) && !UnsupportedKeyCharactersRegex.IsMatch(key) && !key.Contains("..", StringComparison.Ordinal) && HasName(key)
+                // just in case
+                && key.Count(c => c == '/') <= 100 && key.Count(c => c == '\\') <= 100;
+        }
+
+        /// <summary>
+        /// Whether the key has something besides dots and separators, so it names an object and not a folder
+        /// </summary>
+        private static bool HasName(string key)
+        {
+            return key.Any(c => c != '.' && c != '/' && c != '\\');
+        }
+
+        /// <summary>
+        /// Describes why a key does not follow the key format: the problems found and the rules. Null for a supported key
+        /// </summary>
+        private static string GetKeyIssues(string key)
+        {
+            if (IsSupportedKey(key))
+            {
+                return null;
+            }
+            return string.Join("; ", FindKeyIssues(key)) +
+                ". Keys may only contain english letters, numbers, spaces and the characters" +
+                " '.', '/', '\\', '_', '#', '-', '$' and '=', never two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv'";
+        }
+
+        /// <summary>
+        /// Lists why a key fails <see cref="IsSupportedKey"/>, one entry per problem found
+        /// </summary>
+        private static List<string> FindKeyIssues(string key)
+        {
+            var issues = new List<string>();
+            if (string.IsNullOrEmpty(key))
+            {
+                issues.Add("the key is empty");
+                return issues;
+            }
+
+            var unsupported = UnsupportedKeyCharactersRegex.Matches(key).Select(match => $"'{match.Value}'").Distinct().ToList();
+            if (unsupported.Count > 0)
+            {
+                issues.Add($"unsupported character{(unsupported.Count > 1 ? "s" : "")} {string.Join(", ", unsupported)}");
+            }
+
+            if (key.Contains("..", StringComparison.Ordinal))
+            {
+                issues.Add("it contains '..'");
+            }
+            if (!HasName(key))
+            {
+                issues.Add("it has no name, only '.' and separators");
+            }
+
+            if (key.Count(c => c == '/') > 100 || key.Count(c => c == '\\') > 100)
+            {
+                issues.Add("it has more than 100 '/' or '\\' separators");
+            }
+
+            if (issues.Count == 0)
+            {
+                issues.Add("it does not follow the key format");
+            }
+            return issues;
+        }
+
+        /// <summary>
+        /// Converts an unsupported key into a supported one by replacing every unsupported character, and every '.'
+        /// of a '..' run, with '_': 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'.
+        /// The mapping is lossy, distinct keys can sanitize to the same one. Throws when the key cannot be fixed
+        /// </summary>
+        private static string SanitizeKey(string key)
+        {
+            var sanitized = UnsupportedKeyCharactersRegex.Replace(key, "_");
+            sanitized = ConsecutiveDotsRegex.Replace(sanitized, match => new string('_', match.Length));
+
+            ValidateKey(sanitized);
+            return sanitized;
+        }
+
+        /// <summary>
+        /// The keys of the object store, listed on first use. Its Contains finds a key the way
+        /// <see cref="ContainsKey"/> does, without listing the store
+        /// </summary>
+        private sealed class KeyCollection : ICollection<string>
+        {
+            private readonly Lazy<ICollection<string>> _keys;
+            private readonly Func<string, bool> _containsKey;
+
+            public int Count => _keys.Value.Count;
+
+            public bool IsReadOnly => _keys.Value.IsReadOnly;
+
+            public KeyCollection(Func<ICollection<string>> listKeys, Func<string, bool> containsKey)
+            {
+                _keys = new Lazy<ICollection<string>>(listKeys);
+                _containsKey = containsKey;
+            }
+
+            public bool Contains(string item)
+            {
+                return !string.IsNullOrEmpty(item) && _containsKey(item);
+            }
+
+            /// <summary>
+            /// Python's 'in' operator calls this on a type that also has a Count
+            /// </summary>
+            public bool ContainsKey(string key)
+            {
+                return Contains(key);
+            }
+
+            public void Add(string item)
+            {
+                _keys.Value.Add(item);
+            }
+
+            public void Clear()
+            {
+                _keys.Value.Clear();
+            }
+
+            public bool Remove(string item)
+            {
+                return _keys.Value.Remove(item);
+            }
+
+            public void CopyTo(string[] array, int arrayIndex)
+            {
+                _keys.Value.CopyTo(array, arrayIndex);
+            }
+
+            public IEnumerator<string> GetEnumerator()
+            {
+                return _keys.Value.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 }

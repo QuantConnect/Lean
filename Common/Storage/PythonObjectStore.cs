@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
 using QuantConnect.Interfaces;
 
@@ -34,8 +35,9 @@ namespace QuantConnect.Storage
         /// Initializes a new instance of the <see cref="PythonObjectStore"/> class
         /// </summary>
         /// <param name="store">The <see cref="IObjectStore"/> instance to wrap</param>
-        public PythonObjectStore(IObjectStore store)
-            : base(store)
+        /// <param name="warn">Receives the warnings about sanitized keys, the engine log by default</param>
+        public PythonObjectStore(IObjectStore store, Action<string> warn = null)
+            : base(store, warn)
         {
         }
 
@@ -85,7 +87,7 @@ namespace QuantConnect.Storage
         /// <see cref="SaveDataframe"/>, and so is any other type that would not round trip. A top-level Python
         /// str, int, float or bool is not accepted, use <see cref="ObjectStore.SaveText"/> for text
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="obj">The Python object to be saved</param>
         /// <returns>True if the object was saved successfully</returns>
         /// <exception cref="PythonException">A TypeError naming the value that cannot be serialized</exception>
@@ -105,7 +107,7 @@ namespace QuantConnect.Storage
         /// Saves the given pandas DataFrame (or Series) for the specified path, in JSON format if the
         /// path has a '.json' extension and as CSV otherwise
         /// </summary>
-        /// <param name="path">The object path</param>
+        /// <param name="path">The object key: english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never '..', e.g. 'folder/trade_log-2024.v2.csv'. Other characters are replaced by '_'</param>
         /// <param name="dataFrame">The pandas DataFrame or Series to be saved</param>
         /// <returns>True if the object was saved successfully</returns>
         public bool SaveDataframe(string path, PyObject dataFrame)

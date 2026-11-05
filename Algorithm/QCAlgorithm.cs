@@ -3321,7 +3321,7 @@ namespace QuantConnect.Algorithm
         public void SetObjectStore(IObjectStore objectStore)
         {
             // an already wrapped store, like the Python one, is used as is
-            ObjectStore = objectStore as ObjectStore ?? new ObjectStore(objectStore);
+            ObjectStore = objectStore as ObjectStore ?? new ObjectStore(objectStore, Debug);
         }
 
         /// <summary>

@@ -173,6 +173,29 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        [Test]
+        public void PythonAlgorithmKeyWarningGoesThroughDebug()
+        {
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm("def on_end_of_algorithm(self): self.object_store.save('trade log: AI & Cloud.json', '{}')");
+                using var localStore = new LocalObjectStore();
+                localStore.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+
+                algorithm.SetObjectStore(localStore);
+
+                // the key warning lands in the algorithm's log
+                algorithm.OnEndOfAlgorithm();
+                Assert.Null(algorithm.RunTimeError);
+                Assert.IsTrue(localStore.Keys.Contains("trade log_ AI _ Cloud.json"), string.Join(", ", localStore.Keys));
+                Assert.IsTrue(algorithm.BaseAlgorithm.DebugMessages.TryDequeue(out var warning));
+                Assert.That(warning, Does.Contain("ObjectStore: key 'trade log: AI & Cloud.json' is not supported: unsupported characters ':', '&'."));
+                Assert.That(warning, Does.Contain("Using 'trade log_ AI _ Cloud.json' instead"));
+
+                localStore.Delete("trade log_ AI _ Cloud.json");
+            }
+        }
+
         private AlgorithmPythonWrapper GetAlgorithm(string code)
         {
             code = $"{_baseCode}{Environment.NewLine}    {code}";
