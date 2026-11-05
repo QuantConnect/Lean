@@ -13,15 +13,15 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting the ObjectStore key rules: an unsupported key is sanitized and used on every
-    /// save and read, and once the sanitized name is written directly a save through the unsupported key throws
+    /// save and read, and a save through it replaces the object stored under its sanitized name
     /// </summary>
     public class ObjectStoreKeySanitizationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -50,11 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Expected the unsupported key to be sanitized and saved");
             }
-            if (!ObjectStore.Keys.Contains(sanitizedKey) || ObjectStore.Keys.Contains(invalidKey))
+            var keys = ObjectStore.Keys.ToList();
+            if (!keys.Contains(sanitizedKey) || !keys.Contains(invalidKey))
             {
-                throw new RegressionTestException($"Expected the object to be stored under '{sanitizedKey}', keys: {string.Join(", ", ObjectStore.Keys)}");
+                throw new RegressionTestException($"Expected the keys to hold '{sanitizedKey}' and '{invalidKey}', keys: {string.Join(", ", keys)}");
             }
-            if (!ObjectStore.ContainsKey(invalidKey) || ObjectStore.Read(invalidKey) != "a,b\n1,2" || ObjectStore.Read(sanitizedKey) != "a,b\n1,2")
+            if (!ObjectStore.ContainsKey(invalidKey) || !ObjectStore.Keys.Contains(invalidKey)
+                || ObjectStore.Read(invalidKey) != "a,b\n1,2" || ObjectStore.Read(sanitizedKey) != "a,b\n1,2")
             {
                 throw new RegressionTestException("Expected the object to be read through both the original and the sanitized key");
             }
@@ -65,31 +67,14 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected the second save through the unsupported key to update the object");
             }
 
-            // once the sanitized name is written directly, as an upload or another run would, it is never replaced through the unsupported key
-            if (!ObjectStore.Save(sanitizedKey, "c,d\n5,6"))
+            // a save through the unsupported key replaces the object under its sanitized name, whoever wrote it
+            if (!ObjectStore.Save(sanitizedKey, "c,d\n5,6") || !ObjectStore.Save(invalidKey, "e,f\n7,8") || ObjectStore.Read(sanitizedKey) != "e,f\n7,8")
             {
-                throw new RegressionTestException("Expected the save through the sanitized key to succeed");
-            }
-            var errorMessage = string.Empty;
-            try
-            {
-                ObjectStore.Save(invalidKey, "e,f\n7,8");
-            }
-            catch (ArgumentException exception)
-            {
-                errorMessage = exception.Message;
-            }
-            if (!errorMessage.Contains($"its sanitized name '{sanitizedKey}' already holds another object"))
-            {
-                throw new RegressionTestException($"Expected the save through the unsupported key to throw, got: '{errorMessage}'");
-            }
-            if (ObjectStore.Read(sanitizedKey) != "c,d\n5,6")
-            {
-                throw new RegressionTestException("Expected the object written through the sanitized key to be kept");
+                throw new RegressionTestException("Expected the save through the unsupported key to replace the object under its sanitized name");
             }
 
             ObjectStore.Delete(sanitizedKey);
-            if (ObjectStore.ContainsKey(invalidKey))
+            if (ObjectStore.ContainsKey(invalidKey) || ObjectStore.Keys.ToList().Contains(invalidKey))
             {
                 throw new RegressionTestException("Expected the delete of the sanitized key to remove the object the unsupported key reads");
             }

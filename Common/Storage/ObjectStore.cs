@@ -33,11 +33,9 @@ namespace QuantConnect.Storage
     /// <summary>
     /// Helper class for easier access to <see cref="IObjectStore"/> methods. A key that does not follow the key
     /// format (english letters, numbers, spaces and the characters '.', '/', '\', '_', '#', '-', '$' and '=', never
-    /// two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv') is saved under its sanitized version and found by
-    /// either name, with a warning the first time it happens. A save whose
-    /// sanitized name already holds an object this store did not write from that key throws, since nothing records who
-    /// wrote that object. An object already stored under an unsupported name is read as is; a save to that name goes
-    /// to the sanitized name, warning every time
+    /// two '.' in a row, e.g. 'folder/trade_log-2024.v2.csv') is saved under its sanitized version, then found and
+    /// listed by either name, with a warning the first time it happens. An object already stored under an unsupported name
+    /// is read as is until a save through that name creates the sanitized one
     /// </summary>
     public class ObjectStore : IObjectStore
     {
@@ -48,9 +46,9 @@ namespace QuantConnect.Storage
 
         private readonly IObjectStore _store;
         private readonly Action<string> _warn;
+        // The unsupported keys saved in this run and the sanitized name each one is stored under
+        private readonly ConcurrentDictionary<string, string> _sanitizedKeys = new();
         private int _warned;
-        // the unsupported keys this store last wrote each sanitized name from: their saves are updates, and reads follow them
-        private readonly ConcurrentDictionary<string, string> _savedKeys = new();
 
         /// <summary>
         /// Gets the maximum storage limit in bytes
@@ -96,9 +94,19 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory
+        /// Returns the file paths present in the object store. This is specially useful not to load the object store into memory.
+        /// An unsupported key saved in this run is listed next to the sanitized name its object is stored under,
+        /// and Contains finds a key the way <see cref="ContainsKey"/> does
         /// </summary>
-        public ICollection<string> Keys => _store.Keys;
+        public ICollection<string> Keys
+        {
+            get
+            {
+                var keys = _store.Keys;
+                var unsupportedKeys = _sanitizedKeys.Where(pair => _store.ContainsKey(pair.Value)).Select(pair => pair.Key).ToList();
+                return new KeyCollection(unsupportedKeys.Count == 0 ? keys : keys.Union(unsupportedKeys).ToList(), ContainsKey);
+            }
+        }
 
         /// <summary>
         /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
@@ -133,17 +141,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the save operation was successful</returns>
         public bool SaveBytes(string path, byte[] contents)
         {
-            var key = KeyToSave(path);
-            if (!_store.SaveBytes(key, contents))
-            {
-                return false;
-            }
-            ForgetSavesTo(key, exceptFrom: path);
-            if (key != path)
-            {
-                _savedKeys[path] = key;
-            }
-            return true;
+            return _store.SaveBytes(KeyToSave(path), contents);
         }
 
         /// <summary>
@@ -153,13 +151,7 @@ namespace QuantConnect.Storage
         /// <returns>True if the delete operation was successful</returns>
         public bool Delete(string path)
         {
-            var key = KeyToRead(path);
-            if (!_store.Delete(key))
-            {
-                return false;
-            }
-            ForgetSavesTo(key);
-            return true;
+            return _store.Delete(KeyToRead(path));
         }
 
         /// <summary>
@@ -169,15 +161,7 @@ namespace QuantConnect.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string path)
         {
-            var key = KeyToRead(path);
-            // the store registers a missing key when handing out its path: that object is then this key's, so the save that follows is an update
-            var created = key != path && !_store.ContainsKey(key);
-            var filePath = _store.GetFilePath(key);
-            if (created)
-            {
-                _savedKeys[path] = key;
-            }
-            return filePath;
+            return _store.GetFilePath(KeyToRead(path));
         }
 
         /// <summary>
@@ -385,8 +369,8 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// The key a save goes to: the given one when it follows the key format, else its sanitized version. Throws when
-        /// that already holds an object this store did not last write from the given key. Null and empty keys are left for the store to reject
+        /// The key a save goes to: the given one when it follows the key format, else its sanitized version, replacing
+        /// the object stored there. Null and empty keys are left for the store to reject
         /// </summary>
         private string KeyToSave(string path)
         {
@@ -396,55 +380,28 @@ namespace QuantConnect.Storage
             }
 
             var key = SanitizeKey(path);
+            _sanitizedKeys[path] = key;
             WarnOnce(path, key);
-            if (!_savedKeys.ContainsKey(path) && _store.ContainsKey(key))
-            {
-                // nothing records who wrote that object, a previous run, another algorithm or an upload: it is never replaced through another key
-                throw new ArgumentException($"ObjectStore: key '{path}' is not supported and its sanitized name '{key}' already holds" +
-                    $" another object. Delete '{key}' or save to it directly to replace it");
-            }
-            if (_store.ContainsKey(path))
-            {
-                // the object under the name as given stays: reads of it from another store still return it
-                _warn($"ObjectStore: key '{path}' is not supported: the object stored under that name is left as is, this save goes to '{key}'");
-            }
             return key;
         }
 
         /// <summary>
-        /// Forgets the unsupported keys whose object under the given key is gone or replaced from another key
-        /// </summary>
-        private void ForgetSavesTo(string key, string exceptFrom = null)
-        {
-            foreach (var entry in _savedKeys)
-            {
-                if (entry.Value == key && entry.Key != exceptFrom)
-                {
-                    _savedKeys.TryRemove(entry.Key, out _);
-                }
-            }
-        }
-
-        /// <summary>
-        /// The key the other operations use: where this store saved it while that object exists, else the given one when
-        /// it follows the key format or the store already has it, else its sanitized version, so an object is found by the key it was saved with
+        /// The key the other operations use: the given one when it follows the key format, else its sanitized version,
+        /// so an object is found by the key it was saved with. An object stored under the name as given, before the
+        /// key format applied, is used while the sanitized one does not exist
         /// </summary>
         private string KeyToRead(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                return path;
-            }
-            if (_savedKeys.TryGetValue(path, out var key) && _store.ContainsKey(key))
-            {
-                return key;
-            }
-            if (IsSupportedKey(path) || _store.ContainsKey(path))
+            if (string.IsNullOrEmpty(path) || IsSupportedKey(path))
             {
                 return path;
             }
 
-            key = SanitizeKey(path);
+            var key = SanitizeKey(path);
+            if (!_store.ContainsKey(key) && _store.ContainsKey(path))
+            {
+                return path;
+            }
             WarnOnce(path, key);
             return key;
         }
@@ -453,8 +410,8 @@ namespace QuantConnect.Storage
         {
             if (Interlocked.Exchange(ref _warned, 1) == 0)
             {
-                _warn($"ObjectStore: key '{path}' is not supported: {GetKeyIssues(path)}. Using '{key}' instead. Any other unsupported" +
-                    " key is sanitized the same way; a save throws when its sanitized name already holds an object not written from that key in this run");
+                _warn($"ObjectStore: key '{path}' is not supported: {GetKeyIssues(path)}. Using '{key}' instead." +
+                    " Any other unsupported key is sanitized the same way");
             }
         }
 
@@ -538,6 +495,68 @@ namespace QuantConnect.Storage
 
             ValidateKey(sanitized);
             return sanitized;
+        }
+
+        /// <summary>
+        /// The keys of the object store, whose Contains finds a key the way <see cref="ContainsKey"/> does
+        /// </summary>
+        private sealed class KeyCollection : ICollection<string>
+        {
+            private readonly ICollection<string> _keys;
+            private readonly Func<string, bool> _containsKey;
+
+            public int Count => _keys.Count;
+
+            public bool IsReadOnly => _keys.IsReadOnly;
+
+            public KeyCollection(ICollection<string> keys, Func<string, bool> containsKey)
+            {
+                _keys = keys;
+                _containsKey = containsKey;
+            }
+
+            public bool Contains(string item)
+            {
+                return !string.IsNullOrEmpty(item) && _containsKey(item);
+            }
+
+            /// <summary>
+            /// Python's 'in' operator calls this on a type that also has a Count
+            /// </summary>
+            public bool ContainsKey(string key)
+            {
+                return Contains(key);
+            }
+
+            public void Add(string item)
+            {
+                _keys.Add(item);
+            }
+
+            public void Clear()
+            {
+                _keys.Clear();
+            }
+
+            public bool Remove(string item)
+            {
+                return _keys.Remove(item);
+            }
+
+            public void CopyTo(string[] array, int arrayIndex)
+            {
+                _keys.CopyTo(array, arrayIndex);
+            }
+
+            public IEnumerator<string> GetEnumerator()
+            {
+                return _keys.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 }

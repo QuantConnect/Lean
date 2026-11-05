@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm asserting the ObjectStore key rules: an unsupported key is sanitized and used on every
-### save and read, and once the sanitized name is written directly a save through the unsupported key throws
+### save and read, and a save through it replaces the object stored under its sanitized name
 ### </summary>
 class ObjectStoreKeySanitizationRegressionAlgorithm(QCAlgorithm):
 
@@ -34,9 +34,10 @@ class ObjectStoreKeySanitizationRegressionAlgorithm(QCAlgorithm):
         if not self.object_store.save(invalid_key, "a,b\n1,2"):
             raise AssertionError("Expected the unsupported key to be sanitized and saved")
         keys = list(self.object_store.keys)
-        if sanitized_key not in keys or invalid_key in keys:
-            raise AssertionError(f"Expected the object to be stored under '{sanitized_key}', keys: {keys}")
-        if not self.object_store.contains_key(invalid_key) or self.object_store.read(invalid_key) != "a,b\n1,2" \
+        if sanitized_key not in keys or invalid_key not in keys:
+            raise AssertionError(f"Expected the keys to hold '{sanitized_key}' and '{invalid_key}', keys: {keys}")
+        if not self.object_store.contains_key(invalid_key) or invalid_key not in self.object_store.keys \
+                or self.object_store.read(invalid_key) != "a,b\n1,2" \
                 or self.object_store.read(sanitized_key) != "a,b\n1,2":
             raise AssertionError("Expected the object to be read through both the original and the sanitized key")
 
@@ -44,19 +45,11 @@ class ObjectStoreKeySanitizationRegressionAlgorithm(QCAlgorithm):
         if not self.object_store.save(invalid_key, "a,b\n3,4") or self.object_store.read(sanitized_key) != "a,b\n3,4":
             raise AssertionError("Expected the second save through the unsupported key to update the object")
 
-        # once the sanitized name is written directly, as an upload or another run would, it is never replaced through the unsupported key
-        if not self.object_store.save(sanitized_key, "c,d\n5,6"):
-            raise AssertionError("Expected the save through the sanitized key to succeed")
-        error = ""
-        try:
-            self.object_store.save(invalid_key, "e,f\n7,8")
-        except BaseException as e:
-            error = str(e)
-        if f"its sanitized name '{sanitized_key}' already holds another object" not in error:
-            raise AssertionError(f"Expected the save through the unsupported key to throw, got: '{error}'")
-        if self.object_store.read(sanitized_key) != "c,d\n5,6":
-            raise AssertionError("Expected the object written through the sanitized key to be kept")
+        # a save through the unsupported key replaces the object under its sanitized name, whoever wrote it
+        if not self.object_store.save(sanitized_key, "c,d\n5,6") or not self.object_store.save(invalid_key, "e,f\n7,8") \
+                or self.object_store.read(sanitized_key) != "e,f\n7,8":
+            raise AssertionError("Expected the save through the unsupported key to replace the object under its sanitized name")
 
         self.object_store.delete(sanitized_key)
-        if self.object_store.contains_key(invalid_key):
+        if self.object_store.contains_key(invalid_key) or invalid_key in list(self.object_store.keys):
             raise AssertionError("Expected the delete of the sanitized key to remove the object the unsupported key reads")
