@@ -221,8 +221,10 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Returns true for a price change of an exit order: eToro moves the stop loss or the take profit of the position.
-        /// Any other update is refused, eToro has no order update; an order is cancelled and placed again instead.
+        /// Returns true for a price change of a stop market or a limit order, the stop loss or the take profit of a
+        /// position, which eToro moves on the position; the order may come without its entry, read from the position
+        /// after a restart. Any other update is refused, eToro has no order update; an order is cancelled and placed
+        /// again instead.
         /// </summary>
         /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
@@ -232,7 +234,7 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
-            if (order.GetContingencyLink(ContingencyRole.Child) == null)
+            if (order.Type is not (OrderType.StopMarket or OrderType.Limit))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.OrderUpdateNotSupported);

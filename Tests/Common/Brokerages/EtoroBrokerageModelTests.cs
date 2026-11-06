@@ -132,14 +132,17 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         // An exit order moves the stop loss or the take profit of the position; its quantity is the position's
-        [TestCase(false, true, Description = "A new stop price")]
-        [TestCase(true, false, Description = "A new quantity")]
-        public void CanUpdateOrderExitOrderAllowsThePriceOnly(bool changesQuantity, bool expectedCanUpdate)
+        [TestCase(true, false, true, Description = "A new stop price")]
+        [TestCase(true, true, false, Description = "A new quantity")]
+        [TestCase(false, false, true, Description = "A new stop price on an exit read from the position after a restart, without its entry")]
+        public void CanUpdateOrderExitOrderAllowsThePriceOnly(bool hasEntry, bool changesQuantity, bool expectedCanUpdate)
         {
             var security = GetSecurityForType(SecurityType.Equity);
-            var entry = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
             var stopLoss = new StopMarketOrder(security.Symbol, -1m, 90m, DateTime.UtcNow);
-            OrderContingency.Trigger([entry], [stopLoss]);
+            if (hasEntry)
+            {
+                OrderContingency.Trigger([new MarketOrder(security.Symbol, 1m, DateTime.UtcNow)], [stopLoss]);
+            }
             var fields = changesQuantity ? new UpdateOrderFields { Quantity = -2m } : new UpdateOrderFields { StopPrice = 95m };
             var request = new UpdateOrderRequest(DateTime.UtcNow, stopLoss.Id, fields);
 
