@@ -110,6 +110,30 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.AreEqual(4, match.Strategies.Sum(strategy => strategy.OptionLegs.Count));
         }
 
+        [TestCase(OptionRight.Put, false)]
+        [TestCase(OptionRight.Put, true)]
+        [TestCase(OptionRight.Call, false)]
+        [TestCase(OptionRight.Call, true)]
+        public void MatchesCoveredCreditSpreadsWithoutLeavingANakedShort(OptionRight right, bool overlapping)
+        {
+            var options = right == OptionRight.Put ? Put : Call;
+            var direction = right == OptionRight.Put ? -1 : 1;
+            var secondShort = overlapping ? 5 : 35;
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(options[1000], -1),
+                Position(options[1000 + direction * 30]),
+                Position(options[1000 + direction * secondShort], -1),
+                Position(options[1000 + direction * (secondShort + 30)])
+            );
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+            Assert.AreEqual(2, match.Strategies.Count);
+            Assert.IsTrue(match.Strategies.All(strategy => strategy.OptionLegs.Count == 2 &&
+                strategy.OptionLegs.Sum(leg => leg.Quantity) == 0),
+                string.Join(", ", match.Strategies.Select(strategy => strategy.Name)));
+            Assert.AreEqual(4, match.Strategies.Sum(strategy => strategy.OptionLegs.Count));
+        }
+
         [Test]
         public void MatchLeavesNoShortContractUncoveredWhenFullCoverageExists()
         {

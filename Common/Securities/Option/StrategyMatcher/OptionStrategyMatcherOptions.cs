@@ -63,10 +63,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             => _enumeratedDefinitions ??= _definitionEnumerator.Enumerate(_definitions).ToList();
 
         /// <summary>
-        /// The definitions to be used for matching, deprioritizing those leaving a short option leg uncovered
+        /// The definitions to be used for matching, favoring balanced option legs after accounting for underlying lots
         /// </summary>
         public IEnumerable<OptionStrategyDefinition> CoveredShortsFirstDefinitions
-            => _coveredShortsFirstDefinitions ??= Definitions.OrderBy(HasUncoveredShortLeg).ToList();
+            => _coveredShortsFirstDefinitions ??= Definitions.OrderBy(HasUnbalancedLegs).ToList();
 
         /// <summary>
         /// Objective function used to compare different match solutions for a given set of positions/definitions
@@ -136,11 +136,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Determines whether the definition, matched at the unit level, leaves a short option leg which isn't
-        /// covered by long legs of the same right or by the underlying lots the definition requires. Only ever
-        /// evaluated while building <see cref="CoveredShortsFirstDefinitions"/>, which is cached
+        /// Determines whether the definition leaves uncovered shorts or surplus longs of either right,
+        /// after accounting for the underlying lots required to cover short legs
         /// </summary>
-        private static bool HasUncoveredShortLeg(OptionStrategyDefinition definition)
+        private static bool HasUnbalancedLegs(OptionStrategyDefinition definition)
         {
             var netCalls = 0;
             var netPuts = 0;
@@ -157,7 +156,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             // long underlying lots cover short calls, short underlying lots cover short puts
-            return -netCalls > Math.Max(0, definition.UnderlyingLots) || -netPuts > Math.Max(0, -definition.UnderlyingLots);
+            return -netCalls != Math.Max(0, definition.UnderlyingLots) || -netPuts != Math.Max(0, -definition.UnderlyingLots);
         }
 
         /// <summary>
