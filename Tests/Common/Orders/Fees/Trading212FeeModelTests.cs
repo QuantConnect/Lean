@@ -61,10 +61,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void GetOrderFeeUsEquityBuyInAccountCurrencyChargesNothing()
         {
-            var security = CreateUsEquity(100m);
+            var security = CreateUsEquity(100m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, 10m, Time);
 
-            var fee = new Trading212FeeModel(Currencies.USD).GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
 
             Assert.That(fee.Value.Amount, Is.EqualTo(0m));
             Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
@@ -73,12 +73,29 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void GetOrderFeeUsEquitySellInAccountCurrencyChargesOnlyRegulatoryFees()
         {
-            var security = CreateUsEquity(100m);
+            var security = CreateUsEquity(100m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, -10m, Time);
 
-            var fee = new Trading212FeeModel(Currencies.USD).GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
 
             Assert.That(fee.Value.Amount, Is.EqualTo(0.02255m));
+            Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
+        }
+
+        // Before the cash book sets up the conversion there is no account currency to convert into, so
+        // the fee stays in the quote currency and no FX fee is charged.
+        [Test]
+        public void GetOrderFeeBeforeTheConversionIsSetUpChargesTheQuoteCurrencyWithoutAnFxFee()
+        {
+            var security = CreateUsEquity(100m, accountCurrency: null);
+
+            var buyFee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, 10m, Time)));
+            Assert.That(buyFee.Value.Amount, Is.EqualTo(0m));
+            Assert.That(buyFee.Value.Currency, Is.EqualTo(Currencies.USD));
+
+            var sellFee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, new MarketOrder(security.Symbol, -10m, Time)));
+            Assert.That(sellFee.Value.Amount, Is.EqualTo(0.02255m));
+            Assert.That(sellFee.Value.Currency, Is.EqualTo(Currencies.USD));
         }
 
         // FINRA caps the trading activity fee at $9.79 per trade, so a large sale is not charged the
@@ -87,10 +104,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         public void GetOrderFeeCapsTheFinraTradingActivityFeePerTrade()
         {
             // 100,000 shares at $1 => the uncapped TAF would be $19.50.
-            var security = CreateUsEquity(1m);
+            var security = CreateUsEquity(1m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, -100000m, Time);
 
-            var fee = new Trading212FeeModel(Currencies.USD).GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
 
             // SEC Section 31 0.206 bps of $100,000 = $2.06, plus the capped $9.79 TAF.
             Assert.That(fee.Value.Amount, Is.EqualTo(11.85m));
@@ -101,10 +118,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [TestCase(50206, 9.79)]
         public void GetOrderFeeAppliesTheFinraTradingActivityFeeCapAtTheBoundary(decimal quantity, decimal expectedTaf)
         {
-            var security = CreateUsEquity(1m);
+            var security = CreateUsEquity(1m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, -quantity, Time);
 
-            var fee = new Trading212FeeModel(Currencies.USD).GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
 
             var expectedSection31 = 0.0000206m * quantity;
             Assert.That(fee.Value.Amount, Is.EqualTo(expectedSection31 + expectedTaf));
@@ -117,7 +134,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [TestCase(50300, 50000)] // capped at 9.79, amended to 50,000 => back to the per-share rate
         public void GetOrderFeeAppliesTheFinraTradingActivityFeeCapToTheAmendedQuantity(decimal submittedQuantity, decimal amendedQuantity)
         {
-            var security = CreateUsEquity(1m);
+            var security = CreateUsEquity(1m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, -submittedQuantity, Time);
 
             order.ApplyUpdateOrderRequest(new UpdateOrderRequest(Time, order.Id, new UpdateOrderFields
@@ -125,7 +142,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 Quantity = -amendedQuantity
             }));
 
-            var fee = new Trading212FeeModel(Currencies.USD).GetOrderFee(new OrderFeeParameters(security, order));
+            var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
 
             var expectedTaf = Math.Min(0.000195m * amendedQuantity, 9.79m);
             var expectedSection31 = 0.0000206m * amendedQuantity;
@@ -140,7 +157,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void GetOrderFeeUnsupportedSecurityTypeThrows()
         {
-            var security = CreateSecurity(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase), Currencies.USD, 100m);
+            var security = CreateSecurity(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase), Currencies.USD, 100m, Currencies.USD);
             var order = new MarketOrder(security.Symbol, 1m, Time);
 
             Assert.Throws<ArgumentException>(() =>
@@ -170,8 +187,10 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var security = algorithm.AddSecurity(Symbols.AAPL);
             security.SetMarketPrice(new Tick(Time, security.Symbol, 100m, 100m));
             var portfolio = algorithm.Portfolio;
-            // One USD is worth 0.8 GBP.
+            // One USD is worth 0.8 GBP. The cash book sets this up during the backtest setup.
             portfolio.SetCash(Currencies.USD, 0m, 0.8m);
+            portfolio.CashBook[Currencies.USD].CurrencyConversion =
+                new ConstantCurrencyConversion(Currencies.USD, Currencies.GBP, 0.8m);
 
             var order = new MarketOrder(security.Symbol, 10m, Time);
             var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
@@ -186,7 +205,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void GetOrderFeeNonUsEquitySellChargesOnlyTheFxFeeInTheAccountCurrency()
         {
-            var security = CreateSecurity(Symbol.Create("TCS", SecurityType.Equity, Market.India), Currencies.INR, 100m);
+            var security = CreateSecurity(Symbol.Create("TCS", SecurityType.Equity, Market.India), Currencies.INR, 100m, Currencies.GBP);
             var order = new MarketOrder(security.Symbol, -10m, Time);
 
             var fee = new Trading212FeeModel().GetOrderFee(new OrderFeeParameters(security, order));
@@ -253,20 +272,34 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(feeModel, Is.InstanceOf<Trading212FeeModel>());
         }
 
-        private static Security CreateUsEquity(decimal price, decimal conversionRate = 1m)
+        /// <summary>
+        /// Creates a US equity priced in USD. The default account currency is GBP, so the conversion
+        /// is set up the way the cash book does it. Pass <c>null</c> to leave it unset.
+        /// </summary>
+        private static Security CreateUsEquity(decimal price, string accountCurrency = Currencies.GBP, decimal conversionRate = 1m)
         {
-            return CreateSecurity(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Currencies.USD, price, conversionRate);
+            return CreateSecurity(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), Currencies.USD, price, accountCurrency, conversionRate);
         }
 
-        private static Security CreateSecurity(Symbol symbol, string quoteCurrency, decimal price, decimal conversionRate = 1m)
+        private static Security CreateSecurity(Symbol symbol, string quoteCurrency, decimal price, string accountCurrency, decimal conversionRate = 1m)
         {
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute,
                 TimeZones.Utc, TimeZones.Utc, true, true, false);
 
+            var cash = new Cash(quoteCurrency, 0, conversionRate);
+            if (accountCurrency == quoteCurrency)
+            {
+                cash.CurrencyConversion = ConstantCurrencyConversion.Identity(quoteCurrency);
+            }
+            else if (accountCurrency != null)
+            {
+                cash.CurrencyConversion = new ConstantCurrencyConversion(quoteCurrency, accountCurrency, conversionRate);
+            }
+
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 config,
-                new Cash(quoteCurrency, 0, conversionRate),
+                cash,
                 SymbolProperties.GetDefault(quoteCurrency),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
