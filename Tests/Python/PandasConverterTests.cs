@@ -744,6 +744,36 @@ def Test4(dataFrame):
             }
         }
 
+        [TestCase("open")]
+        [TestCase("low")]
+        public void HistoryColumnLookupPreservesLabelsThatMatchTickers(string column)
+        {
+            var symbol = Symbols.SPY;
+            var rawBars = new[]
+            {
+                new TradeBar(new DateTime(2020, 1, 2, 9, 30, 0), symbol, 10m, 30m, 5m, 20m, 1000m),
+                new TradeBar(new DateTime(2020, 1, 2, 9, 31, 0), symbol, 11m, 31m, 6m, 21m, 1000m)
+            };
+            SymbolCache.Set("SPY", symbol);
+            var ticker = column.ToUpperInvariant();
+            SymbolCache.Set(ticker, Symbol.Create(ticker, SecurityType.Equity, Market.USA));
+
+            using (Py.GIL())
+            {
+                using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(symbol, Resolution.Minute, rawBars));
+                using var module = PyModule.FromString("testModule",
+                    @"
+def Test(data_frame, symbol, column):
+    expected = data_frame.loc[symbol][column]
+    assert data_frame.loc[symbol, column].equals(expected)
+    assert data_frame.loc['SPY', column].equals(expected)");
+                using var test = module.GetAttr("Test");
+                using var pySymbol = symbol.ToPython();
+                using var pyColumn = new PyString(column);
+                using var result = test.Invoke(dataFrame, pySymbol, pyColumn);
+            }
+        }
+
         [TestCase("dataFrame['opne']", "'opne'")]
         [TestCase("dataFrame.loc[symbol, 'opne']", "'opne'")]
         [TestCase("dataFrame.loc[symbol].loc[[pd.Timestamp(1999, 1, 1)]]", "1999-01-01")]

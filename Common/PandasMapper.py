@@ -68,7 +68,20 @@ def mapper(key):
         return mapped
     return key
 
-def wrap_keyerror_function(f):
+def map_location_args(args):
+    indexer, key = args
+    if (isinstance(indexer, pd.core.indexing._LocIndexer)
+            and isinstance(indexer.obj, pd.DataFrame)
+            and type(key) is tuple and len(key) == 2):
+        row, column = key
+        if type(column) is str and mapper(column) is not column:
+            # Check for a literal column before pandas interprets the two-axis key.
+            if PandasColumn(column) in indexer.obj.columns:
+                mapped_row = mapper(row)
+                return args if mapped_row is row else (indexer, (mapped_row, column))
+    return mapper(args)
+
+def wrap_keyerror_function(f, map_args=mapper):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
     wrapped_function converts the args / kwargs to use alternative index keys and then calls the function.
     If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
@@ -81,7 +94,7 @@ def wrap_keyerror_function(f):
             newkwargs = kwargs
 
             if len(args) > 1:
-                newargs = mapper(args)
+                newargs = map_args(args)
             if len(kwargs) > 0:
                 newkwargs = mapper(kwargs)
 
@@ -131,7 +144,8 @@ def wrap_bool_function(f):
 
 
 # Wrap all core indexing functions that are shared, yet still throw key errors if index not found
-pd.core.indexing._LocationIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._LocationIndexer.__getitem__)
+pd.core.indexing._LocationIndexer.__getitem__ = wrap_keyerror_function(
+    pd.core.indexing._LocationIndexer.__getitem__, map_location_args)
 pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
 pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 
