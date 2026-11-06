@@ -754,12 +754,12 @@ def Test4(dataFrame):
                 .Select(i => new TradeBar(new DateTime(2020, 1, 2, 9, 30, 0).AddMinutes(i), Symbols.SPY, 10 + i, 30 + i, 5 + i, 20 + i, 1000 + i))
                 .ToArray();
 
-            using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(Symbols.SPY, Resolution.Minute, rawBars));
-
             SymbolCache.Set("SPY", Symbols.SPY);
 
             using (Py.GIL())
             {
+                // Declared inside the GIL so it is disposed before the GIL is released
+                using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(Symbols.SPY, Resolution.Minute, rawBars));
                 using var module = PyModule.FromString("testModule",
                     $@"
 import pandas as pd
