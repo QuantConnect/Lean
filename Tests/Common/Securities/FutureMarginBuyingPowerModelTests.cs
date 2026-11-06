@@ -18,6 +18,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -37,6 +40,103 @@ namespace QuantConnect.Tests.Common.Securities
     {
         // Test class to enable calling protected methods
         private FutureMarginModel _futureMarginModel;
+
+        [Test]
+        public void ConcurrentMarginLookupsKeepTheHistoryIndexInRange()
+        {
+            var symbol = Symbol.CreateFuture("MARGIN-RACE", Market.USA, new DateTime(2030, 1, 1));
+            var date = new DateTime(2026, 1, 1);
+            var security = MarginSecurity(symbol, date);
+            var history = Enumerable.Range(0, 5000).Select(i => new MarginRequirementsEntry
+            {
+                Date = date.AddDays(i - 5000),
+                InitialOvernight = i + 1,
+                MaintenanceOvernight = i + 1
+            }).ToArray();
+            using var cache = new MarginHistoryCache(symbol, history);
+            for (var attempt = 0; attempt < 20; attempt++)
+            {
+                var model = new FutureMarginModel(security: security);
+                using var start = new Barrier(16);
+                var tasks = Enumerable.Range(0, 16).Select(_ => Task.Factory.StartNew(() =>
+                {
+                    start.SignalAndWait();
+                    return model.GetInitialMarginRequirement(new InitialMarginParameters(security, 1)).Value;
+                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray();
+                Task.WaitAll(tasks);
+                Assert.IsTrue(tasks.All(t => t.Result == 5000));
+                Assert.AreEqual(5000, model.InitialOvernightMarginRequirement);
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void MarginLookupsRecoverAfterTheCachedHistoryIsReplaced(bool futureRows)
+        {
+            var symbol = Symbol.CreateFuture("MARGIN-RELOAD", Market.USA, new DateTime(2030, 1, 1));
+            var date = new DateTime(2026, 1, 5);
+            var security = MarginSecurity(symbol, date);
+            var history = Enumerable.Range(1, 5).Select(i => new MarginRequirementsEntry
+            {
+                Date = new DateTime(2026, 1, i),
+                InitialOvernight = 100 * i
+            }).ToArray();
+            using var cache = new MarginHistoryCache(symbol, history);
+            var model = new FutureMarginModel(security: security);
+            Assert.AreEqual(500, model.InitialOvernightMarginRequirement);
+            cache.Replace(new[] { new MarginRequirementsEntry { Date = date, InitialOvernight = 750 } }
+                .Concat(futureRows ? history.Select(e => new MarginRequirementsEntry
+                {
+                    Date = e.Date.AddDays(10),
+                    InitialOvernight = e.InitialOvernight
+                }) : Array.Empty<MarginRequirementsEntry>()).ToArray());
+            Assert.AreEqual(750, model.InitialOvernightMarginRequirement);
+        }
+
+        private static Future MarginSecurity(Symbol symbol, DateTime date)
+        {
+            var tz = TimeZones.NewYork;
+            var security = new Future(SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
+            security.SetMarketPrice(new Tick { Symbol = symbol, Value = 100, Time = date });
+            return security;
+        }
+
+        private sealed class MarginHistoryCache : IDisposable
+        {
+            private static readonly FieldInfo Cache = typeof(FutureMarginModel).GetField("_marginRequirementsCache", BindingFlags.Static | BindingFlags.NonPublic);
+            private static readonly object Locker = typeof(FutureMarginModel).GetField("_locker", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            private readonly string _key;
+
+            public MarginHistoryCache(Symbol symbol, MarginRequirementsEntry[] history)
+            {
+                _key = symbol.ID.Symbol;
+                Replace(history);
+            }
+
+            public void Replace(MarginRequirementsEntry[] history)
+            {
+                lock (Locker)
+                {
+                    var entries = new Dictionary<string, MarginRequirementsEntry[]>((Dictionary<string, MarginRequirementsEntry[]>)Cache.GetValue(null));
+                    entries[_key] = history;
+                    Cache.SetValue(null, entries);
+                }
+            }
+
+            public void Dispose()
+            {
+                lock (Locker)
+                {
+                    var entries = new Dictionary<string, MarginRequirementsEntry[]>((Dictionary<string, MarginRequirementsEntry[]>)Cache.GetValue(null));
+                    entries.Remove(_key);
+                    Cache.SetValue(null, entries);
+                }
+            }
+        }
 
         [Test]
         public void TestMarginForSymbolWithOneLinerHistory()
