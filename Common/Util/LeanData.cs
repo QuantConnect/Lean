@@ -1196,7 +1196,7 @@ namespace QuantConnect.Util
                             return false;
                         }
 
-                        (symbol, date) = ParseUniversePath(info, securityType);
+                        (symbol, date) = ParseUniversePath(info, securityType, startIndex);
                         return true;
                     }
                 }
@@ -1282,7 +1282,7 @@ namespace QuantConnect.Util
         /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the universe processing file date.</returns>
         /// <exception cref="ArgumentException">Thrown if the file path does not contain 'universes'.</exception>
         /// <exception cref="NotSupportedException">Thrown if the security type is not supported.</exception>
-        private static (Symbol symbol, DateTime processingDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType)
+        private static (Symbol symbol, DateTime processingDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType, int startIndex)
         {
             if (!filePathParts.Contains("universes", StringComparer.InvariantCultureIgnoreCase))
             {
@@ -1290,7 +1290,7 @@ namespace QuantConnect.Util
             }
 
             var symbol = default(Symbol);
-            var market = filePathParts[2];
+            var market = filePathParts[startIndex + 1];
             var ticker = filePathParts[^2];
             var universeFileDate = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
             switch (securityType)
