@@ -28,9 +28,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         private readonly Trading212BrokerageModel _brokerageModel = new();
 
         // Trading 212's public API accepts market, limit, stop and stop-limit orders for equities,
-        // and a market order placed outside trading hours fills at the open (MarketOnOpen).
+        // and a market order placed outside trading hours fills at the open (MarketOnOpen). A daily
+        // market order placed during market hours is converted by Lean into MarketOnClose in backtests.
         [TestCase(SecurityType.Equity, OrderType.Market)]
         [TestCase(SecurityType.Equity, OrderType.MarketOnOpen)]
+        [TestCase(SecurityType.Equity, OrderType.MarketOnClose)]
         [TestCase(SecurityType.Equity, OrderType.Limit)]
         [TestCase(SecurityType.Equity, OrderType.StopMarket)]
         [TestCase(SecurityType.Equity, OrderType.StopLimit)]
@@ -65,7 +67,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message.Message, Does.Contain(nameof(Trading212BrokerageModel)));
         }
 
-        [TestCase(SecurityType.Equity, OrderType.MarketOnClose)]
         [TestCase(SecurityType.Equity, OrderType.TrailingStop)]
         [TestCase(SecurityType.Equity, OrderType.LimitIfTouched)]
         [TestCase(SecurityType.Equity, OrderType.ComboMarket)]
