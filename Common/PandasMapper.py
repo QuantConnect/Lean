@@ -50,23 +50,29 @@ def mapper(key):
     Symbol SecurityIdentifier.If cannot map, returns the object
     '''
     keyType = type(key)
-    if keyType is tuple:
-        return tuple(mapper(x) for x in key)
     if keyType is str:
         kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
             return kvp[1]
         return key
-    if keyType is list:
-        return [mapper(x) for x in key]
+    # Containers come back as the same object when nothing in them was mapped, so callers can tell
+    if keyType is tuple or keyType is list:
+        mapped = [mapper(x) for x in key]
+        if all(m is k for m, k in zip(mapped, key)):
+            return key
+        return tuple(mapped) if keyType is tuple else mapped
     if keyType is dict:
-        return {k: mapper(v) for k, v in key.items()}
+        mapped = {k: mapper(v) for k, v in key.items()}
+        if all(mapped[k] is v for k, v in key.items()):
+            return key
+        return mapped
     return key
 
 def wrap_keyerror_function(f):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
     wrapped_function converts the args / kwargs to use alternative index keys and then calls the function.
     If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
+    If there is nothing to convert, the original error is thrown as is.
     '''
     def wrapped_function(*args, **kwargs):
         # Map args & kwargs and execute function
@@ -81,7 +87,9 @@ def wrap_keyerror_function(f):
 
             return f(*newargs, **newkwargs)
         except KeyError as e:
-            pass
+            # No key was mapped, so the original error already tells what is missing
+            if newargs is args and newkwargs is kwargs:
+                raise
 
         # Execute original
         # Allows for df, Series, etc indexing for keys like 'SPY' if they exist

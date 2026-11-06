@@ -744,6 +744,42 @@ def Test4(dataFrame):
             }
         }
 
+        [TestCase("dataFrame['opne']", "'opne'")]
+        [TestCase("dataFrame.loc[symbol, 'opne']", "'opne'")]
+        [TestCase("dataFrame.loc[symbol].loc[[pd.Timestamp(1999, 1, 1)]]", "1999-01-01")]
+        public void KeyErrorIsNotRewrittenWhenNoKeyIsMapped(string lookup, string expectedInMessage)
+        {
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i => new TradeBar(new DateTime(2020, 1, 2, 9, 30, 0).AddMinutes(i), Symbols.SPY, 10 + i, 30 + i, 5 + i, 20 + i, 1000 + i))
+                .ToArray();
+
+            SymbolCache.Set("SPY", Symbols.SPY);
+
+            using (Py.GIL())
+            {
+                // Declared inside the GIL so it is disposed before the GIL is released
+                using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(Symbols.SPY, Resolution.Minute, rawBars));
+                using var module = PyModule.FromString("testModule",
+                    $@"
+import pandas as pd
+
+def Test(dataFrame, symbol):
+    try:
+        {lookup}
+    except KeyError as e:
+        return str(e)
+    return 'no error'");
+
+                using var pySymbol = Symbols.SPY.ToPython();
+                using var result = module.GetAttr("Test").Invoke(dataFrame, pySymbol);
+                var message = result.As<string>();
+
+                Assert.That(message, Does.Contain(expectedInMessage));
+                Assert.That(message, Does.Not.Contain("No key found for either mapped or original key"));
+            }
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void BackwardsCompatibilityDataFrame_Subset(bool cache)
