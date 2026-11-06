@@ -80,14 +80,19 @@ namespace QuantConnect.Algorithm.CSharp
                     // Long only and unsupported order rules reject synchronously with an Invalid ticket.
                     _overSellTicket = MarketOrder(_symbol, -11, asynchronous: true);
                     RequireInvalid(_overSellTicket, "long only");
-                    _sellFromFlatTicket = null;
 
                     var goodTilDate = new OrderProperties { TimeInForce = TimeInForce.GoodTilDate(Time.AddDays(7)) };
                     _goodTilDateTicket = LimitOrder(_symbol, 1, Securities[_symbol].Price * 1.1m, orderProperties: goodTilDate);
                     RequireInvalid(_goodTilDateTicket, "GoodTilDateTimeInForce");
 
+                    // MarketOnClose is accepted, since Lean converts daily market orders placed intraday into it.
+                    // It is cancelled straight away so the position in this algorithm is unchanged.
                     _marketOnCloseTicket = MarketOnCloseOrder(_symbol, 1);
-                    RequireInvalid(_marketOnCloseTicket, "MarketOnClose");
+                    if (_marketOnCloseTicket.Status == OrderStatus.Invalid)
+                    {
+                        throw new RegressionTestException("Expected the MarketOnClose order to be accepted, but it was Invalid.");
+                    }
+                    _marketOnCloseTicket.Cancel();
 
                     // Contingent orders (brackets) are rejected by the model.
                     var price = Securities[_symbol].Price;
@@ -156,7 +161,10 @@ namespace QuantConnect.Algorithm.CSharp
             RequireInvalid(_overSellTicket, "long only");
             RequireInvalid(_sellFromFlatTicket, "long only");
             RequireInvalid(_goodTilDateTicket, "GoodTilDateTimeInForce");
-            RequireInvalid(_marketOnCloseTicket, "MarketOnClose");
+            if (_marketOnCloseTicket == null || _marketOnCloseTicket.Status != OrderStatus.Canceled)
+            {
+                throw new RegressionTestException($"Expected the MarketOnClose order to be cancelled, but it is {_marketOnCloseTicket?.Status}.");
+            }
             if (_bracketTickets == null || _bracketTickets.Count == 0 || _bracketTickets.Any(ticket => ticket.Status != OrderStatus.Invalid))
             {
                 throw new RegressionTestException("Expected every bracket order ticket to be Invalid.");
@@ -214,7 +222,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "9"}
+            {"Total Orders", "9"},
+            {"Average Win", "0.01%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0.346%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100012.94"},
+            {"Net Profit", "0.013%"},
+            {"Sharpe Ratio", "-7.344"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "15.489%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.012"},
+            {"Beta", "0.004"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-15.219"},
+            {"Tracking Error", "0.118"},
+            {"Treynor Ratio", "-1.191"},
+            {"Total Fees", "$0.03"},
+            {"Estimated Strategy Capacity", "$1200000000.00"},
+            {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
+            {"Portfolio Turnover", "0.21%"},
+            {"Drawdown Recovery", "1"},
+            {"OrderListHash", "563859fba6d7c9610a6741cd51048f90"}
         };
     }
 }

@@ -33,9 +33,12 @@ namespace QuantConnect.Brokerages
     /// <see cref="OrderType.MarketOnOpen"/> is accepted as well: a market order submitted while
     /// the market is closed is queued by Trading 212 and executed at the open, which is exactly
     /// what Lean's MarketOnOpen order models, and Lean converts such a market order into one
-    /// before the brokerage model sees it. <see cref="OrderType.MarketOnClose"/> is not accepted,
-    /// because Trading 212 has no order that fills at the close. The leveraged CFD product is a
-    /// separate account type and is out of scope for this model.
+    /// before the brokerage model sees it. <see cref="OrderType.MarketOnClose"/> is accepted for the
+    /// same reason: in backtests Lean converts a market order on a daily-resolution equity placed during
+    /// market hours into a MarketOnClose order, and rejecting it would reject those market orders. The
+    /// model cannot tell a converted order from an explicit MarketOnClose order. Trading 212 has no order
+    /// that fills at the close, so a live brokerage must map or reject an explicit one. The leveraged CFD
+    /// product is a separate account type and is out of scope for this model.
     /// Equity sale proceeds settle immediately in the account currency, see <see cref="GetSettlementModel"/>.
     /// The long-only rule is evaluated against the security's holdings when the order is submitted,
     /// matching the other LEAN brokerage models, so it does not account for other pending unfilled orders.
@@ -56,7 +59,7 @@ namespace QuantConnect.Brokerages
         /// </remarks>
         private readonly Dictionary<SecurityType, HashSet<OrderType>> _supportOrderTypeBySecurityType = new()
         {
-            { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.MarketOnOpen, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit } }
+            { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.MarketOnOpen, OrderType.MarketOnClose, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit } }
         };
 
         /// <summary>
