@@ -141,7 +141,7 @@ namespace QuantConnect.Tests.Common.Statistics
             }
         }
 
-        private TradeBuilder CreateCryptoFutureTradeBuilder(string ticker, FillGroupingMethod groupingMethod,
+        private static TradeBuilder CreateCryptoFutureTradeBuilder(string ticker, FillGroupingMethod groupingMethod,
             FillMatchingMethod matchingMethod, out CryptoFuture security, string market = Market.Binance,
             string accountCurrency = Currencies.USD)
         {
