@@ -192,6 +192,21 @@ namespace QuantConnect.Tests.Common.Securities
             Globals.Reset();
         }
 
+        // the interactivebrokers crypto rows sit after the coinbase ones so a market-less lookup, like an
+        // order deserialized without a market, keeps resolving to coinbase
+        [Test]
+        public void ListedInteractiveBrokersCryptoPairsDoNotChangeTheDefaultCryptoMarket()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.InteractiveBrokers);
+
+            var properties = database.GetSymbolProperties(Market.InteractiveBrokers, symbol, SecurityType.Crypto, Currencies.USD);
+            Assert.AreEqual(0.25m, properties.MinimumPriceVariation);
+
+            Assert.IsTrue(database.TryGetMarket("BTCUSD", SecurityType.Crypto, out var market));
+            Assert.AreEqual(Market.Coinbase, market);
+        }
+
         [TestCase(Market.FXCM, SecurityType.Cfd)]
         [TestCase(Market.Oanda, SecurityType.Cfd)]
         [TestCase(Market.CFE, SecurityType.Future)]
