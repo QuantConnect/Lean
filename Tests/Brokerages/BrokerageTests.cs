@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -138,13 +139,18 @@ namespace QuantConnect.Tests.Brokerages
 
         /// <summary>
         /// Applies the brokerage updates of the orders the way the transaction handler does: contingent orders held waiting
-        /// for their parent are released
+        /// for their parent are released, and an order the brokerage resized takes the new quantity
         /// </summary>
         private void HandleOrderUpdatedEvents(object _, OrderUpdateEvent orderUpdateEvent)
         {
-            if (orderUpdateEvent.ContingencyTriggered && OrderProvider.GetOrderById(orderUpdateEvent.OrderId)?.GetContingencyLink(ContingencyRole.Child) is { } child)
+            var order = OrderProvider.GetOrderById(orderUpdateEvent.OrderId);
+            if (orderUpdateEvent.ContingencyTriggered && order?.GetContingencyLink(ContingencyRole.Child) is { } child)
             {
                 child.Triggered = true;
+            }
+            if (orderUpdateEvent.Quantity.HasValue && order != null)
+            {
+                order.Quantity = orderUpdateEvent.Quantity.Value;
             }
         }
 
@@ -851,12 +857,17 @@ namespace QuantConnect.Tests.Brokerages
         {
             using var requiredStatusEvent = new ManualResetEvent(false);
             using var desiredStatusEvent = new ManualResetEvent(false);
+            var invalidOrderEvents = new ConcurrentQueue<OrderEvent>();
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, orderEvents) =>
             {
                 foreach (var orderEvent in orderEvents)
                 {
                     var order = _orderProvider.GetOrderById(orderEvent.OrderId);
                     order.Status = orderEvent.Status;
+                    if (orderEvent.Status == OrderStatus.Invalid)
+                    {
+                        invalidOrderEvents.Enqueue(orderEvent);
+                    }
                     // no matter what, every order should fire at least one of these
                     if (orders.All(o => o.Status is OrderStatus.Submitted or OrderStatus.Invalid))
                     {
@@ -890,40 +901,58 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrdersStatusChanged += brokerageOnOrdersStatusChanged;
 
-            OrderFillEvent.Reset();
-
-            foreach (var order in orders)
+            try
             {
-                OrderProvider.Add(order);
-                if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
+                OrderFillEvent.Reset();
+
+                foreach (var order in orders)
                 {
-                    Assert.Fail($"Brokerage failed to place the order: {order}");
+                    OrderProvider.Add(order);
+                    if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
+                    {
+                        Assert.Fail($"Brokerage failed to place the order: {order}");
+                    }
+                }
+
+                // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
+                // which causes the Status.Submitted order event to never be set
+                var assertOrderEventStatus = true;
+                if (Brokerage.Name == "Interactive Brokers Brokerage" && orders.Any(o => o.Type is OrderType.StopMarket or OrderType.StopLimit))
+                {
+                    assertOrderEventStatus = false;
+                }
+
+                var delayMilliseconds = Convert.ToInt32(1000 * secondsTimeout);
+                if (assertOrderEventStatus)
+                {
+                    if (requiredStatusEvent.WaitOneAssertFail(delayMilliseconds, "Expected every order to fire a submitted or invalid status event"))
+                    {
+                        if (!desiredStatusEvent.WaitOne(delayMilliseconds))
+                        {
+                            var details = new List<string>();
+                            foreach (var order in orders)
+                            {
+                                var detail = $"OrderID: {order.Id} expected OrderStatus {expectedStatus} actual {order.Status}";
+                                var invalidOrderEvent = invalidOrderEvents.FirstOrDefault(orderEvent => orderEvent.OrderId == order.Id);
+                                if (invalidOrderEvent != null)
+                                {
+                                    detail += $" Message: {invalidOrderEvent.Message}";
+                                }
+                                details.Add(detail);
+                            }
+                            Assert.Fail("Timeout: " + string.Join("; ", details));
+                        }
+                    }
+                }
+                else
+                {
+                    requiredStatusEvent.WaitOne(delayMilliseconds);
                 }
             }
-
-            // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
-            // which causes the Status.Submitted order event to never be set
-            var assertOrderEventStatus = true;
-            if (Brokerage.Name == "Interactive Brokers Brokerage" && orders.Any(o => o.Type is OrderType.StopMarket or OrderType.StopLimit))
+            finally
             {
-                assertOrderEventStatus = false;
+                Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
             }
-
-            var delayMilliseconds = Convert.ToInt32(1000 * secondsTimeout);
-            if (assertOrderEventStatus)
-            {
-                if (requiredStatusEvent.WaitOneAssertFail(delayMilliseconds, "Expected every order to fire a submitted or invalid status event"))
-                {
-                    desiredStatusEvent.WaitOneAssertFail(delayMilliseconds,
-                        "OrderStatus " + expectedStatus + " was not encountered within the timeout." + string.Join("", orders.Select(x => " Order Id:" + x.Id)));
-                }
-            }
-            else
-            {
-                requiredStatusEvent.WaitOne(delayMilliseconds);
-            }
-
-            Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
 
             return orders;
         }

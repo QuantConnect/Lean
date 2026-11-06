@@ -306,6 +306,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.ClearStreet:
                     return new ClearStreetBrokerageModel(accountType);
 
+                case BrokerageName.Etoro:
+                    return new EtoroBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
@@ -423,6 +426,9 @@ namespace QuantConnect.Brokerages
 
                 case ClearStreetBrokerageModel:
                     return BrokerageName.ClearStreet;
+
+                case EtoroBrokerageModel:
+                    return BrokerageName.Etoro;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;
