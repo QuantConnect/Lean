@@ -713,6 +713,15 @@ namespace QuantConnect
             {
                 return Invariant($"A position in {order.Symbol.Value} at leverage {leverage} at eToro needs a stop loss: a stop market order the entry triggers, as a one triggers other or a bracket order. eToro closes the position at its stop price.");
             }
+
+            /// <summary>
+            /// Returns a message explaining that a crypto stop loss has to be at least a given percent away from the price.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string CryptoStopLossTooClose(Orders.Order order, decimal price, int minimumPercent)
+            {
+                return Invariant($"The stop loss of {order.Symbol.Value} at eToro has to be at least {minimumPercent}% away from the price {price}: eToro keeps a crypto stop loss that far from the position and moves a closer one there.");
+            }
         }
 
         /// <summary>

@@ -17,6 +17,7 @@
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
@@ -26,6 +27,12 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class EtoroBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The least distance of a crypto stop loss from the price, in percent of the margin, which is the whole
+        /// position at leverage 1, the one leverage of crypto at eToro. eToro moves a closer stop loss there without an error.
+        /// </summary>
+        private const int CryptoMinimumStopLossPercent = 10;
+
         /// <summary>
         /// The security types supported by eToro: US stocks and ETFs, crypto and currency pairs.
         /// </summary>
@@ -122,6 +129,13 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportedOrderTypes));
+                return false;
+            }
+
+            if (isExitOrder && order is StopMarketOrder stopLoss && IsCryptoStopLossTooClose(security, stopLoss.StopPrice))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.EtoroBrokerageModel.CryptoStopLossTooClose(order, security.Price, CryptoMinimumStopLossPercent));
                 return false;
             }
 
@@ -233,7 +247,27 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.Type == OrderType.StopMarket && request.StopPrice.HasValue && IsCryptoStopLossTooClose(security, request.StopPrice.Value))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.EtoroBrokerageModel.CryptoStopLossTooClose(order, security.Price, CryptoMinimumStopLossPercent));
+                return false;
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// True for a stop loss on a crypto security closer to its price than eToro keeps one; a security without a
+        /// price yet is not checked.
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="stopPrice">The stop price asked</param>
+        /// <returns>True when eToro would move the stop loss away from the price</returns>
+        private static bool IsCryptoStopLossTooClose(Security security, decimal stopPrice)
+        {
+            return security.Type == SecurityType.Crypto && security.Price != 0
+                && Math.Abs(security.Price - stopPrice) < security.Price * CryptoMinimumStopLossPercent / 100;
         }
     }
 }

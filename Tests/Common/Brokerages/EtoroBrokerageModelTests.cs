@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders.Fees;
@@ -141,6 +142,43 @@ namespace QuantConnect.Tests.Common.Brokerages
             OrderContingency.Trigger([entry], [stopLoss]);
             var fields = changesQuantity ? new UpdateOrderFields { Quantity = -2m } : new UpdateOrderFields { StopPrice = 95m };
             var request = new UpdateOrderRequest(DateTime.UtcNow, stopLoss.Id, fields);
+
+            var canUpdate = _brokerageModel.CanUpdateOrder(security, stopLoss, request, out var message);
+
+            Assert.That(canUpdate, Is.EqualTo(expectedCanUpdate));
+            Assert.That(message, expectedCanUpdate ? Is.Null : Is.Not.Null);
+        }
+
+        [TestCase(0.05, false, Description = "A crypto stop loss 5% under the price is inside the 10% eToro keeps")]
+        [TestCase(0.1, true, Description = "A crypto stop loss 10% under the price")]
+        [TestCase(0.2, true, Description = "A crypto stop loss 20% under the price")]
+        public void CanSubmitOrderCryptoStopLossKeepsTheMinimumDistance(decimal distance, bool expectedCanSubmit)
+        {
+            var security = GetSecurityForType(SecurityType.Crypto);
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 100m });
+            var entry = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
+            var stopLoss = new StopMarketOrder(security.Symbol, -1m, 100m * (1 - distance), DateTime.UtcNow);
+            OrderContingency.Trigger([entry], [stopLoss]);
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, stopLoss, out var message);
+
+            Assert.That(canSubmit, Is.EqualTo(expectedCanSubmit));
+            if (!expectedCanSubmit)
+            {
+                Assert.That(message.Message, Does.Contain("10%"));
+            }
+        }
+
+        [TestCase(0.05, false, Description = "A crypto stop loss moved to 5% under the price is inside the 10% eToro keeps")]
+        [TestCase(0.2, true, Description = "A crypto stop loss moved to 20% under the price")]
+        public void CanUpdateOrderCryptoStopLossKeepsTheMinimumDistance(decimal distance, bool expectedCanUpdate)
+        {
+            var security = GetSecurityForType(SecurityType.Crypto);
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 100m });
+            var entry = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
+            var stopLoss = new StopMarketOrder(security.Symbol, -1m, 70m, DateTime.UtcNow);
+            OrderContingency.Trigger([entry], [stopLoss]);
+            var request = new UpdateOrderRequest(DateTime.UtcNow, stopLoss.Id, new UpdateOrderFields { StopPrice = 100m * (1 - distance) });
 
             var canUpdate = _brokerageModel.CanUpdateOrder(security, stopLoss, request, out var message);
 
