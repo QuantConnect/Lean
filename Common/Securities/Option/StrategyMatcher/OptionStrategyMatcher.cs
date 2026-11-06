@@ -67,11 +67,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 return bestMatch;
             }
 
-            // the second candidate deprioritizes definitions leaving a short leg uncovered within the strategy
-            // (naked calls/puts, ladders, short backspreads/straddles/strangles), so short positions are matched
-            // into covered strategies whenever another grouping of the same positions allows it. this avoids
-            // greedily carving, for instance, two overlapping bull call spreads into a bull call ladder, whose
-            // uncovered short leg is charged naked option margin, plus an unmatched long contract
+            // the second candidate favors definitions with balanced option legs after underlying coverage.
+            // surplus longs within a strategy can consume the cover needed by shorts elsewhere in the book
             var candidateMatch = Match(Options.CoveredShortsFirstDefinitions, positions, out unmatched);
             var candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
 
