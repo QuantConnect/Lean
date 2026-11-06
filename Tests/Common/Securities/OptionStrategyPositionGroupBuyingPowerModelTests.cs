@@ -686,6 +686,28 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, _portfolio.TotalMarginUsed);
         }
 
+        [TestCase(OptionRight.Put)]
+        [TestCase(OptionRight.Call)]
+        public void CoveredCreditSpreadsRequireOnlyTheirCombinedStrikeWidths(OptionRight right)
+        {
+            _equity.SetMarketPrice(new Tick { Value = 500 });
+            var expiry = new DateTime(2025, 2, 21);
+            var direction = right == OptionRight.Put ? -1 : 1;
+            foreach (var offset in new[] { 0, 5 })
+            {
+                var shortOption = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", right,
+                    500 + direction * offset, expiry));
+                var longOption = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", right,
+                    500 + direction * (offset + 30), expiry));
+                shortOption.SetMarketPrice(new Tick { Value = 5 });
+                longOption.SetMarketPrice(new Tick { Value = 2 });
+                shortOption.Holdings.SetHoldings(shortOption.Price, -1);
+                longOption.Holdings.SetHoldings(longOption.Price, 1);
+            }
+
+            Assert.AreEqual(6000, _portfolio.TotalMarginUsed);
+        }
+
         [Test]
         public void OverlappingDebitSpreadOrderRequiresOnlyPremium()
         {
