@@ -1,0 +1,57 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System.Collections.Generic;
+using QuantConnect.Brokerages;
+
+namespace QuantConnect.Interfaces
+{
+    /// <summary>
+    /// Optional brokerage capability for retrieving account-level state in multi-account structures.
+    /// </summary>
+    public interface IBrokerageAccountStateProvider
+    {
+        /// <summary>
+        /// Gets the latest immutable account snapshot without performing an external request.
+        /// </summary>
+        BrokerageAccountSnapshot GetAccountSnapshot();
+
+        /// <summary>
+        /// Requests an asynchronous refresh for the requested brokerage account groups and additional managed accounts.
+        /// Implementations should coalesce duplicate requests and apply brokerage pacing limits.
+        /// Before accepted work proceeds, the implementation publishes a
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/> snapshot without advancing its generation; a
+        /// coalesced request joins previously accepted work. A fast refresh can publish a terminal snapshot before the
+        /// caller's next read, so callers must not require observing
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/>. Callers should enforce their own timeout and wait
+        /// for a <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot with a later generation while handling
+        /// <see cref="BrokerageAccountSnapshotStatus.Failed"/> or <see cref="BrokerageAccountSnapshotStatus.Stale"/>.
+        /// Snapshot generations and collection timestamps do not guarantee visibility of activity reported through
+        /// another brokerage stream, such as a recent execution.
+        /// </summary>
+        /// <param name="groupNames">
+        /// Brokerage account groups to refresh. An empty collection requests complete discovery within the
+        /// provider's configured deployment scope; inspect <see cref="BrokerageAccountSnapshot.IsComplete"/>
+        /// on the published snapshot.
+        /// </param>
+        /// <param name="additionalAccountIds">Additional managed accounts to refresh outside the selected groups.</param>
+        /// <returns>
+        /// True if the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
+        /// </returns>
+        bool RequestAccountSnapshotRefresh(
+            IReadOnlyCollection<string> groupNames,
+            IReadOnlyCollection<string> additionalAccountIds);
+    }
+}
