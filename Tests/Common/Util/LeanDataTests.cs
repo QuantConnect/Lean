@@ -324,8 +324,10 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("Data/equity/usa/universes/etf/spy/20200102.csv", SecurityType.Base, Market.USA, Resolution.Daily, "SPY.ETFConstituentUniverse", "2020/1/2", true)]
         [TestCase("Data/equity/usa/universes/daily/qctest/20131007.csv", SecurityType.Base, Market.USA, Resolution.Daily, "qctest", "2013/10/07", false)]
         [TestCase("Data/option/usa/universes/aapl/20241112.csv", SecurityType.Option, Market.USA, Resolution.Daily, "AAPL", "2024/11/12", false)]
+        [TestCase("/Lean/Data/option/usa/universes/aapl/20241112.csv", SecurityType.Option, Market.USA, Resolution.Daily, "AAPL", "2024/11/12", false)]
         [TestCase("Data/indexoption/usa/universes/spx/20250110.csv", SecurityType.IndexOption, Market.USA, Resolution.Daily, "SPX", "2025/1/10", false)]
         [TestCase("Data/future/cme/universes/es/20111230.csv", SecurityType.Future, Market.CME, Resolution.Daily, "ES", "2011/12/30", false)]
+        [TestCase("/var/lib/lean/Data/future/cme/universes/es/20111230.csv", SecurityType.Future, Market.CME, Resolution.Daily, "ES", "2011/12/30", false)]
         [TestCase("Data/futureoption/cme/universes/es/202003/20111230.csv", SecurityType.FutureOption, Market.CME, Resolution.Daily, "ES", "2011/12/30", false)]
         public void UniversesDataPath(string path, SecurityType expectedSecurityType, string expectedMarket, Resolution expectedResolution, string expectedIDSymbol, DateTime expectedDate, bool isCustomDataType)
         {
