@@ -57,6 +57,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             typeof(CharlesSchwabBrokerageModel),
             typeof(TradeStationBrokerageModel),
             typeof(AlpacaBrokerageModel),
+            typeof(EtoroBrokerageModel),
             typeof(BinanceBrokerageModel),
             typeof(BinanceFuturesBrokerageModel),
             typeof(BinanceCoinFuturesBrokerageModel)
