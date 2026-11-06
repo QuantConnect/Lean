@@ -172,6 +172,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);
         }
 
+        [Test]
         public void LastTradeProfit_ShortToLong()
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
