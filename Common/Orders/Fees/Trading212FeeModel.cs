@@ -31,10 +31,10 @@ namespace QuantConnect.Orders.Fees
     /// Trading 212 converts every trade to the account currency, so the fee is charged in the account
     /// currency. The model reports it in that currency too, which is also the currency Lean deducts it
     /// from, so the reported fee and the cash movement always agree.
-    /// The account currency is read from the security's quote cash conversion, which the cash book
-    /// sets to the algorithm's account currency. This happens lazily at fee time, because the fee
-    /// model is assigned while the security is created, before the cash book has set up conversions.
-    /// A caller with another account currency can pass it explicitly instead.
+    /// The account currency is the destination of the security's quote cash conversion, which the cash
+    /// book sets to the algorithm's account currency. It is read at fee time, because the fee model is
+    /// assigned while the security is created, before the cash book has set up conversions. Until then
+    /// there is no destination to convert into, so the fee is charged in the quote currency with no FX fee.
     /// Lean invokes the fee model once, at the completed fill, against the order quantity in effect
     /// then. The fees are therefore computed on the full order rather than once per partial fill, and
     /// an amendment made before the fill is reflected without triggering a fee of its own. An order
@@ -82,27 +82,12 @@ namespace QuantConnect.Orders.Fees
         private const decimal _finraTafMaximumPerTrade = 9.79m;
 
         /// <summary>
-        /// The explicitly configured account currency, if any.
-        /// </summary>
-        private readonly string _accountCurrency;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Trading212FeeModel"/> class
-        /// </summary>
-        /// <param name="accountCurrency">The account currency, used to decide whether a trade
-        /// requires an FX conversion. When not provided, it is read at fee time from the security's
-        /// quote cash conversion, which is the algorithm's account currency.</param>
-        public Trading212FeeModel(string accountCurrency = null)
-        {
-            _accountCurrency = accountCurrency;
-        }
-
-        /// <summary>
         /// Gets the order fee associated with the specified order, in the account currency.
         /// </summary>
         /// <param name="parameters">A <see cref="OrderFeeParameters"/> object containing the
         /// security and order</param>
-        /// <returns>The cost of the order in the account currency</returns>
+        /// <returns>The cost of the order in the account currency, or in the quote currency when the
+        /// account currency is not set up yet</returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
@@ -113,9 +98,7 @@ namespace QuantConnect.Orders.Fees
                 throw new ArgumentException(Messages.FeeModel.UnsupportedSecurityType(security));
             }
 
-            var accountCurrency = _accountCurrency
-                ?? security.QuoteCurrency.CurrencyConversion?.DestinationCurrency
-                ?? Currencies.GBP;
+            var accountCurrency = security.QuoteCurrency.CurrencyConversion?.DestinationCurrency;
 
             // Order.GetValue returns the value in the account currency, but the fees are charged on
             // the trade value in the instrument's quote currency, so convert it back. A zero rate
@@ -126,7 +109,8 @@ namespace QuantConnect.Orders.Fees
 
             // Trading 212 converts the notional to the account currency, so the FX fee applies
             // whenever the instrument is priced in another currency, on buys and sells alike.
-            if (security.QuoteCurrency.Symbol != accountCurrency)
+            // Without an account currency there is nothing to convert into, so no FX fee applies.
+            if (accountCurrency != null && security.QuoteCurrency.Symbol != accountCurrency)
             {
                 fee += _fxFeeRate * tradeValue;
             }
@@ -139,8 +123,13 @@ namespace QuantConnect.Orders.Fees
                 fee += Math.Min(_finraTafPerShare * order.AbsoluteQuantity, _finraTafMaximumPerTrade);
             }
 
-            // The fee was computed in the instrument's quote currency; convert it to the account
-            // currency, which is the currency Trading 212 charges it in.
+            if (accountCurrency == null)
+            {
+                return new OrderFee(new CashAmount(fee, security.QuoteCurrency.Symbol));
+            }
+
+            // The fee was computed in the instrument's quote currency; convert it to the account currency,
+            // which is the currency Trading 212 charges it in.
             return new OrderFee(new CashAmount(fee * conversionRate, accountCurrency));
         }
     }

@@ -23,9 +23,10 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Exercises the Trading 212 fee model end to end with a GBP account trading a USD-listed
-    /// equity: the FX fee is charged on both fills and the US regulatory fees on the sale, all
-    /// settled in the account currency.
+    /// Exercises the Trading 212 fee model and settlement end to end with a GBP account trading a
+    /// USD-listed equity: the FX fee is charged on both fills and the US regulatory fees on the sale,
+    /// all settled in the account currency. The fills' proceeds settle immediately, so the GBP cash
+    /// book ends at the starting cash less the fees and the converted buy, plus the converted sale.
     /// </summary>
     public class Trading212FeeModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -33,6 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
         private int _day;
         private OrderTicket _buyTicket;
         private OrderTicket _sellTicket;
+        private decimal _buyValueInAccountCurrency;
+        private decimal _sellValueInAccountCurrency;
         private decimal _feesInAccountCurrency;
         private int _fills;
 
@@ -85,6 +88,15 @@ namespace QuantConnect.Algorithm.CSharp
             _fills++;
             var conversionRate = Securities[_symbol].QuoteCurrency.ConversionRate;
             var tradeValueInQuoteCurrency = orderEvent.AbsoluteFillQuantity * orderEvent.FillPrice;
+            var tradeValueInAccountCurrency = tradeValueInQuoteCurrency * conversionRate;
+            if (orderEvent.Direction == OrderDirection.Sell)
+            {
+                _sellValueInAccountCurrency += tradeValueInAccountCurrency;
+            }
+            else
+            {
+                _buyValueInAccountCurrency += tradeValueInAccountCurrency;
+            }
 
             // The fees are computed in the quote currency and reported, converted, in GBP.
             var expected = 0.0015m * tradeValueInQuoteCurrency;
@@ -107,9 +119,26 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Expected two fills, but there were {_fills}.");
             }
 
-            // Cash placement is covered by Trading212SettlementModelRegressionAlgorithm; this
-            // algorithm pins the fees and reports the resulting cash book.
-            Log($"Fees in GBP: {_feesInAccountCurrency}; cash: {Portfolio.CashBook}");
+            // Starting cash, less the buy and the fees, plus the sale proceeds, all in GBP.
+            var expectedGbp = 100000m - _buyValueInAccountCurrency - _feesInAccountCurrency + _sellValueInAccountCurrency;
+            var actualGbp = Portfolio.CashBook[Currencies.GBP].Amount;
+            if (Math.Abs(actualGbp - expectedGbp) > 0.0001m)
+            {
+                throw new RegressionTestException(
+                    $"Expected {expectedGbp} GBP after {_feesInAccountCurrency} of fees, but the cash book has {actualGbp} GBP.");
+            }
+
+            // The USD cash is fully converted to GBP by the settlement model, so none is left behind.
+            var actualUsd = Portfolio.CashBook[Currencies.USD].Amount;
+            if (Math.Abs(actualUsd) > 0.000001m)
+            {
+                throw new RegressionTestException($"Expected no USD cash, but the cash book has {actualUsd} USD.");
+            }
+
+            if (Portfolio.UnsettledCash != 0)
+            {
+                throw new RegressionTestException($"Expected no unsettled cash, but there is {Portfolio.UnsettledCash}.");
+            }
         }
 
         private static void AssertFee(OrderEvent orderEvent, string currency, decimal expected)
@@ -158,7 +187,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "2"}
+            {"Total Orders", "2"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0.051%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100002.06"},
+            {"Net Profit", "0.002%"},
+            {"Sharpe Ratio", "-118.859"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0.050%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.007"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-9.813"},
+            {"Tracking Error", "0.133"},
+            {"Treynor Ratio", "-26.403"},
+            {"Total Fees", "₤0.29"},
+            {"Estimated Strategy Capacity", "₤140000000.00"},
+            {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
+            {"Portfolio Turnover", "0.01%"},
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "2a4c36261b0d1d4fc5a35ec35930ffe2"}
         };
     }
 }
