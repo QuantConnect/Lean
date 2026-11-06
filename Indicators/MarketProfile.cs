@@ -92,13 +92,13 @@ namespace QuantConnect.Indicators
         public decimal ProfileLow { get; private set; }
 
         /// <summary>
-        /// Price where the most trading occured (Point of Control(POC))
+        /// Price where the most trading occurred (Point of Control(POC))
         /// This price is MarketProfile.Current.Value
         /// </summary>
         public decimal POCPrice { get; private set; }
 
         /// <summary>
-        /// Volume where the most tradding occured (Point of Control(POC))
+        /// Volume where the most trading occurred (Point of Control(POC))
         /// </summary>
         public decimal POCVolume { get; private set; }
 
