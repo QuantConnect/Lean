@@ -71,6 +71,26 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(5m, fee.Value.Amount);
         }
 
+        [TestCase(10, 0.20, 0.02)]
+        [TestCase(1000, 0.80, 5)]
+        [TestCase(1, 100, 1)]
+        [TestCase(1000, 100, 5)]
+        public void USAEquityFeeIsCappedAtOnePercentOfTradeValue(int quantity, decimal price, decimal expectedFee)
+        {
+            var security = SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
         [TestCaseSource(nameof(USAFuturesFeeTestCases))]
         public void USAFutureFee(Symbol symbol, decimal expectedFee)
         {
