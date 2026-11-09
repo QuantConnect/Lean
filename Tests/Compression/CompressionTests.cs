@@ -74,13 +74,19 @@ namespace QuantConnect.Tests.Compression
         }
 
         [Test]
-        public void ZipBytesReturnsByteArrayWithCorrectLength()
+        public void ZipBytesReturnsOnlyArchiveBytes()
         {
             const string file = "../../../Data/equity/usa/tick/spy/20131007_trade.zip";
             var fileBytes = File.ReadAllBytes(file);
             var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
 
-            Assert.AreEqual(OS.IsWindows ? 905693 : 906121, zippedBytes.Length);
+            // With no ZIP comment, the end-of-central-directory record occupies the last 22 bytes.
+            CollectionAssert.AreEqual(new byte[] { 0x50, 0x4b, 0x05, 0x06 }, zippedBytes[^22..^18]);
+            using var input = new MemoryStream(zippedBytes);
+            using var archive = ZipFile.Read(input);
+            using var output = new MemoryStream();
+            archive["entry"].Extract(output);
+            CollectionAssert.AreEqual(fileBytes, output.ToArray());
         }
 
         [Test]
