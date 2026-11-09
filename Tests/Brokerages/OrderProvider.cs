@@ -86,24 +86,22 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         /// <summary>
-        /// Applies an update request to the order and its ticket, the way the transaction handler does before it
-        /// calls the brokerage, so a brokerage sees the request on the ticket and its values on the order
+        /// Takes an update request the way the transaction handler does when the algorithm sends it: on the ticket of
+        /// its order and processing. The handler applies the values of a request to the order when it processes it,
+        /// one request at a time, right before it calls the brokerage; a test does the same with
+        /// <see cref="Order.ApplyUpdateOrderRequest"/> for the request the brokerage is to see
         /// </summary>
         /// <param name="request">The update request</param>
         public void UpdateOrder(UpdateOrderRequest request)
         {
-            var order = GetOrderById(request.OrderId);
-            if (order == null)
+            if (!_orderTickets.TryGetValue(request.OrderId, out var orderTicket))
             {
                 Log.Error($"OrderProvider.UpdateOrder(): Lean order id {request.OrderId} not found");
                 return;
             }
 
-            if (_orderTickets.TryGetValue(request.OrderId, out var orderTicket))
-            {
-                orderTicket.AddUpdateRequest(request);
-            }
-            order.ApplyUpdateOrderRequest(request);
+            orderTicket.AddUpdateRequest(request);
+            request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
         }
 
         public int OrdersCount => _orders.Count;
