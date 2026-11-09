@@ -252,6 +252,9 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase("take profit", 2, false, Description = "A leveraged entry needs a stop loss")]
         [TestCase("exits only", 1, false, Description = "The exits have to be triggered by an entry")]
         [TestCase("same side exit", 1, false, Description = "The exits are on the opposite side of the entry")]
+        [TestCase("stop loss on the entry side", 1, false, Description = "A bracket whose stop loss buys with the entry: eToro's close at the stop would fill a buy")]
+        [TestCase("take profit on the entry side", 1, false, Description = "A bracket whose take profit buys with the entry")]
+        [TestCase("short stop loss on the entry side", 1, false, Description = "A short bracket whose stop loss sells with the entry")]
         [TestCase("half exit", 1, false, Description = "The exits are for the quantity of the entry, the whole position closes at one of them")]
         [TestCase("limit entry", 1, false, Description = "The entry has to be a market order")]
         [TestCase("market exit", 1, false, Description = "An exit has to be a stop market or a limit order")]
@@ -288,20 +291,17 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var time = DateTime.UtcNow;
             var entryQuantity = shape.StartsWith("short") ? -2m : 2m;
-            var exitQuantity = shape switch
-            {
-                "same side exit" => entryQuantity,
-                "half exit" => -entryQuantity / 2,
-                _ => -entryQuantity
-            };
+            var exitQuantity = shape == "half exit" ? -entryQuantity / 2 : -entryQuantity;
+            var stopLossQuantity = shape is "same side exit" or "stop loss on the entry side" or "short stop loss on the entry side" ? entryQuantity : exitQuantity;
+            var takeProfitQuantity = shape is "same side exit" or "take profit on the entry side" ? entryQuantity : exitQuantity;
             Order entry = shape == "limit entry" ? new LimitOrder(symbol, entryQuantity, 100m, time) : new MarketOrder(symbol, entryQuantity, time);
-            var stopLoss = new StopMarketOrder(symbol, exitQuantity, 90m, time);
-            var takeProfit = new LimitOrder(symbol, exitQuantity, 110m, time);
+            var stopLoss = new StopMarketOrder(symbol, stopLossQuantity, 90m, time);
+            var takeProfit = new LimitOrder(symbol, takeProfitQuantity, 110m, time);
 
             List<Order> exits = shape switch
             {
                 "take profit" or "short take profit" => [takeProfit],
-                "bracket" or "exits only" => [takeProfit, stopLoss],
+                "bracket" or "exits only" or "stop loss on the entry side" or "take profit on the entry side" or "short stop loss on the entry side" => [takeProfit, stopLoss],
                 "market exit" => [new MarketOrder(symbol, exitQuantity, time)],
                 "two stop losses" => [stopLoss, new StopMarketOrder(symbol, exitQuantity, 80m, time)],
                 _ => [stopLoss]

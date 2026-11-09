@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -204,7 +205,7 @@ namespace QuantConnect.Brokerages
             {
                 message = this.UnsupportedContingentOrdersShape("the entry order has to open a position.");
             }
-            else if (contingency.Directions.Count != 2)
+            else if (contingency.Directions.Count != 2 || isEntry && contingency.Quantities.Count(quantity => Math.Sign(quantity) == Math.Sign(order.Quantity)) != 1)
             {
                 message = this.UnsupportedContingentOrdersShape("the exit orders have to be on the opposite side of the entry order.");
             }
