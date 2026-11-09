@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -150,7 +149,13 @@ namespace QuantConnect.Tests.Brokerages
             }
             if (orderUpdateEvent.Quantity.HasValue && order != null)
             {
-                order.Quantity = orderUpdateEvent.Quantity.Value;
+                // the transaction handler drops a zero quantity, a change of side and a quantity under what already filled
+                var quantity = orderUpdateEvent.Quantity.Value;
+                var filledQuantity = OrderProvider.GetOrderTicket(order.Id)?.QuantityFilled ?? 0;
+                if (quantity != 0 && quantity != order.Quantity && Math.Sign(quantity) == Math.Sign(order.Quantity) && Math.Abs(quantity) >= Math.Abs(filledQuantity))
+                {
+                    order.Quantity = quantity;
+                }
             }
         }
 
@@ -857,17 +862,12 @@ namespace QuantConnect.Tests.Brokerages
         {
             using var requiredStatusEvent = new ManualResetEvent(false);
             using var desiredStatusEvent = new ManualResetEvent(false);
-            var invalidOrderEvents = new ConcurrentQueue<OrderEvent>();
             EventHandler<List<OrderEvent>> brokerageOnOrdersStatusChanged = (sender, orderEvents) =>
             {
                 foreach (var orderEvent in orderEvents)
                 {
                     var order = _orderProvider.GetOrderById(orderEvent.OrderId);
                     order.Status = orderEvent.Status;
-                    if (orderEvent.Status == OrderStatus.Invalid)
-                    {
-                        invalidOrderEvents.Enqueue(orderEvent);
-                    }
                     // no matter what, every order should fire at least one of these
                     if (orders.All(o => o.Status is OrderStatus.Submitted or OrderStatus.Invalid))
                     {
@@ -901,58 +901,40 @@ namespace QuantConnect.Tests.Brokerages
 
             Brokerage.OrdersStatusChanged += brokerageOnOrdersStatusChanged;
 
-            try
+            OrderFillEvent.Reset();
+
+            foreach (var order in orders)
             {
-                OrderFillEvent.Reset();
-
-                foreach (var order in orders)
+                OrderProvider.Add(order);
+                if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
                 {
-                    OrderProvider.Add(order);
-                    if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
-                    {
-                        Assert.Fail($"Brokerage failed to place the order: {order}");
-                    }
-                }
-
-                // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
-                // which causes the Status.Submitted order event to never be set
-                var assertOrderEventStatus = true;
-                if (Brokerage.Name == "Interactive Brokers Brokerage" && orders.Any(o => o.Type is OrderType.StopMarket or OrderType.StopLimit))
-                {
-                    assertOrderEventStatus = false;
-                }
-
-                var delayMilliseconds = Convert.ToInt32(1000 * secondsTimeout);
-                if (assertOrderEventStatus)
-                {
-                    if (requiredStatusEvent.WaitOneAssertFail(delayMilliseconds, "Expected every order to fire a submitted or invalid status event"))
-                    {
-                        if (!desiredStatusEvent.WaitOne(delayMilliseconds))
-                        {
-                            var details = new List<string>();
-                            foreach (var order in orders)
-                            {
-                                var detail = $"OrderID: {order.Id} expected OrderStatus {expectedStatus} actual {order.Status}";
-                                var invalidOrderEvent = invalidOrderEvents.FirstOrDefault(orderEvent => orderEvent.OrderId == order.Id);
-                                if (invalidOrderEvent != null)
-                                {
-                                    detail += $" Message: {invalidOrderEvent.Message}";
-                                }
-                                details.Add(detail);
-                            }
-                            Assert.Fail("Timeout: " + string.Join("; ", details));
-                        }
-                    }
-                }
-                else
-                {
-                    requiredStatusEvent.WaitOne(delayMilliseconds);
+                    Assert.Fail($"Brokerage failed to place the order: {order}");
                 }
             }
-            finally
+
+            // This is due to IB simulating stop orders https://www.interactivebrokers.com/en/trading/orders/stop.php
+            // which causes the Status.Submitted order event to never be set
+            var assertOrderEventStatus = true;
+            if (Brokerage.Name == "Interactive Brokers Brokerage" && orders.Any(o => o.Type is OrderType.StopMarket or OrderType.StopLimit))
             {
-                Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
+                assertOrderEventStatus = false;
             }
+
+            var delayMilliseconds = Convert.ToInt32(1000 * secondsTimeout);
+            if (assertOrderEventStatus)
+            {
+                if (requiredStatusEvent.WaitOneAssertFail(delayMilliseconds, "Expected every order to fire a submitted or invalid status event"))
+                {
+                    desiredStatusEvent.WaitOneAssertFail(delayMilliseconds,
+                        "OrderStatus " + expectedStatus + " was not encountered within the timeout." + string.Join("", orders.Select(x => " Order Id:" + x.Id)));
+                }
+            }
+            else
+            {
+                requiredStatusEvent.WaitOne(delayMilliseconds);
+            }
+
+            Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
 
             return orders;
         }
