@@ -228,7 +228,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(AccountType.Cash, SecurityType.Forex, 1)]
         [TestCase(AccountType.Margin, SecurityType.Equity, 2)]
         [TestCase(AccountType.Margin, SecurityType.Crypto, 1)]
-        [TestCase(AccountType.Margin, SecurityType.Forex, 50)]
+        [TestCase(AccountType.Margin, SecurityType.Forex, 30, Description = "The highest leverage eToro offers on a currency pair, under Lean's default of 50")]
         public void GetLeverageReturnsTheDefaultOfTheAccountType(AccountType accountType, SecurityType securityType, decimal expectedLeverage)
         {
             var brokerageModel = new EtoroBrokerageModel(accountType);

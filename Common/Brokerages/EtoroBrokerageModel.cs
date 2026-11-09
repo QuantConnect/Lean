@@ -87,10 +87,28 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Constructor for eToro brokerage model
         /// </summary>
-        /// <param name="accountType">Cash or Margin; a cash account gives every security leverage 1</param>
+        /// <param name="accountType">Cash or Margin; a cash account gives every security leverage 1 and takes no other,
+        /// a margin account starts at the leverage of <see cref="GetLeverage"/> and takes another with SetLeverage</param>
         public EtoroBrokerageModel(AccountType accountType = AccountType.Cash)
             : base(accountType)
         {
+        }
+
+        /// <summary>
+        /// Gets the leverage a security starts at: 1 on a cash account; on a margin account 30 on a currency pair, the
+        /// highest eToro offers, and Lean's default elsewhere, 2 on equities and 1 on crypto, inside what eToro offers.
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>The leverage the security starts at</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            if (AccountType == AccountType.Margin && security.Type == SecurityType.Forex)
+            {
+                // the highest eToro offers on a currency pair; a pair that takes 10 or 20 is refused at the order
+                return 30m;
+            }
+
+            return base.GetLeverage(security);
         }
 
         /// <summary>
