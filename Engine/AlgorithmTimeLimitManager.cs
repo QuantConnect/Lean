@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="additionalTimeBucket">Provides a bucket of additional time that can be requested to be
         /// spent to give execution time for things such as training scheduled events</param>
         /// <param name="timeLoopMaximum">Specifies the maximum amount of time the algorithm is permitted to
-        /// spend in a single time loop. This value can be overriden if certain actions are taken by the
+        /// spend in a single time loop. This value can be overridden if certain actions are taken by the
         /// algorithm, such as invoking the training methods.</param>
         /// <param name="timeLoopWarningThreshold">Elapsed time of a single time loop after which a warning is logged,
         /// once per time step. Defaults to three minutes; a non positive value disables the warning</param>
