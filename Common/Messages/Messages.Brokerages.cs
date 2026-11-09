@@ -722,6 +722,24 @@ namespace QuantConnect
             {
                 return Invariant($"The stop loss of {order.Symbol.Value} at eToro has to be at least {minimumPercent}% away from the price {price}: eToro keeps a crypto stop loss that far from the position and moves a closer one there.");
             }
+
+            /// <summary>
+            /// Returns a message explaining that a stop loss has to be below the price of a long position and above the price of a short one.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string StopLossOnTheWrongSide(Orders.Order order, decimal stopPrice, decimal price)
+            {
+                return Invariant($"The stop loss of {order.Symbol.Value} at {stopPrice} is on the wrong side of the price {price}: eToro keeps the stop loss of a long position below the price and that of a short position above it.");
+            }
+
+            /// <summary>
+            /// Returns a message explaining that a take profit has to be above the price of a long position and below the price of a short one.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TakeProfitOnTheWrongSide(Orders.Order order, decimal limitPrice, decimal price)
+            {
+                return Invariant($"The take profit of {order.Symbol.Value} at {limitPrice} is on the wrong side of the price {price}: eToro keeps the take profit of a long position above the price and that of a short position below it.");
+            }
         }
 
         /// <summary>

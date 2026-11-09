@@ -189,6 +189,57 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, expectedCanUpdate ? Is.Null : Is.Not.Null);
         }
 
+        // eToro refuses a rate on the wrong side of the price, where Lean's fill model would fill the exit at once
+        [TestCase(OrderType.StopMarket, -1, 90, true, Description = "The stop loss of a long position below the price")]
+        [TestCase(OrderType.StopMarket, -1, 120, false, Description = "The stop loss of a long position above the price")]
+        [TestCase(OrderType.StopMarket, 1, 110, true, Description = "The stop loss of a short position above the price")]
+        [TestCase(OrderType.StopMarket, 1, 80, false, Description = "The stop loss of a short position below the price")]
+        [TestCase(OrderType.Limit, -1, 110, true, Description = "The take profit of a long position above the price")]
+        [TestCase(OrderType.Limit, -1, 90, false, Description = "The take profit of a long position below the price")]
+        [TestCase(OrderType.Limit, 1, 90, true, Description = "The take profit of a short position below the price")]
+        [TestCase(OrderType.Limit, 1, 110, false, Description = "The take profit of a short position above the price")]
+        public void CanSubmitOrderExitPriceHasToBeOnItsSideOfThePrice(OrderType exitType, decimal exitQuantity, decimal exitPrice, bool expectedCanSubmit)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 100m });
+            var exit = CreateExitOrder(exitType, security.Symbol, exitQuantity, exitPrice);
+            OrderContingency.Trigger([new MarketOrder(security.Symbol, -exitQuantity, DateTime.UtcNow)], [exit]);
+
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, exit, out var message);
+
+            Assert.That(canSubmit, Is.EqualTo(expectedCanSubmit));
+            if (!expectedCanSubmit)
+            {
+                Assert.That(message.Message, Does.Contain("wrong side"));
+            }
+        }
+
+        // The exit comes without its entry, as read from the position after a restart; the side of its new price is checked all the same
+        [TestCase(OrderType.StopMarket, -1, 90, true, Description = "The stop loss of a long position moved below the price")]
+        [TestCase(OrderType.StopMarket, -1, 120, false, Description = "The stop loss of a long position moved above the price")]
+        [TestCase(OrderType.StopMarket, 1, 110, true, Description = "The stop loss of a short position moved above the price")]
+        [TestCase(OrderType.StopMarket, 1, 80, false, Description = "The stop loss of a short position moved below the price")]
+        [TestCase(OrderType.Limit, -1, 110, true, Description = "The take profit of a long position moved above the price")]
+        [TestCase(OrderType.Limit, -1, 90, false, Description = "The take profit of a long position moved below the price")]
+        [TestCase(OrderType.Limit, 1, 90, true, Description = "The take profit of a short position moved below the price")]
+        [TestCase(OrderType.Limit, 1, 110, false, Description = "The take profit of a short position moved above the price")]
+        public void CanUpdateOrderExitPriceHasToBeOnItsSideOfThePrice(OrderType exitType, decimal exitQuantity, decimal newPrice, bool expectedCanUpdate)
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+            security.SetMarketPrice(new Tick { Symbol = security.Symbol, Value = 100m });
+            var exit = CreateExitOrder(exitType, security.Symbol, exitQuantity, 100m);
+            var fields = exitType == OrderType.StopMarket ? new UpdateOrderFields { StopPrice = newPrice } : new UpdateOrderFields { LimitPrice = newPrice };
+            var request = new UpdateOrderRequest(DateTime.UtcNow, exit.Id, fields);
+
+            var canUpdate = _brokerageModel.CanUpdateOrder(security, exit, request, out var message);
+
+            Assert.That(canUpdate, Is.EqualTo(expectedCanUpdate));
+            if (!expectedCanUpdate)
+            {
+                Assert.That(message.Message, Does.Contain("wrong side"));
+            }
+        }
+
         [Test]
         public void GetFeeModelReturnsEtoroFeeModel()
         {
@@ -316,6 +367,19 @@ namespace QuantConnect.Tests.Common.Brokerages
                 OrderContingency.Relate(ContingencyType.OneCancelsOther, exits);
             }
             return shape == "exits only" ? exits : [entry, .. exits];
+        }
+
+        private static Order CreateExitOrder(OrderType exitType, Symbol symbol, decimal quantity, decimal price)
+        {
+            switch (exitType)
+            {
+                case OrderType.StopMarket:
+                    return new StopMarketOrder(symbol, quantity, price, DateTime.UtcNow);
+                case OrderType.Limit:
+                    return new LimitOrder(symbol, quantity, price, DateTime.UtcNow);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(exitType), exitType, null);
+            }
         }
 
         private static Security GetSecurityForType(SecurityType securityType)

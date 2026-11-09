@@ -31,49 +31,37 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The least distance of a crypto stop loss from the price, in percent of the margin, which is the whole
         /// position at leverage 1, the one leverage of crypto at eToro. eToro moves a closer stop loss there without an error.
+        /// It is the <c>minStopLossPercentage</c> in the <c>leverageConfigs</c> of every crypto instrument in the eligibility
+        /// endpoint, https://api-portal.etoro.com/api-reference/trading--real/check-instrument-trading-eligibility.md;
+        /// the other security types carry it per instrument, 0 on most.
         /// </summary>
         private const int CryptoMinimumStopLossPercent = 10;
 
         /// <summary>
         /// The security types supported by eToro: US stocks and ETFs, crypto and currency pairs.
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new(
-            new[]
-            {
-                SecurityType.Equity,
-                SecurityType.Crypto,
-                SecurityType.Forex
-            });
+        private readonly HashSet<SecurityType> _supportSecurityTypes = [SecurityType.Equity, SecurityType.Crypto, SecurityType.Forex];
 
         /// <summary>
         /// The order types supported by the <see cref="CanSubmitOrder"/> operation in eToro.
         /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market
-            });
+        private readonly HashSet<OrderType> _supportOrderTypes = [OrderType.Market];
 
         /// <summary>
         /// The order types of an exit order an entry triggers: a stop market order is the stop loss of the position the
         /// entry opens, a limit order its take profit.
         /// </summary>
-        private readonly HashSet<OrderType> _supportExitOrderTypes = new(
-            new[]
-            {
-                OrderType.StopMarket,
-                OrderType.Limit
-            });
+        private readonly HashSet<OrderType> _supportContingentExitOrderTypes = [OrderType.StopMarket, OrderType.Limit];
 
         /// <summary>
         /// The contingency types supported: an entry which triggers its exits, and the two exits of a bracket where one
         /// cancels the other.
         /// </summary>
-        private readonly HashSet<ContingencyType> _supportedContingencyTypes = new()
-        {
+        private readonly HashSet<ContingencyType> _supportedContingencyTypes =
+        [
             ContingencyType.OneTriggersOther,
             ContingencyType.OneCancelsOther
-        };
+        ];
 
         /// <summary>
         /// The order types that cannot cross zero holdings.
@@ -142,8 +130,8 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            var isExitOrder = order.GetContingencyLink(ContingencyRole.Child) != null;
-            var supportedOrderTypes = isExitOrder ? _supportExitOrderTypes : _supportOrderTypes;
+            var isContingentExitOrder = order.GetContingencyLink(ContingencyRole.Child) != null;
+            var supportedOrderTypes = isContingentExitOrder ? _supportContingentExitOrderTypes : _supportOrderTypes;
             if (!supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
@@ -151,14 +139,12 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (isExitOrder && order is StopMarketOrder stopLoss && IsCryptoStopLossTooClose(security, stopLoss.StopPrice))
+            if (isContingentExitOrder && !IsExitPriceSupported(security, order, GetContingentExitOrderPrice(order), out message))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.EtoroBrokerageModel.CryptoStopLossTooClose(order, security.Price, CryptoMinimumStopLossPercent));
                 return false;
             }
 
-            if (!isExitOrder)
+            if (!isContingentExitOrder)
             {
                 var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity);
                 var hasStopLoss = order.Contingency?.OrderTypes.Contains(OrderType.StopMarket) == true;
@@ -177,7 +163,7 @@ namespace QuantConnect.Brokerages
                 }
             }
 
-            if (!isExitOrder && !BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
+            if (!isContingentExitOrder && !BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
             {
                 return false;
             }
@@ -242,8 +228,8 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Returns true for a price change of a stop market or a limit order, the stop loss or the take profit of a
         /// position, which eToro moves on the position; the order may come without its entry, read from the position
-        /// after a restart. Any other update is refused, eToro has no order update; an order is cancelled and placed
-        /// again instead.
+        /// after a restart. The new price is checked as at submission, see <see cref="IsExitPriceSupported"/>. Any
+        /// other update is refused, eToro has no order update; an order is cancelled and placed again instead.
         /// </summary>
         /// <param name="security">The security of the order</param>
         /// <param name="order">The order to be updated</param>
@@ -268,10 +254,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type == OrderType.StopMarket && request.StopPrice.HasValue && IsCryptoStopLossTooClose(security, request.StopPrice.Value))
+            var exitPrice = order.Type == OrderType.StopMarket ? request.StopPrice : request.LimitPrice;
+            if (exitPrice.HasValue && !IsExitPriceSupported(security, order, exitPrice.Value, out message))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.EtoroBrokerageModel.CryptoStopLossTooClose(order, security.Price, CryptoMinimumStopLossPercent));
                 return false;
             }
 
@@ -279,16 +264,68 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// True for a stop loss on a crypto security closer to its price than eToro keeps one; a security without a
-        /// price yet is not checked.
+        /// Checks the price of an exit order as eToro takes a rate of the position: the stop loss of a long position
+        /// below the price and of a short position above it, the take profit the other side, and a crypto stop loss
+        /// at least 10% away from the price. eToro refuses a rate on the wrong side of the price, where the fill model
+        /// would fill the exit at once. A security without a price yet is not checked.
         /// </summary>
         /// <param name="security">The security of the order</param>
-        /// <param name="stopPrice">The stop price asked</param>
-        /// <returns>True when eToro would move the stop loss away from the price</returns>
-        private static bool IsCryptoStopLossTooClose(Security security, decimal stopPrice)
+        /// <param name="order">The exit order: a sell closes a long position, a buy a short one</param>
+        /// <param name="exitPrice">The stop price of a stop loss or the limit price of a take profit, asked or new</param>
+        /// <param name="message">The refusal, null when eToro takes the price</param>
+        /// <returns>True when eToro takes the price</returns>
+        private static bool IsExitPriceSupported(Security security, Order order, decimal exitPrice, out BrokerageMessageEvent message)
         {
-            return security.Type == SecurityType.Crypto && security.Price != 0
-                && Math.Abs(security.Price - stopPrice) < security.Price * CryptoMinimumStopLossPercent / 100;
+            message = null;
+            if (security.Price == 0)
+            {
+                return true;
+            }
+
+            var closesLong = order.Direction == OrderDirection.Sell;
+            switch (order.Type)
+            {
+                case OrderType.StopMarket:
+                    if (closesLong ? exitPrice >= security.Price : exitPrice <= security.Price)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.EtoroBrokerageModel.StopLossOnTheWrongSide(order, exitPrice, security.Price));
+                    }
+                    else if (security.Type == SecurityType.Crypto && Math.Abs(security.Price - exitPrice) < security.Price * CryptoMinimumStopLossPercent / 100)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.EtoroBrokerageModel.CryptoStopLossTooClose(order, security.Price, CryptoMinimumStopLossPercent));
+                    }
+                    break;
+                case OrderType.Limit:
+                    if (closesLong ? exitPrice <= security.Price : exitPrice >= security.Price)
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.EtoroBrokerageModel.TakeProfitOnTheWrongSide(order, exitPrice, security.Price));
+                    }
+                    break;
+            }
+
+            return message == null;
+        }
+
+        /// <summary>
+        /// Gets the price of a contingent exit order, the rate eToro keeps on the position: the stop price of a stop
+        /// loss, the limit price of a take profit.
+        /// </summary>
+        /// <param name="order">The exit order, a stop market or a limit order</param>
+        /// <returns>The stop price or the limit price</returns>
+        private static decimal GetContingentExitOrderPrice(Order order)
+        {
+            switch (order)
+            {
+                case StopMarketOrder stopLoss:
+                    return stopLoss.StopPrice;
+                case LimitOrder takeProfit:
+                    return takeProfit.LimitPrice;
+                default:
+                    throw new NotSupportedException($"A {order.Type} order is not supported as an exit order: a stop market order is the stop loss, a limit order the take profit.");
+            }
         }
     }
 }
