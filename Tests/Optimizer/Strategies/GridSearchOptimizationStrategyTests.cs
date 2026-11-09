@@ -119,6 +119,32 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
 
+            private static TestCaseData[] OffGridStepParameters => new[]
+            {
+                new TestCaseData(0.10000000000000001m, 0.29999999999999999m, 0.050000000000000003m),
+                new TestCaseData(109m, 111.57142857142857142857142857m, 1.2857142857142857142857142857m),
+                new TestCaseData(162.66666666666666666666666667m, 171.80952380952380952380952381m, 9.142857142857142857142857143m),
+                new TestCaseData(9.333333333333333333333333333m, 110.04761904761904761904761904m, 6.7142857142857142857142857143m)
+            };
+
+            [Test, TestCaseSource(nameof(OffGridStepParameters))]
+            public void EstimateMatchesEnumeratedParameterSets(decimal min, decimal max, decimal step)
+            {
+                var set = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationStepParameter("ema-fast", min, max, step),
+                    new OptimizationStepParameter("ema-slow", 0.1m, 0.3m, 0.05m)
+                };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
+                var enumerated = 0;
+                _strategy.NewParameterSet += (s, parameterSet) => enumerated++;
+
+                _strategy.PushNewResults(OptimizationResult.Initial);
+
+                Assert.Greater(enumerated, 0);
+                Assert.AreEqual(enumerated, _strategy.GetTotalBacktestEstimate());
+            }
+
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}})

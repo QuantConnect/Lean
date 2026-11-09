@@ -142,7 +142,20 @@ namespace QuantConnect.Optimizer.Strategies
                 throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
             }
 
-            return (int)Math.Floor((stepParameter.MaxValue - stepParameter.MinValue) / stepParameter.Step.Value) + 1;
+            var step = stepParameter.Step.Value;
+            var count = (int)Math.Floor((stepParameter.MaxValue - stepParameter.MinValue) / step) + 1;
+
+            // the division can round across a grid boundary, align the count with the enumerator's 'MinValue + index * Step <= MaxValue' condition
+            while (stepParameter.MinValue + count * step <= stepParameter.MaxValue)
+            {
+                count++;
+            }
+            while (count > 0 && stepParameter.MinValue + (count - 1) * step > stepParameter.MaxValue)
+            {
+                count--;
+            }
+
+            return count;
         }
 
         /// <summary>
