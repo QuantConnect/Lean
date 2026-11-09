@@ -213,13 +213,20 @@ namespace QuantConnect.Securities.Future
             var marginRequirementsHistory = LoadMarginRequirementsHistory(security.Symbol);
             var date = lastData.Time.Date;
 
-            while (_marginCurrentIndex + 1 < marginRequirementsHistory.Length &&
-                marginRequirementsHistory[_marginCurrentIndex + 1].Date <= date)
+            // Each lookup owns its index; the shared value is only a search hint.
+            var index = Math.Min(_marginCurrentIndex, marginRequirementsHistory.Length - 1);
+            while (index > 0 && marginRequirementsHistory[index].Date > date)
             {
-                _marginCurrentIndex++;
+                index--;
+            }
+            while (index + 1 < marginRequirementsHistory.Length &&
+                marginRequirementsHistory[index + 1].Date <= date)
+            {
+                index++;
             }
 
-            return marginRequirementsHistory[_marginCurrentIndex];
+            _marginCurrentIndex = index;
+            return marginRequirementsHistory[index];
         }
 
         /// <summary>
