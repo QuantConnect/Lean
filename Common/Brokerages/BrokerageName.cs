@@ -229,6 +229,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Quant Bridge models
         /// </summary>
-        QuantBridge
+        QuantBridge,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Trading 212 models
+        /// </summary>
+        Trading212
     }
 }
