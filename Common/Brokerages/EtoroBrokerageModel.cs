@@ -227,7 +227,7 @@ namespace QuantConnect.Brokerages
             {
                 message = this.UnsupportedContingentOrdersShape("the exit orders have to be on the opposite side of the entry order.");
             }
-            else if (contingency.AbsoluteQuantities.Count != 1)
+            else if (contingency.Quantities.Select(Math.Abs).Distinct().Count() != 1)
             {
                 message = this.UnsupportedContingentOrdersShape("the exit orders have to be for the quantity of the entry order: eToro closes the whole position at the stop loss or the take profit.");
             }

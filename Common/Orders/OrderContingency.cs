@@ -77,15 +77,8 @@ namespace QuantConnect.Orders
         public IReadOnlySet<OrderType> OrderTypes => _set.OrderTypes ??= _set.BuildSet(member => member.OrderType);
 
         /// <summary>
-        /// The different absolute quantities of the orders in the set. Allows a brokerage model to validate a single
-        /// order knowing about the rest of the set. Only available at submission time
-        /// </summary>
-        [JsonIgnore]
-        public IReadOnlySet<decimal> AbsoluteQuantities => _set.AbsoluteQuantities ??= _set.BuildSet(member => Math.Abs(member.Quantity));
-
-        /// <summary>
         /// The quantities of the orders in the set, one per order, signed. Allows a brokerage model to validate a single
-        /// order against the side of each other order of the set. Only available at submission time
+        /// order against the side and the size of each other order of the set. Only available at submission time
         /// </summary>
         [JsonIgnore]
         public IReadOnlyList<decimal> Quantities => _set.Quantities ??= _set.BuildList(member => member.Quantity);
@@ -527,7 +520,6 @@ namespace QuantConnect.Orders
             public HashSet<Symbol> Symbols { get; set; }
             public HashSet<OrderDirection> Directions { get; set; }
             public HashSet<OrderType> OrderTypes { get; set; }
-            public HashSet<decimal> AbsoluteQuantities { get; set; }
             public List<decimal> Quantities { get; set; }
             public List<SubmitOrderRequest> Requests { get; set; }
 
@@ -544,7 +536,6 @@ namespace QuantConnect.Orders
                 Symbols = null;
                 Directions = null;
                 OrderTypes = null;
-                AbsoluteQuantities = null;
                 Quantities = null;
                 Requests = null;
             }
