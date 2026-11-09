@@ -85,6 +85,27 @@ namespace QuantConnect.Tests.Brokerages
             }
         }
 
+        /// <summary>
+        /// Applies an update request to the order and its ticket, the way the transaction handler does before it
+        /// calls the brokerage, so a brokerage sees the request on the ticket and its values on the order
+        /// </summary>
+        /// <param name="request">The update request</param>
+        public void UpdateOrder(UpdateOrderRequest request)
+        {
+            var order = GetOrderById(request.OrderId);
+            if (order == null)
+            {
+                Log.Error($"OrderProvider.UpdateOrder(): Lean order id {request.OrderId} not found");
+                return;
+            }
+
+            if (_orderTickets.TryGetValue(request.OrderId, out var orderTicket))
+            {
+                orderTicket.AddUpdateRequest(request);
+            }
+            order.ApplyUpdateOrderRequest(request);
+        }
+
         public int OrdersCount => _orders.Count;
 
         public Order GetOrderById(int orderId)
