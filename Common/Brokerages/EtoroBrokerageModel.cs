@@ -139,7 +139,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (isContingentExitOrder && !IsExitPriceSupported(security, order, GetContingentExitOrderPrice(order), out message))
+            if (isContingentExitOrder && !IsExitPriceSupported(security, order, order is StopMarketOrder stopLoss ? stopLoss.StopPrice : ((LimitOrder)order).LimitPrice, out message))
             {
                 return false;
             }
@@ -307,25 +307,6 @@ namespace QuantConnect.Brokerages
             }
 
             return message == null;
-        }
-
-        /// <summary>
-        /// Gets the price of a contingent exit order, the rate eToro keeps on the position: the stop price of a stop
-        /// loss, the limit price of a take profit.
-        /// </summary>
-        /// <param name="order">The exit order, a stop market or a limit order</param>
-        /// <returns>The stop price or the limit price</returns>
-        private static decimal GetContingentExitOrderPrice(Order order)
-        {
-            switch (order)
-            {
-                case StopMarketOrder stopLoss:
-                    return stopLoss.StopPrice;
-                case LimitOrder takeProfit:
-                    return takeProfit.LimitPrice;
-                default:
-                    throw new NotSupportedException($"A {order.Type} order is not supported as an exit order: a stop market order is the stop loss, a limit order the take profit.");
-            }
         }
     }
 }
