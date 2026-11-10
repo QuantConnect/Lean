@@ -53,26 +53,52 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // first so that whenever the objective function scores another candidate equally this one is preserved
             var bestMatch = Match(Options.Definitions, positions, out var unmatched);
             var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, unmatched);
-            if (bestScore >= 0
-                // the bound below reads the score as a negated quantity of uncovered short contracts, which only the
-                // default objective function itself guarantees. any other one, including a derived function free to
-                // score by different rules, always gets to evaluate both candidates
-                || Options.ObjectiveFunction.GetType() == typeof(UncoveredShortQuantityOptionStrategyMatchObjectiveFunction)
-                    && -bestScore <= GetMinimumUncoveredQuantity(positions))
+            if (CannotImprove(bestScore))
             {
-                // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction.
-                // matching again is also pointless once the first solution leaves no more short contracts uncovered than
-                // the positions themselves can possibly cover, which is the case for a book of naked shorts, for a book
-                // holding fewer longs than shorts, and generally whenever the first solution is already optimal
                 return bestMatch;
             }
 
-            // the second candidate favors definitions with balanced option legs after underlying coverage.
-            // surplus longs within a strategy can consume the cover needed by shorts elsewhere in the book
+            // the second candidate deprioritizes definitions leaving a short leg uncovered within the strategy
+            // (naked calls/puts, ladders, short backspreads/straddles/strangles), so short positions are matched
+            // into covered strategies whenever another grouping of the same positions allows it. this avoids
+            // greedily carving, for instance, two overlapping bull call spreads into a bull call ladder, whose
+            // uncovered short leg is charged naked option margin, plus an unmatched long contract
             var candidateMatch = Match(Options.CoveredShortsFirstDefinitions, positions, out unmatched);
             var candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
+            if (candidateScore > bestScore)
+            {
+                bestMatch = candidateMatch;
+                bestScore = candidateScore;
+            }
+
+            if (CannotImprove(bestScore))
+            {
+                return bestMatch;
+            }
+
+            // the third candidate also deprioritizes definitions holding more long legs of a right than their own
+            // short legs need (bull put/bear call ladders, long straddles, protective puts), since those longs could
+            // cover short legs elsewhere in the book. this avoids carving, for instance, two bull put spreads into a
+            // bull put ladder plus an unmatched, naked short put. it's kept separate from the second candidate
+            // because deprioritizing those definitions loses the covered grouping of some books the second finds
+            candidateMatch = Match(Options.BalancedLegsFirstDefinitions, positions, out unmatched);
+            candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
 
             return candidateScore > bestScore ? candidateMatch : bestMatch;
+
+            bool CannotImprove(decimal score)
+            {
+                // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction.
+                // matching again is also pointless once the solution leaves no more short contracts uncovered than
+                // the positions themselves can possibly cover, which is the case for a book of naked shorts, for a book
+                // holding fewer longs than shorts, and generally whenever the solution is already optimal.
+                // that bound reads the score as a negated quantity of uncovered short contracts, which only the
+                // default objective function itself guarantees. any other one, including a derived function free to
+                // score by different rules, always gets to evaluate every candidate
+                return score >= 0
+                    || Options.ObjectiveFunction.GetType() == typeof(UncoveredShortQuantityOptionStrategyMatchObjectiveFunction)
+                        && -score <= GetMinimumUncoveredQuantity(positions);
+            }
         }
 
         private OptionStrategyMatch Match(IEnumerable<OptionStrategyDefinition> definitions, OptionPositionCollection positions,

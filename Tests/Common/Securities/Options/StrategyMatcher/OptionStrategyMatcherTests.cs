@@ -135,6 +135,33 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         }
 
         [Test]
+        public void MatchesCollarBookWithoutLeavingANakedShort()
+        {
+            // only deprioritizing the definitions leaving a short leg uncovered groups this book fully covered:
+            // a protective collar, a covered call and two bull call spreads. also deprioritizing the protective
+            // collar, which holds a put its call doesn't need, lets two covered calls take both underlying lots
+            // and leaves the far short call naked, so that ordering must never replace this solution
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Underlying, 2),
+                Position(Call[115], -1),
+                Position(Call[100], 2),
+                Position(Call[105], -1),
+                Position(Call[115, 1], -2),
+                Position(Call[95, 1]),
+                Position(Put[100, 1])
+            );
+
+            var options = OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions);
+            var match = new OptionStrategyMatcher(options).MatchOnce(positions);
+            // the score only reads the short options left unmatched, the underlying lots don't count there
+            var unmatched = positions.RemoveRange(match.Strategies.SelectMany(strategy => strategy.OptionLegs)
+                .Select(leg => new OptionPosition(leg.Symbol, leg.Quantity)));
+
+            Assert.AreEqual(0, options.ObjectiveFunction.ComputeScore(positions, match, unmatched),
+                string.Join(", ", match.Strategies.Select(strategy => strategy.Name)));
+        }
+
+        [Test]
         public void MatchLeavesNoShortContractUncoveredWhenFullCoverageExists()
         {
             // every short strike has a long at a lower strike available to cover it, same expiration:
@@ -269,8 +296,8 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         public void CustomObjectiveFunctionEvaluatesEveryCandidate()
         {
             // a book of naked shorts, where the default objective function knows no grouping can cover anything and
-            // skips the second candidate. a custom objective function makes no promise about what its score means,
-            // so it must be given both candidates to choose between
+            // skips the other candidates. a custom objective function makes no promise about what its score means,
+            // so it must be given every candidate to choose between
             var positions = OptionPositionCollection.Empty.AddRange(
                 Position(Call[600m], -1),
                 Position(Call[605m], -1)
@@ -281,7 +308,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 .WithObjectiveFunction(objectiveFunction));
             matcher.MatchOnce(positions);
 
-            Assert.AreEqual(2, objectiveFunction.Count);
+            Assert.AreEqual(3, objectiveFunction.Count);
         }
 
         [Test]
@@ -299,7 +326,7 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 .WithObjectiveFunction(objectiveFunction));
             matcher.MatchOnce(positions);
 
-            Assert.AreEqual(2, objectiveFunction.Count);
+            Assert.AreEqual(3, objectiveFunction.Count);
         }
 
         [Test]
