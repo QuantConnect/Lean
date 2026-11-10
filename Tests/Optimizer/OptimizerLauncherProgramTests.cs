@@ -14,12 +14,15 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Optimizer.Strategies;
 using Program = QuantConnect.Optimizer.Launcher.Program;
 
 namespace QuantConnect.Tests.Optimizer
@@ -68,8 +71,8 @@ namespace QuantConnect.Tests.Optimizer
         public void ExitsWithFailureAndDisposesTheOptimizerWhenEstimateFails()
         {
             Config.Set("estimate", "true");
-            // equal bounds without a step calculate a zero step, which the estimate rejects
-            Config.Set("parameters", "[{\"name\":\"x\",\"min\":1,\"max\":1}]");
+            Config.Set("optimization-strategy", typeof(EstimateFailingOptimizationStrategy).AssemblyQualifiedName);
+            Config.Set("parameters", "[{\"name\":\"x\",\"min\":0,\"max\":1,\"step\":1}]");
 
             Assert.AreEqual(1, RunMain());
             Assert.IsTrue(FailingStartLeanOptimizer.Disposed);
@@ -127,6 +130,27 @@ namespace QuantConnect.Tests.Optimizer
             {
                 Disposed = true;
                 base.Dispose();
+            }
+        }
+
+        public class EstimateFailingOptimizationStrategy : IOptimizationStrategy
+        {
+            public event EventHandler<ParameterSet> NewParameterSet { add { } remove { } }
+
+            public OptimizationResult Solution => null;
+
+            public void Initialize(Target target, IReadOnlyList<Constraint> constraints, HashSet<OptimizationParameter> parameters,
+                OptimizationStrategySettings settings)
+            {
+            }
+
+            public void PushNewResults(OptimizationResult result)
+            {
+            }
+
+            public int GetTotalBacktestEstimate()
+            {
+                throw new InvalidOperationException("The backtests could not be estimated");
             }
         }
     }
