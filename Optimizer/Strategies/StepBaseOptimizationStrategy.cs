@@ -142,20 +142,48 @@ namespace QuantConnect.Optimizer.Strategies
                 throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
             }
 
-            var step = stepParameter.Step.Value;
-            var count = (int)Math.Floor((stepParameter.MaxValue - stepParameter.MinValue) / step) + 1;
-
-            // the division can round across a grid boundary, align the count with the enumerator's 'MinValue + index * Step <= MaxValue' condition
-            while (stepParameter.MinValue + count * step <= stepParameter.MaxValue)
+            // dividing the range by the step can round across a grid boundary, so search for the last index meeting the
+            // enumerator's own 'MinValue + index * Step <= MaxValue' condition, which is monotonic in the index
+            bool IsInGrid(long index)
             {
-                count++;
-            }
-            while (count > 0 && stepParameter.MinValue + (count - 1) * step > stepParameter.MaxValue)
-            {
-                count--;
+                try
+                {
+                    return stepParameter.MinValue + index * stepParameter.Step.Value <= stepParameter.MaxValue;
+                }
+                catch (OverflowException)
+                {
+                    // the step is positive, so an overflowing value is above any max value
+                    return false;
+                }
             }
 
-            return count;
+            long lastInGrid = 0;
+            long firstOutOfGrid = 1;
+            while (IsInGrid(firstOutOfGrid))
+            {
+                if (firstOutOfGrid >= int.MaxValue - 1)
+                {
+                    // the count doesn't fit in an int, the estimate is capped
+                    return int.MaxValue;
+                }
+                lastInGrid = firstOutOfGrid;
+                firstOutOfGrid = Math.Min(firstOutOfGrid * 2, int.MaxValue - 1);
+            }
+
+            while (firstOutOfGrid - lastInGrid > 1)
+            {
+                var middle = lastInGrid + (firstOutOfGrid - lastInGrid) / 2;
+                if (IsInGrid(middle))
+                {
+                    lastInGrid = middle;
+                }
+                else
+                {
+                    firstOutOfGrid = middle;
+                }
+            }
+
+            return (int)lastInGrid + 1;
         }
 
         /// <summary>

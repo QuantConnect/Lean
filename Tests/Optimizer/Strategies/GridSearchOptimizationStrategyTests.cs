@@ -145,6 +145,25 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(enumerated, _strategy.GetTotalBacktestEstimate());
             }
 
+            private static TestCaseData[] BoundaryStepParameters => new[]
+            {
+                // the step is below the min value's precision, so 'min + index * step' rounds back to min for half a billion indices
+                new TestCaseData(1000000000m, 1000000000m, 0.0000000000000000000000000001m, 500000001),
+                // the count doesn't fit in an int
+                new TestCaseData(0m, 2147483647m, 1m, int.MaxValue),
+                // the division rounds up to the next grid point, which is out of the decimal range
+                new TestCaseData(0m, 59999999999999999999999999999m, 60000000000000000000000000000m, 1)
+            };
+
+            [Test, TestCaseSource(nameof(BoundaryStepParameters))]
+            public void EstimateAtNumericBoundaries(decimal min, decimal max, decimal step, int expected)
+            {
+                var set = new HashSet<OptimizationParameter> { new OptimizationStepParameter("ema-fast", min, max, step) };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
+
+                Assert.AreEqual(expected, _strategy.GetTotalBacktestEstimate());
+            }
+
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}})
