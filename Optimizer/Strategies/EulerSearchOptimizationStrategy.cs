@@ -88,8 +88,8 @@ namespace QuantConnect.Optimizer.Strategies
                 }
 
                 // Once all running backtests have ended, for the current collection of optimization parameters, for each parameter we determine if
-                // we can create a new smaller/finer optimization scope
-                if (Target.Current.HasValue && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
+                // we can create a new smaller/finer optimization scope. Fewer than two segments can't shrink the step, refining would never end
+                if (Target.Current.HasValue && _segmentsAmount > 1 && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
                     var parameterSet = Solution.ParameterSet;
