@@ -166,13 +166,23 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(expected, _strategy.GetTotalBacktestEstimate());
             }
 
-            // the step is calculated as '(max - min) / segments', which is zero for equal bounds or a range below the decimal precision
-            [TestCase(1, 1)]
-            [TestCase(0, 0.0000000000000000000000000001)]
-            public void EstimateRejectsCalculatedZeroStep(decimal min, decimal max)
+            // the step calculated as '(max - min) / segments' would be zero for equal bounds or a range below the decimal precision
+            [TestCase(1, 1, 1)]
+            [TestCase(0, 0.0000000000000000000000000001, 2)]
+            public void EstimateCountsCalculatedStepOfSingleValueOrNarrowRange(decimal min, decimal max, int expected)
             {
                 var set = new HashSet<OptimizationParameter> { new OptimizationStepParameter("ema-fast", min, max) };
                 _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 });
+
+                Assert.AreEqual(expected, _strategy.GetTotalBacktestEstimate());
+            }
+
+            [Test]
+            public void EstimateRejectsZeroStep()
+            {
+                var parameter = new OptimizationStepParameter("ema-fast", 1, 2, 1);
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), new HashSet<OptimizationParameter> { parameter }, new StepBaseOptimizationStrategySettings());
+                parameter.Step = 0;
 
                 Assert.Throws<InvalidOperationException>(() => _strategy.GetTotalBacktestEstimate());
             }
