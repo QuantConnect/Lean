@@ -35,7 +35,13 @@ namespace QuantConnect.Optimizer.Launcher
             // Parse report arguments and merge with config to use in the optimizer
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(OptimizerArgumentParser.ParseArguments(args));
+                var cliArguments = OptimizerArgumentParser.ParseArguments(args);
+                // Unknown arguments throw, so arguments that parse to no options only requested help or version, already shown
+                if (cliArguments.Count == 0)
+                {
+                    return 0;
+                }
+                Config.MergeCommandLineArgumentsWithConfiguration(cliArguments);
             }
 
             using var endedEvent = new ManualResetEvent(false);

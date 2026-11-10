@@ -40,6 +40,7 @@ namespace QuantConnect.Tests.Optimizer
             _logHandler = Log.LogHandler;
             _logFilePath = Log.FilePath;
             _debuggingEnabled = Log.DebuggingEnabled;
+            FailingStartLeanOptimizer.Created = false;
             FailingStartLeanOptimizer.Disposed = false;
 
             Config.Set("log-handler", "ConsoleLogHandler");
@@ -97,20 +98,47 @@ namespace QuantConnect.Tests.Optimizer
             Assert.IsTrue(FailingStartLeanOptimizer.Disposed);
         }
 
-        private static int RunMain()
+        [TestCase("--help")]
+        [TestCase("-h")]
+        [TestCase("-?")]
+        [TestCase("--version")]
+        [TestCase("-V")]
+        public void ExitsWithSuccessWithoutCreatingTheOptimizerWhenHelpOrVersionIsRequested(string argument)
         {
-            var main = Task.Run(() => Program.Main(Array.Empty<string>()));
+            Config.Set("estimate", "true");
+            Config.Set("parameters", "[{\"name\":\"x\",\"min\":0,\"max\":1,\"step\":1}]");
+
+            Assert.AreEqual(0, RunMain(argument));
+            Assert.IsFalse(FailingStartLeanOptimizer.Created);
+        }
+
+        [Test]
+        public void EstimatesWhenRequestedFromTheCommandLine()
+        {
+            Config.Set("parameters", "[{\"name\":\"x\",\"min\":0,\"max\":1,\"step\":1}]");
+
+            Assert.AreEqual(0, RunMain("--estimate"));
+            Assert.IsTrue(FailingStartLeanOptimizer.Created);
+            Assert.IsTrue(FailingStartLeanOptimizer.Disposed);
+        }
+
+        private static int RunMain(params string[] args)
+        {
+            var main = Task.Run(() => Program.Main(args));
             Assert.IsTrue(main.Wait(TimeSpan.FromSeconds(30)), "The optimizer launcher did not exit");
             return main.Result;
         }
 
         public class FailingStartLeanOptimizer : LeanOptimizer
         {
+            public static bool Created { get; set; }
+
             public static bool Disposed { get; set; }
 
             public FailingStartLeanOptimizer(OptimizationNodePacket nodePacket)
                 : base(nodePacket)
             {
+                Created = true;
             }
 
             protected override string RunLean(ParameterSet parameterSet, string backtestName)
