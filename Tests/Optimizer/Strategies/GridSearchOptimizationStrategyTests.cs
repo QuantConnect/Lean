@@ -119,6 +119,64 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(Math.Floor(Math.Abs(max - min) / Math.Abs(step)) + 1, _strategy.GetTotalBacktestEstimate());
             }
 
+            private static TestCaseData[] OffGridStepParameters => new[]
+            {
+                new TestCaseData(0.10000000000000001m, 0.29999999999999999m, 0.050000000000000003m),
+                new TestCaseData(109m, 111.57142857142857142857142857m, 1.2857142857142857142857142857m),
+                new TestCaseData(162.66666666666666666666666667m, 171.80952380952380952380952381m, 9.142857142857142857142857143m),
+                new TestCaseData(9.333333333333333333333333333m, 110.04761904761904761904761904m, 6.7142857142857142857142857143m)
+            };
+
+            [Test, TestCaseSource(nameof(OffGridStepParameters))]
+            public void EstimateMatchesEnumeratedParameterSets(decimal min, decimal max, decimal step)
+            {
+                var set = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationStepParameter("ema-fast", min, max, step),
+                    new OptimizationStepParameter("ema-slow", 0.1m, 0.3m, 0.05m)
+                };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
+                var enumerated = 0;
+                _strategy.NewParameterSet += (s, parameterSet) => enumerated++;
+
+                _strategy.PushNewResults(OptimizationResult.Initial);
+
+                Assert.Greater(enumerated, 0);
+                Assert.AreEqual(enumerated, _strategy.GetTotalBacktestEstimate());
+            }
+
+            private static TestCaseData[] BoundaryStepParameters => new[]
+            {
+                // the step is below the min value's precision, so 'min + index * step' rounds back to min for half a billion indices
+                new TestCaseData(1000000000m, 1000000000m, 0.0000000000000000000000000001m, 500000001),
+                // the count doesn't fit in an int
+                new TestCaseData(0m, 2147483647m, 1m, int.MaxValue),
+                // the division rounds up to the next grid point
+                new TestCaseData(0m, 59999999999999999999999999999m, 60000000000000000000000000000m, 1),
+                // the grid enumerates within the decimal range, but the search probes an index whose value overflows it
+                new TestCaseData(0m, 50000000000000000000000000000m, 10000000000000000000000000000m, 6)
+            };
+
+            [Test, TestCaseSource(nameof(BoundaryStepParameters))]
+            public void EstimateAtNumericBoundaries(decimal min, decimal max, decimal step, int expected)
+            {
+                var set = new HashSet<OptimizationParameter> { new OptimizationStepParameter("ema-fast", min, max, step) };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
+
+                Assert.AreEqual(expected, _strategy.GetTotalBacktestEstimate());
+            }
+
+            // the step is calculated as '(max - min) / segments', which is zero for equal bounds or a range below the decimal precision
+            [TestCase(1, 1)]
+            [TestCase(0, 0.0000000000000000000000000001)]
+            public void EstimateRejectsCalculatedZeroStep(decimal min, decimal max)
+            {
+                var set = new HashSet<OptimizationParameter> { new OptimizationStepParameter("ema-fast", min, max) };
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 });
+
+                Assert.Throws<InvalidOperationException>(() => _strategy.GetTotalBacktestEstimate());
+            }
+
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}})
