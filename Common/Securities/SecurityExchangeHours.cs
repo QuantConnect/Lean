@@ -340,17 +340,7 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    // If there was an early close the market opens until next day first segment,
-                    // so we don't take into account continuous segments between days, then
-                    // lastDaySegment should be null
-                    if (_earlyCloses.ContainsKey(time.Date))
-                    {
-                        lastDaySegment = null;
-                    }
-                    else
-                    {
-                        lastDaySegment = marketHours.Segments.LastOrDefault();
-                    }
+                    lastDaySegment = marketHours.Segments.LastOrDefault();
                 }
                 else
                 {

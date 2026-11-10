@@ -416,6 +416,27 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetNextMarketCloseForContinuousScheduleBeforeEarlyClose(bool hasLateOpen)
         {
             var earlyCloseDate = new DateTime(2023, 11, 23);
+            var exchangeHours = CreateContinuousExchangeHoursWithEarlyClose(earlyCloseDate, hasLateOpen);
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(earlyCloseDate.AddDays(-1).AddHours(17), true);
+
+            Assert.AreEqual(earlyCloseDate.AddHours(12), nextMarketClose);
+        }
+
+        [Test]
+        public void ContinuousScheduleAfterEarlyCloseLateOpenContinuesAcrossMidnight()
+        {
+            var earlyCloseDate = new DateTime(2023, 11, 23);
+            var exchangeHours = CreateContinuousExchangeHoursWithEarlyClose(earlyCloseDate, hasLateOpen: true);
+            var lateOpenSessionTime = earlyCloseDate.AddHours(18);
+
+            Assert.AreEqual(earlyCloseDate.AddDays(1).AddHours(16), exchangeHours.GetNextMarketClose(lateOpenSessionTime, true));
+            Assert.AreEqual(earlyCloseDate.AddHours(17), exchangeHours.GetPreviousMarketOpen(lateOpenSessionTime, true));
+            Assert.AreEqual(earlyCloseDate.AddDays(3).AddHours(17), exchangeHours.GetNextMarketOpen(lateOpenSessionTime, true));
+        }
+
+        private static SecurityExchangeHours CreateContinuousExchangeHoursWithEarlyClose(DateTime earlyCloseDate, bool hasLateOpen)
+        {
             MarketHoursSegment Segment(int start, int end) =>
                 new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(start), TimeSpan.FromHours(end));
             var marketHours = new[]
@@ -431,16 +452,12 @@ namespace QuantConnect.Tests.Common.Securities
             var lateOpens = hasLateOpen
                 ? new Dictionary<DateTime, TimeSpan> { { earlyCloseDate, TimeSpan.FromHours(17) } }
                 : new Dictionary<DateTime, TimeSpan>();
-            var exchangeHours = new SecurityExchangeHours(
+            return new SecurityExchangeHours(
                 TimeZones.Chicago,
                 Enumerable.Empty<DateTime>(),
                 marketHours,
                 new Dictionary<DateTime, TimeSpan> { { earlyCloseDate, TimeSpan.FromHours(12) } },
                 lateOpens);
-
-            var nextMarketClose = exchangeHours.GetNextMarketClose(earlyCloseDate.AddDays(-1).AddHours(17), true);
-
-            Assert.AreEqual(earlyCloseDate.AddHours(12), nextMarketClose);
         }
 
         [Test]
