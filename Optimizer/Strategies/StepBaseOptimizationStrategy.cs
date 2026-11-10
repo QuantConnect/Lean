@@ -112,13 +112,14 @@ namespace QuantConnect.Optimizer.Strategies
         /// <returns>Number of parameter sets for given optimization parameters</returns>
         public int GetTotalBacktestEstimate()
         {
-            var total = 1;
+            // both factors are at most int.MaxValue so their product fits in a long, the total is capped since it can't fit in an int
+            long total = 1;
             foreach (var arg in OptimizationParameters)
             {
-                total *= Estimate(arg);
+                total = Math.Min(total * Estimate(arg), int.MaxValue);
             }
 
-            return total;
+            return (int)total;
         }
 
         /// <summary>
