@@ -107,6 +107,42 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(105m, _profit(_strategy.Solution.ParameterSet));
             }
 
+            [TestCase(10)]
+            [TestCase(null)]
+            public void EndsWithSingleSegment(double? step)
+            {
+                var parameter = step.HasValue
+                    ? new OptimizationStepParameter("x", 0, 10, (decimal)step.Value, 1)
+                    : new OptimizationStepParameter("x", 0, 10);
+                _strategy.Initialize(
+                    new Target("Profit", new Maximization(), null),
+                    new List<Constraint>(),
+                    new HashSet<OptimizationParameter> { parameter },
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 1 });
+                var pendingOptimizationResults = new Queue<OptimizationResult>();
+                var values = new List<decimal>();
+                _strategy.NewParameterSet += (s, parameterSet) =>
+                {
+                    var value = parameterSet.Value["x"].ToDecimal();
+                    values.Add(value);
+                    if (values.Count > 100)
+                    {
+                        Assert.Fail("The search did not end");
+                    }
+                    pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(value, 0), parameterSet, ""));
+                };
+
+                _strategy.PushNewResults(OptimizationResult.Initial);
+
+                while (pendingOptimizationResults.TryDequeue(out var item))
+                {
+                    _strategy.PushNewResults(item);
+                }
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m }, values);
+                Assert.AreEqual(10m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
             [Test]
             public void ThrowIfNoSettingsPassed()
             {
