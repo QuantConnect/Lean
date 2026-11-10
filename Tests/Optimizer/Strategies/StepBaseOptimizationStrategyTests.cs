@@ -61,7 +61,6 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             var set = new HashSet<OptimizationParameter>
             {
                 new OptimizationStepParameter("ema-fast", 1, 100),
-                new OptimizationStepParameter("ema-slow", -10, -10),
                 new OptimizationStepParameter("ema-custom", -100, -1)
             };
 
@@ -80,6 +79,40 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.AreEqual(actual, stepParameter.Step);
                 Assert.AreEqual(actual / 10, stepParameter.MinStep);
             }
+        }
+
+        private static TestCaseData[] RangesWithZeroDividedStep => new[]
+        {
+            new TestCaseData(-10m, -10m, new[] { -10m }),
+            new TestCaseData(1m, 1m, new[] { 1m }),
+            new TestCaseData(0m, 0.0000000000000000000000000001m, new[] { 0m, 0.0000000000000000000000000001m }),
+            new TestCaseData(0m, 0.0000000000000000000000000003m,
+                new[] { 0m, 0.0000000000000000000000000001m, 0.0000000000000000000000000002m, 0.0000000000000000000000000003m })
+        };
+
+        [Test, TestCaseSource(nameof(RangesWithZeroDividedStep))]
+        public void CalculatedStepIsPositiveAndExhaustsRange(decimal min, decimal max, decimal[] expectedValues)
+        {
+            var parameter = new OptimizationStepParameter("ema-fast", min, max);
+
+            _strategy.Initialize(
+                new Target("Profit", new Maximization(), null),
+                new List<Constraint>(),
+                new HashSet<OptimizationParameter> { parameter },
+                new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 });
+
+            Assert.Greater(parameter.Step, 0m);
+            Assert.Greater(parameter.MinStep, 0m);
+            Assert.LessOrEqual(parameter.MinStep, parameter.Step);
+
+            var values = new List<decimal>();
+            using var enumerator = new OptimizationStepParameterEnumerator(parameter);
+            while (enumerator.MoveNext() && values.Count <= expectedValues.Length)
+            {
+                values.Add(enumerator.Current.ToDecimal());
+            }
+
+            CollectionAssert.AreEqual(expectedValues, values);
         }
 
         private static TestCaseData[] StepBaseSettings => new[]

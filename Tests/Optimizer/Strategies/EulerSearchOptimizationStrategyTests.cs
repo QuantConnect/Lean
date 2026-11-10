@@ -73,6 +73,41 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
 
             [Test]
+            public void EndsWithCalculatedSingleValueStep()
+            {
+                var set = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationStepParameter("ema-fast", 10, 100, 10, 0.1m),
+                    new OptimizationStepParameter("ema-slow", 5, 5)
+                };
+                _strategy.Initialize(
+                    new Target("Profit", new Maximization(), null),
+                    new List<Constraint>(),
+                    set,
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 });
+                var pendingOptimizationResults = new Queue<OptimizationResult>();
+                var backtests = 0;
+                _strategy.NewParameterSet += (s, parameterSet) =>
+                {
+                    if (++backtests > 1000)
+                    {
+                        Assert.Fail("The search did not end");
+                    }
+                    Assert.AreEqual(5m, parameterSet.Value["ema-slow"].ToDecimal());
+                    pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
+                };
+
+                _strategy.PushNewResults(OptimizationResult.Initial);
+
+                while (pendingOptimizationResults.TryDequeue(out var item))
+                {
+                    _strategy.PushNewResults(item);
+                }
+
+                Assert.AreEqual(105m, _profit(_strategy.Solution.ParameterSet));
+            }
+
+            [Test]
             public void ThrowIfNoSettingsPassed()
             {
                 Assert.Throws<ArgumentNullException>(() =>

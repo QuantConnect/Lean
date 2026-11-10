@@ -27,6 +27,8 @@ namespace QuantConnect.Optimizer.Strategies
     /// </summary>
     public abstract class StepBaseOptimizationStrategy : IOptimizationStrategy
     {
+        private const decimal SmallestPositiveStep = 0.0000000000000000000000000001m;
+
         private int _i;
 
         /// <summary>
@@ -242,8 +244,16 @@ namespace QuantConnect.Optimizer.Strategies
                 throw new ArgumentException($"Number of segments should be positive number, but specified '{defaultSegmentAmount}'", nameof(defaultSegmentAmount));
             }
 
-            parameter.Step = Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount;
-            parameter.MinStep = parameter.Step / 10;
+            // a zero step never exhausts the grid: any positive step enumerates a single value once, without changing its precision,
+            // and a range too narrow for its segments gets the finest step decimal can represent
+            if (parameter.MinValue == parameter.MaxValue)
+            {
+                parameter.Step = parameter.MinStep = 1;
+                return;
+            }
+
+            parameter.Step = Math.Max(SmallestPositiveStep, Math.Abs(parameter.MaxValue - parameter.MinValue) / defaultSegmentAmount);
+            parameter.MinStep = Math.Max(SmallestPositiveStep, parameter.Step.Value / 10);
         }
 
         private IEnumerable<Dictionary<string, string>> Recursive(Queue<OptimizationParameter> args)
