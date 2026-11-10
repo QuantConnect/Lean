@@ -142,6 +142,12 @@ namespace QuantConnect.Optimizer.Strategies
                 throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
             }
 
+            // a step calculated from the min and max values can be zero, the grid would never be exhausted
+            if (stepParameter.Step.Value <= 0)
+            {
+                throw new InvalidOperationException($"Optimization parameter cannot be estimated due to step value is not positive, but was {stepParameter.Step.Value}");
+            }
+
             // dividing the range by the step can round across a grid boundary, so search for the last index meeting the
             // enumerator's own 'MinValue + index * Step <= MaxValue' condition, which is monotonic in the index
             bool IsInGrid(long index)
