@@ -151,8 +151,10 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 new TestCaseData(1000000000m, 1000000000m, 0.0000000000000000000000000001m, 500000001),
                 // the count doesn't fit in an int
                 new TestCaseData(0m, 2147483647m, 1m, int.MaxValue),
-                // the division rounds up to the next grid point, which is out of the decimal range
-                new TestCaseData(0m, 59999999999999999999999999999m, 60000000000000000000000000000m, 1)
+                // the division rounds up to the next grid point
+                new TestCaseData(0m, 59999999999999999999999999999m, 60000000000000000000000000000m, 1),
+                // the grid enumerates within the decimal range, but the search probes an index whose value overflows it
+                new TestCaseData(0m, 50000000000000000000000000000m, 10000000000000000000000000000m, 6)
             };
 
             [Test, TestCaseSource(nameof(BoundaryStepParameters))]
