@@ -623,6 +623,39 @@ def rolling_window_with_custom_data_type():
             }
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AddAfterGrowingOverwrittenWindowKeepsNewestFirstOrder(bool growByIndexerRead)
+        {
+            var window = new RollingWindow<int>(3);
+            for (var i = 1; i <= 4; i++)
+            {
+                window.Add(i);
+            }
+            CollectionAssert.AreEqual(new[] { 4, 3, 2 }, window);
+
+            if (growByIndexerRead)
+            {
+                Assert.AreEqual(0, window[4]);
+            }
+            else
+            {
+                window.Size = 5;
+            }
+            Assert.AreEqual(5, window.Size);
+            CollectionAssert.AreEqual(new[] { 4, 3, 2 }, window);
+
+            window.Add(5);
+            CollectionAssert.AreEqual(new[] { 5, 4, 3, 2 }, window);
+            Assert.AreEqual(5, window[0]);
+            Assert.AreEqual(4, window[1]);
+
+            window.Add(6);
+            window.Add(7);
+            CollectionAssert.AreEqual(new[] { 7, 6, 5, 4, 3 }, window);
+            Assert.AreEqual(2, window.MostRecentlyRemoved);
+        }
+
         [Test]
         public void MultipleResizesOnOverwrittenWindowPreserveElementOrder()
         {

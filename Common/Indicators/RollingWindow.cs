@@ -368,19 +368,20 @@ namespace QuantConnect.Indicators
             {
                 _listLock.EnterWriteLock();
 
+                if (_tail != 0 && size != _size)
+                {
+                    // The _list is out of order due to circular overwrites
+                    // Restore oldest to newest order and reset _tail before resizing,
+                    // growing included: Add() then appends, which is newest only once the list is in order
+                    var count = _list.Count;
+                    _list.Reverse(0, _tail);
+                    _list.Reverse(_tail, count - _tail);
+                    _list.Reverse(0, count);
+                    _tail = 0;
+                }
+
                 if (size < _list.Count)
                 {
-                    if (_tail != 0)
-                    {
-                        // The _list is out of order due to circular overwrites
-                        // Restore oldest to newest order and reset _tail before resizing
-                        var count = _list.Count;
-                        _list.Reverse(0, _tail);
-                        _list.Reverse(_tail, count - _tail);
-                        _list.Reverse(0, count);
-                        _tail = 0;
-                    }
-
                     _list.RemoveRange(0, _list.Count - size);
                 }
 
