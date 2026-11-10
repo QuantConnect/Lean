@@ -177,6 +177,33 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                 Assert.Throws<InvalidOperationException>(() => _strategy.GetTotalBacktestEstimate());
             }
 
+            private static TestCaseData[] LargeGridParameters => new[]
+            {
+                // 46340 * 46340 values fit in an int
+                new TestCaseData(new decimal[] { 46339, 46339 }, 2147395600),
+                // 46341 * 46341 values don't fit in an int
+                new TestCaseData(new decimal[] { 46340, 46340 }, int.MaxValue),
+                // the total stays capped once it reached the int range
+                new TestCaseData(new decimal[] { 46340, 46340, 46340 }, int.MaxValue),
+                // int.MaxValue * 2 values don't fit in an int
+                new TestCaseData(new decimal[] { 2147483646, 1 }, int.MaxValue),
+                // int.MaxValue * 1 values fit in an int
+                new TestCaseData(new decimal[] { 2147483646, 0 }, int.MaxValue)
+            };
+
+            [Test, TestCaseSource(nameof(LargeGridParameters))]
+            public void EstimateIsCappedForLargeGrids(decimal[] maxValues, int expected)
+            {
+                var set = new HashSet<OptimizationParameter> { new StaticOptimizationParameter("pepe", "SPY") };
+                for (var i = 0; i < maxValues.Length; i++)
+                {
+                    set.Add(new OptimizationStepParameter($"param-{i}", 0, maxValues[i], 1));
+                }
+                _strategy.Initialize(new Target("Profit", new Maximization(), null), new List<Constraint>(), set, new StepBaseOptimizationStrategySettings());
+
+                Assert.AreEqual(expected, _strategy.GetTotalBacktestEstimate());
+            }
+
             private static TestCaseData[] OptimizationStepParameter2D => new[]{
                 new TestCaseData(new decimal[,] {{10, 100, 1}, {20, 200, 1}}),
                 new TestCaseData(new decimal[,] {{10.5m, 100.5m, 1.5m}, { 20m, 209.9m, 3.5m}})
