@@ -139,13 +139,24 @@ namespace QuantConnect.Tests.Brokerages
 
         /// <summary>
         /// Applies the brokerage updates of the orders the way the transaction handler does: contingent orders held waiting
-        /// for their parent are released
+        /// for their parent are released, and an order the brokerage resized takes the new quantity
         /// </summary>
         private void HandleOrderUpdatedEvents(object _, OrderUpdateEvent orderUpdateEvent)
         {
-            if (orderUpdateEvent.ContingencyTriggered && OrderProvider.GetOrderById(orderUpdateEvent.OrderId)?.GetContingencyLink(ContingencyRole.Child) is { } child)
+            var order = OrderProvider.GetOrderById(orderUpdateEvent.OrderId);
+            if (orderUpdateEvent.ContingencyTriggered && order?.GetContingencyLink(ContingencyRole.Child) is { } child)
             {
                 child.Triggered = true;
+            }
+            if (orderUpdateEvent.Quantity.HasValue && order != null)
+            {
+                // the transaction handler drops a zero quantity, a change of side and a quantity under what already filled
+                var quantity = orderUpdateEvent.Quantity.Value;
+                var filledQuantity = OrderProvider.GetOrderTicket(order.Id)?.QuantityFilled ?? 0;
+                if (quantity != 0 && quantity != order.Quantity && Math.Sign(quantity) == Math.Sign(order.Quantity) && Math.Abs(quantity) >= Math.Abs(filledQuantity))
+                {
+                    order.Quantity = quantity;
+                }
             }
         }
 

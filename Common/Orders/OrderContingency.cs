@@ -77,6 +77,13 @@ namespace QuantConnect.Orders
         public IReadOnlySet<OrderType> OrderTypes => _set.OrderTypes ??= _set.BuildSet(member => member.OrderType);
 
         /// <summary>
+        /// The quantities of the orders in the set, one per order, signed. Allows a brokerage model to validate a single
+        /// order against the side and the size of each other order of the set. Only available at submission time
+        /// </summary>
+        [JsonIgnore]
+        public IReadOnlyList<decimal> Quantities => _set.Quantities ??= _set.BuildList(member => member.Quantity);
+
+        /// <summary>
         /// The links of this order to the rest of the set: the role it plays in each contingency
         /// </summary>
         [JsonProperty(PropertyName = "links")]
@@ -513,6 +520,7 @@ namespace QuantConnect.Orders
             public HashSet<Symbol> Symbols { get; set; }
             public HashSet<OrderDirection> Directions { get; set; }
             public HashSet<OrderType> OrderTypes { get; set; }
+            public List<decimal> Quantities { get; set; }
             public List<SubmitOrderRequest> Requests { get; set; }
 
             public SharedState(int id, int count)
@@ -528,12 +536,23 @@ namespace QuantConnect.Orders
                 Symbols = null;
                 Directions = null;
                 OrderTypes = null;
+                Quantities = null;
                 Requests = null;
             }
 
             public HashSet<T> BuildSet<T>(Func<Member, T> selector)
             {
                 var result = new HashSet<T>();
+                foreach (var member in Members)
+                {
+                    result.Add(selector(member));
+                }
+                return result;
+            }
+
+            public List<T> BuildList<T>(Func<Member, T> selector)
+            {
+                var result = new List<T>(Members.Count);
                 foreach (var member in Members)
                 {
                     result.Add(selector(member));
