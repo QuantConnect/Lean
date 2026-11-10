@@ -144,7 +144,7 @@ namespace QuantConnect.Optimizer.Strategies
                 throw new InvalidOperationException("Optimization parameter cannot be estimated due to step value is not initialized");
             }
 
-            // a step calculated from the min and max values can be zero, the grid would never be exhausted
+            // the step can be set to zero after initialization, the grid would never be exhausted
             if (stepParameter.Step.Value <= 0)
             {
                 throw new InvalidOperationException($"Optimization parameter cannot be estimated due to step value is not positive, but was {stepParameter.Step.Value}");
