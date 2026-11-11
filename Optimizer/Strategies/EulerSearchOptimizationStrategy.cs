@@ -29,6 +29,7 @@ namespace QuantConnect.Optimizer.Strategies
         private object _locker = new object();
         private readonly HashSet<ParameterSet> _runningParameterSet = new HashSet<ParameterSet>();
         private int _segmentsAmount = 4;
+        private bool _schedulingParameterSets;
 
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
@@ -69,13 +70,16 @@ namespace QuantConnect.Optimizer.Strategies
             {
                 if (!ReferenceEquals(result, OptimizationResult.Initial) && string.IsNullOrEmpty(result?.JsonBacktestResult))
                 {
-                    // one of the requested backtests failed
+                    // one of the requested backtests failed, the round can still end with the other backtests' results
                     _runningParameterSet.Remove(result.ParameterSet);
-                    return;
+                    if (_schedulingParameterSets)
+                    {
+                        // a launch failure reported while the round is being scheduled, the round isn't complete yet
+                        return;
+                    }
                 }
-
                 // check if the incoming result is not the initial seed
-                if (result.Id > 0)
+                else if (result.Id > 0)
                 {
                     _runningParameterSet.Remove(result.ParameterSet);
                     ProcessNewResult(result);
@@ -126,9 +130,17 @@ namespace QuantConnect.Optimizer.Strategies
                     return;
                 }
 
-                foreach (var parameterSet in Step(OptimizationParameters))
+                _schedulingParameterSets = true;
+                try
                 {
-                    OnNewParameterSet(parameterSet);
+                    foreach (var parameterSet in Step(OptimizationParameters))
+                    {
+                        OnNewParameterSet(parameterSet);
+                    }
+                }
+                finally
+                {
+                    _schedulingParameterSets = false;
                 }
             }
         }
