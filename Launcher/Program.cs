@@ -54,7 +54,13 @@ namespace QuantConnect.Lean.Launcher
             // expect first argument to be config file name
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(LeanArgumentParser.ParseArguments(args));
+                var cliArguments = LeanArgumentParser.ParseArguments(args);
+                // Unknown arguments throw, so arguments that parse to no options only requested help or version, already shown
+                if (cliArguments.Count == 0)
+                {
+                    return;
+                }
+                Config.MergeCommandLineArgumentsWithConfiguration(cliArguments);
             }
 
             //Name thread for the profiler:

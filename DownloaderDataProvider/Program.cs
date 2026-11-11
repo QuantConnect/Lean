@@ -60,7 +60,13 @@ public static class Program
         // Parse report arguments and merge with config to use in the optimizer
         if (args.Length > 0)
         {
-            Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
+            var cliArguments = DownloaderDataProviderArgumentParser.ParseArguments(args);
+            // Unknown arguments throw, so arguments that parse to no options only requested help or version, already shown
+            if (cliArguments.Count == 0)
+            {
+                return;
+            }
+            Config.MergeCommandLineArgumentsWithConfiguration(cliArguments);
         }
 
         var dataDownloaderSelector = InitializeConfigurations();
