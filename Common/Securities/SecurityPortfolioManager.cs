@@ -66,7 +66,11 @@ namespace QuantConnect.Securities
             }
             set
             {
-                value?.Initialize(Securities);
+                if (value != null)
+                {
+                    value.Portfolio = this;
+                    value.Initialize(Securities);
+                }
                 _positions = value;
             }
         }

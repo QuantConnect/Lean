@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -24,6 +25,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     /// </summary>
     public class OptionStrategyMatcher
     {
+        private readonly OptionStrategyMatchMarginFunction _marginFunction;
+
         /// <summary>
         /// Specifies options controlling how the matcher operates
         /// </summary>
@@ -39,6 +42,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="OptionStrategyMatcher"/> class
+        /// </summary>
+        /// <param name="options">Specifies definitions and other options controlling the matcher</param>
+        /// <param name="marginFunction">Prices candidate solutions so the last candidate never replaces one requiring
+        /// less maintenance margin, or null to compare candidates by their score alone</param>
+        internal OptionStrategyMatcher(OptionStrategyMatcherOptions options, OptionStrategyMatchMarginFunction marginFunction)
+            : this(options)
+        {
+            _marginFunction = marginFunction;
+        }
+
+        /// <summary>
         /// Using the definitions provided in <see cref="Options"/>, attempts to match all <paramref name="positions"/>.
         /// The resulting <see cref="OptionStrategyMatch"/> presents a single, valid solution for matching as many positions
         /// as possible. A fixed set of candidate solutions is evaluated and the one scoring highest against the configured
@@ -51,8 +66,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // the first candidate solution greedily matches definitions in the configured enumeration order, by
             // default descending by leg count so more complex definitions get matching priority. it's evaluated
             // first so that whenever the objective function scores another candidate equally this one is preserved
-            var bestMatch = Match(Options.Definitions, positions, out var unmatched);
-            var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, unmatched);
+            var bestMatch = Match(Options.Definitions, positions, out var bestUnmatched);
+            var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, bestUnmatched);
             if (CannotImprove(bestScore))
             {
                 return bestMatch;
@@ -63,11 +78,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // into covered strategies whenever another grouping of the same positions allows it. this avoids
             // greedily carving, for instance, two overlapping bull call spreads into a bull call ladder, whose
             // uncovered short leg is charged naked option margin, plus an unmatched long contract
-            var candidateMatch = Match(Options.CoveredShortsFirstDefinitions, positions, out unmatched);
-            var candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
+            var candidateMatch = Match(Options.CoveredShortsFirstDefinitions, positions, out var candidateUnmatched);
+            var candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, candidateUnmatched);
             if (candidateScore > bestScore)
             {
                 bestMatch = candidateMatch;
+                bestUnmatched = candidateUnmatched;
                 bestScore = candidateScore;
             }
 
@@ -81,10 +97,26 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // cover short legs elsewhere in the book. this avoids carving, for instance, two bull put spreads into a
             // bull put ladder plus an unmatched, naked short put. it's kept separate from the second candidate
             // because deprioritizing those definitions loses the covered grouping of some books the second finds
-            candidateMatch = Match(Options.BalancedLegsFirstDefinitions, positions, out unmatched);
-            candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
+            candidateMatch = Match(Options.BalancedLegsFirstDefinitions, positions, out candidateUnmatched);
+            candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, candidateUnmatched);
+            if (candidateScore <= bestScore)
+            {
+                return bestMatch;
+            }
 
-            return candidateScore > bestScore ? candidateMatch : bestMatch;
+            // covering more short contracts doesn't always lower the margin: the score counts a credit spread as covered
+            // up to a width of 10% of its short strike, while a far out of the money naked call can require less than
+            // that. so this candidate also mustn't require more maintenance margin than the best solution so far,
+            // unless a security lacks the price to tell, where the score alone decides
+            if (_marginFunction != null
+                && _marginFunction.TryGetMaintenanceMargin(positions, bestMatch, bestUnmatched, out var bestMargin)
+                && _marginFunction.TryGetMaintenanceMargin(positions, candidateMatch, candidateUnmatched, out var candidateMargin)
+                && candidateMargin > bestMargin)
+            {
+                return bestMatch;
+            }
+
+            return candidateMatch;
 
             bool CannotImprove(decimal score)
             {

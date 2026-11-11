@@ -43,6 +43,11 @@ namespace QuantConnect.Securities.Positions
         protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
 
         /// <summary>
+        /// The portfolio whose positions are grouped, which option strategy matching prices its candidates against
+        /// </summary>
+        internal SecurityPortfolioManager Portfolio { get; set; }
+
+        /// <summary>
         /// Gets the set of currently resolved position groups
         /// </summary>
         public PositionGroupCollection Groups
@@ -214,7 +219,10 @@ namespace QuantConnect.Securities.Positions
         /// <returns>The position group resolver instance</returns>
         protected virtual IPositionGroupResolver GetPositionGroupResolver()
         {
-            return new CompositePositionGroupResolver(new OptionStrategyPositionGroupResolver(_securities), new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel));
+            var optionStrategyResolver = Portfolio != null
+                ? new OptionStrategyPositionGroupResolver(Portfolio)
+                : new OptionStrategyPositionGroupResolver(_securities);
+            return new CompositePositionGroupResolver(optionStrategyResolver, new SecurityPositionGroupResolver(PositionGroupBuyingPowerModel));
         }
 
         private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)
