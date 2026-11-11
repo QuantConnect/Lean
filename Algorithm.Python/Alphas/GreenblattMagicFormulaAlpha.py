@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-from math import ceil
+from math import ceil, isnan
 from itertools import chain
 
 class GreenblattMagicFormulaAlpha(QCAlgorithm):
@@ -138,9 +138,9 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
 
         # Number of stocks in Coarse Universe
         self.number_of_symbols_coarse = 500
-        # Number of sorted stocks in the fine selection subset using the valuation ratio, EV to EBITDA (EV/EBITDA)
+        # Number of stocks in the fine selection subset ranked by the Magic Formula
         self.number_of_symbols_fine = 20
-        # Final number of stocks in security list, after sorted by the valuation ratio, Return on Assets (ROA)
+        # Final number of stocks in security list, with the lowest combined rank
         self.number_of_symbols_in_portfolio = 10
 
         self.last_month = -1
@@ -170,8 +170,9 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         At least half a year since its initial public offering
         The stock's market cap must be greater than 500 million
 
-        Magic Formula: Rank stocks by Enterprise Value to EBITDA (EV/EBITDA)
-        Rank subset of previously ranked stocks (EV/EBITDA), using the valuation ratio Return on Assets (ROA)'''
+        Magic Formula: Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest first
+        Rank the same stocks by the valuation ratio Return on Assets (ROA), the highest first
+        Select the stocks with the lowest sum of both ranks'''
 
         # QC500:
         ## The company's headquarter must in the U.S.
@@ -194,18 +195,21 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
             value = sorted(value, key=lambda x: self.dollar_volume_by_symbol[x.symbol], reverse = True)
             my_dict[key] = value[:ceil(len(value) * percent)]
 
-        # stocks in QC500 universe
-        top_fine = chain.from_iterable(my_dict.values())
+        # stocks in QC500 universe that have both Magic Formula ratios
+        top_fine = [x for x in chain.from_iterable(my_dict.values())
+                    if not isnan(x.valuation_ratios.ev_to_ebitda) and not isnan(x.valuation_ratios.forward_roa)]
 
         #  Magic Formula:
-        ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA)
-        ## Rank subset of previously ranked stocks (EV/EBITDA), using the valuation ratio Return on Assets (ROA)
+        ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first
+        ## Rank stocks by the valuation ratio Return on Assets (ROA), the highest ratio ranking first
+        ## Select the stocks with the lowest combined rank
+        ## Stocks with equal ratios share the best rank among them, and equal combined ranks are ordered by symbol,
+        ## so the selection doesn't depend on the order of the candidates
+        sorted_ev_to_ebitda = sorted(x.valuation_ratios.ev_to_ebitda for x in top_fine)
+        sorted_roa = sorted((x.valuation_ratios.forward_roa for x in top_fine), reverse=True)
 
-        # sort stocks in the security universe of QC500 based on Enterprise Value to EBITDA valuation ratio
-        sorted_by_ev_to_ebitda = sorted(top_fine, key=lambda x: x.valuation_ratios.ev_to_ebitda , reverse=True)
-
-        # sort subset of stocks that have been sorted by Enterprise Value to EBITDA, based on the valuation ratio Return on Assets (ROA)
-        sorted_by_roa = sorted(sorted_by_ev_to_ebitda[:self.number_of_symbols_fine], key=lambda x: x.valuation_ratios.forward_roa, reverse=False)
+        sorted_by_combined_rank = sorted(top_fine, key=lambda x: (sorted_ev_to_ebitda.index(x.valuation_ratios.ev_to_ebitda)
+                                                                  + sorted_roa.index(x.valuation_ratios.forward_roa), str(x.symbol.id)))
 
         # retrieve list of securites in portfolio
-        return [f.symbol for f in sorted_by_roa[:self.number_of_symbols_in_portfolio]]
+        return [x.symbol for x in sorted_by_combined_rank[:self.number_of_symbols_in_portfolio]]
