@@ -31,10 +31,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
     [TestFixture]
     public class GreenblattMagicFormulaUniverseSelectionModelTests
     {
-        private readonly List<Symbol> _symbols = Enumerable.Range(1, 10)
-            .Select(x => Symbol.Create($"{x:0000}", SecurityType.Equity, Market.USA))
-            .ToList();
-
         // Morningstar codes the NYSE as "NYS" in older data and "NYSE" in current data
         [TestCase(Language.CSharp, "NYSE", true)]
         [TestCase(Language.Python, "NYSE", true)]
@@ -50,26 +46,65 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         [TestCase(Language.Python, null, false)]
         public void FiltersFineByPrimaryExchange(Language language, string primaryExchangeId, bool selects)
         {
+            var stocks = Enumerable.Range(1, 10)
+                .Select(i => new TestStock($"{i:0000}", primaryExchangeId, "N", 100000 * i, i, 1d / i))
+                .ToList();
+
+            var selected = Select(language, stocks);
+
+            Assert.AreEqual(selects ? 10 : 0, selected.Count);
+        }
+
+        // S01 has both the lowest EV/EBITDA and the highest ROA, so each stock's combined rank grows with its number
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void SelectsLowestCombinedRankAcrossIndustries(Language language)
+        {
+            var stocks = Enumerable.Range(1, 21)
+                .Select(i => new TestStock($"S{i:00}", "NAS", i <= 10 ? "N" : "M", 1e6, i, (22 - i) / 100d))
+                .ToList();
+
+            var selected = Select(language, stocks);
+
+            CollectionAssert.AreEquivalent(Enumerable.Range(1, 10).Select(i => $"S{i:00}"), selected);
+        }
+
+        // Neither factor alone picks the stocks with the lowest sum of both ranks:
+        // S01-S05 and S11-S15 score 12, 14, 16, 18 and 20, and the next stocks score 22
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void SelectsBySumOfFactorRanks(Language language)
+        {
+            var stocks = Enumerable.Range(1, 20)
+                .Select(i => new TestStock($"S{i:00}", "NAS", "N", 1e6, i, (i <= 10 ? 11 - i : 31 - i) / 100d))
+                .ToList();
+
+            var selected = Select(language, stocks);
+
+            var expected = Enumerable.Range(1, 5).Concat(Enumerable.Range(11, 5)).Select(i => $"S{i:00}");
+            CollectionAssert.AreEquivalent(expected, selected);
+        }
+
+        private static List<string> Select(Language language, List<TestStock> stocks)
+        {
             var algorithm = new QCAlgorithm();
             algorithm.SetDateTime(new DateTime(2025, 1, 2, 6, 0, 0));
-            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(primaryExchangeId), false);
+            FundamentalService.Initialize(TestGlobals.DataProvider, new TestFundamentalDataProvider(stocks), false);
 
             GetUniverseSelectionModel(language, out var selectCoarse, out var selectFine);
 
             var time = algorithm.UtcTime;
-            var coarse = _symbols.Select(symbol => new CoarseFundamentalSource
+            var coarse = stocks.Select(stock => new CoarseFundamentalSource
             {
-                Symbol = symbol,
+                Symbol = Symbol.Create(stock.Ticker, SecurityType.Equity, Market.USA),
                 EndTime = time,
                 Value = 100,
                 VolumeSetter = 1000,
-                DollarVolumeSetter = 100000 * double.Parse(symbol.Value),
+                DollarVolumeSetter = stock.DollarVolume,
                 HasFundamentalDataSetter = true
             });
             var fine = selectCoarse(algorithm, coarse).Select(symbol => new FineFundamental(time, symbol));
-            var selected = selectFine(algorithm, fine).ToList();
-
-            Assert.AreEqual(selects ? 10 : 0, selected.Count);
+            return selectFine(algorithm, fine).Select(symbol => symbol.Value).ToList();
         }
 
         private static void GetUniverseSelectionModel(
@@ -95,13 +130,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             }
         }
 
+        private record TestStock(string Ticker, string PrimaryExchangeId, string IndustryTemplateCode, double DollarVolume, double EVToEBITDA, double ForwardROA);
+
         private class TestFundamentalDataProvider : IFundamentalDataProvider
         {
-            private readonly string _primaryExchangeId;
+            private readonly Dictionary<string, TestStock> _stocksByTicker;
 
-            public TestFundamentalDataProvider(string primaryExchangeId)
+            public TestFundamentalDataProvider(IEnumerable<TestStock> stocks)
             {
-                _primaryExchangeId = primaryExchangeId;
+                _stocksByTicker = stocks.ToDictionary(x => x.Ticker);
             }
 
             public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
@@ -110,19 +147,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 {
                     return default;
                 }
-                return Get(time, name) is T value ? value : default;
+                return Get(time, _stocksByTicker[securityIdentifier.Symbol], name) is T value ? value : default;
             }
 
-            private object Get(DateTime time, FundamentalProperty name)
+            private static object Get(DateTime time, TestStock stock, FundamentalProperty name)
             {
                 switch (name)
                 {
                     case FundamentalProperty.CompanyReference_CountryId:
                         return "USA";
                     case FundamentalProperty.CompanyReference_PrimaryExchangeID:
-                        return _primaryExchangeId;
+                        return stock.PrimaryExchangeId;
                     case FundamentalProperty.CompanyReference_IndustryTemplateCode:
-                        return "N";
+                        return stock.IndustryTemplateCode;
                     case FundamentalProperty.SecurityReference_IPODate:
                         return time.AddDays(-200);
                     case FundamentalProperty.EarningReports_BasicAverageShares_ThreeMonths:
@@ -131,6 +168,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                         return 1d;
                     case FundamentalProperty.ValuationRatios_PERatio:
                         return 10d;
+                    case FundamentalProperty.ValuationRatios_EVToEBITDA:
+                        return stock.EVToEBITDA;
+                    case FundamentalProperty.ValuationRatios_ForwardROA:
+                        return stock.ForwardROA;
                 }
                 return null;
             }

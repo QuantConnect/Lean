@@ -235,8 +235,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// At least half a year since its initial public offering
             /// The stock's market cap must be greater than 500 million
             ///
-            /// Magic Formula: Rank stocks by Enterprise Value to EBITDA(EV/EBITDA)
-            /// Rank subset of previously ranked stocks(EV/EBITDA), using the valuation ratio Return on Assets(ROA)
+            /// Magic Formula: Rank stocks by Enterprise Value to EBITDA(EV/EBITDA), the lowest first
+            /// Rank the same stocks by the valuation ratio Return on Assets(ROA), the highest first
+            /// Select the stocks with the lowest sum of both ranks
             /// </summary>
             public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
             {
@@ -271,17 +272,21 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     .ToDictionary(x => x.Key, x => x.Value);
 
                 // Stocks in QC500 universe
-                var topFine = myDict.Values.SelectMany(x => x);
+                var topFine = myDict.Values.SelectMany(x => x).ToList();
 
                 // Magic Formula:
-                // Rank stocks by Enterprise Value to EBITDA (EV/EBITDA)
-                // Rank subset of previously ranked stocks (EV/EBITDA), using the valuation ratio Return on Assets (ROA)
-                return topFine
-                    // Sort stocks in the security universe of QC500 based on Enterprise Value to EBITDA valuation ratio
-                    .OrderByDescending(x => x.ValuationRatios.EVToEBITDA)
-                    .Take(_numberOfSymbolsFine)
-                    // sort subset of stocks that have been sorted by Enterprise Value to EBITDA, based on the valuation ratio Return on Assets (ROA)
+                // Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first
+                // Rank stocks by the valuation ratio Return on Assets (ROA), the highest ratio ranking first
+                // Select the stocks with the lowest combined rank
+                var roaRankBySymbol = topFine
                     .OrderByDescending(x => x.ValuationRatios.ForwardROA)
+                    .Select((x, rank) => new { x.Symbol, rank })
+                    .ToDictionary(x => x.Symbol, x => x.rank);
+
+                return topFine
+                    .OrderBy(x => x.ValuationRatios.EVToEBITDA)
+                    .Select((x, rank) => new { x.Symbol, CombinedRank = rank + roaRankBySymbol[x.Symbol] })
+                    .OrderBy(x => x.CombinedRank)
                     .Take(_numberOfSymbolsInPortfolio)
                     .Select(x => x.Symbol);
             }
