@@ -331,13 +331,23 @@ namespace QuantConnect.Securities
                 if (!marketHours.IsClosedAllDay && !_holidays.Contains(time.Date.Ticks))
                 {
                     var marketOpenTimeOfDay = marketHours.GetMarketOpen(time.TimeOfDay, extendedMarketHours, lastDaySegment?.End);
+                    // the open found can be the start of the session holding the reference time, so keep searching after that session ends
+                    if (marketOpenTimeOfDay.HasValue && time.Date + marketOpenTimeOfDay.Value <= localDateTime)
+                    {
+                        for (var i = 0; i < marketHours.Segments.Count; i++)
+                        {
+                            var segment = marketHours.Segments[i];
+                            if (segment.Start == marketOpenTimeOfDay.Value)
+                            {
+                                marketOpenTimeOfDay = marketHours.GetMarketOpen(segment.End, extendedMarketHours, lastDaySegment?.End);
+                                break;
+                            }
+                        }
+                    }
+
                     if (marketOpenTimeOfDay.HasValue)
                     {
-                        var marketOpen = time.Date + marketOpenTimeOfDay.Value;
-                        if (localDateTime < marketOpen)
-                        {
-                            return marketOpen;
-                        }
+                        return time.Date + marketOpenTimeOfDay.Value;
                     }
 
                     lastDaySegment = marketHours.Segments.LastOrDefault();
