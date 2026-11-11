@@ -746,6 +746,7 @@ def Test4(dataFrame):
 
         [TestCase("open")]
         [TestCase("low")]
+        [TestCase("high")]
         public void HistoryColumnLookupPreservesLabelsThatMatchTickers(string column)
         {
             var symbol = Symbols.SPY;
