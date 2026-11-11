@@ -179,7 +179,7 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         ## At least half a year since its initial public offering
         ## The stock's market cap must be greater than 500 million
         filtered_fine = [x for x in fine if x.company_reference.country_id == "USA"
-                                        and (x.company_reference.primary_exchange_id == "NYS" or x.company_reference.primary_exchange_id == "NAS")
+                                        and x.company_reference.primary_exchange_id in ["NYS", "NYSE", "NAS"]
                                         and (algorithm.time - x.security_reference.ipo_date).days > 180
                                         and x.earning_reports.basic_average_shares.three_months * x.earning_reports.basic_eps.twelve_months * x.valuation_ratios.pe_ratio > 5e8]
         count = len(filtered_fine)

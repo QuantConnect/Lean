@@ -243,7 +243,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 var filteredFine =
                     from x in fine
                     where x.CompanyReference.CountryId == "USA"
-                    where x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS"
+                    where x.CompanyReference.PrimaryExchangeID is "NYS" or "NYSE" or "NAS"
                     where (algorithm.Time - x.SecurityReference.IPODate).TotalDays > 180
                     where x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8
                     select x;
