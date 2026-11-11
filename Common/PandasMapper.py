@@ -69,17 +69,20 @@ def mapper(key):
     return key
 
 def map_location_args(args):
+    mapped = mapper(args)
+    if mapped is args:
+        return args
     indexer, key = args
     if (isinstance(indexer, pd.core.indexing._LocIndexer)
             and isinstance(indexer.obj, pd.DataFrame)
             and type(key) is tuple and len(key) == 2):
         row, column = key
-        if type(column) is str and mapper(column) is not column:
-            # Check for a literal column before pandas interprets the two-axis key.
-            if PandasColumn(column) in indexer.obj.columns:
-                mapped_row = mapper(row)
-                return args if mapped_row is row else (indexer, (mapped_row, column))
-    return mapper(args)
+        mapped_row, mapped_column = mapped[1]
+        # Check for a literal column before pandas interprets the two-axis key.
+        if (type(column) is str and mapped_column is not column
+                and PandasColumn(column) in indexer.obj.columns):
+            return args if mapped_row is row else (indexer, (mapped_row, column))
+    return mapped
 
 def wrap_keyerror_function(f, map_args=mapper):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
