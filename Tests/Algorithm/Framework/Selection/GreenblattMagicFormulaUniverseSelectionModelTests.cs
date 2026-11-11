@@ -69,6 +69,29 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 10).Select(i => $"S{i:00}"), selected);
         }
 
+        // Stocks without EV/EBITDA or ROA, such as banks, can't be ranked by the Magic Formula
+        [TestCase(Language.CSharp, true)]
+        [TestCase(Language.Python, true)]
+        [TestCase(Language.CSharp, false)]
+        [TestCase(Language.Python, false)]
+        public void SkipsStocksMissingAFactor(Language language, bool missingEVToEBITDA)
+        {
+            var stocks = Enumerable.Range(1, 21)
+                .Select(i =>
+                {
+                    var missing = i is 12 or 16;
+                    var industry = missing ? "B" : i <= 10 ? "N" : "M";
+                    var evToEbitda = missing && missingEVToEBITDA ? double.NaN : i;
+                    var forwardRoa = missing && !missingEVToEBITDA ? double.NaN : (22 - i) / 100d;
+                    return new TestStock($"S{i:00}", "NAS", industry, 1e6, evToEbitda, forwardRoa);
+                })
+                .ToList();
+
+            var selected = Select(language, stocks);
+
+            CollectionAssert.AreEquivalent(Enumerable.Range(1, 10).Select(i => $"S{i:00}"), selected);
+        }
+
         // Neither factor alone picks the stocks with the lowest sum of both ranks:
         // S01-S05 and S11-S15 score 12, 14, 16, 18 and 20, and the next stocks score 22
         [TestCase(Language.CSharp)]

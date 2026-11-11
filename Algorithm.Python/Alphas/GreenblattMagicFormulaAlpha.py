@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-from math import ceil
+from math import ceil, isnan
 from itertools import chain
 
 class GreenblattMagicFormulaAlpha(QCAlgorithm):
@@ -195,8 +195,9 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
             value = sorted(value, key=lambda x: self.dollar_volume_by_symbol[x.symbol], reverse = True)
             my_dict[key] = value[:ceil(len(value) * percent)]
 
-        # stocks in QC500 universe
-        top_fine = list(chain.from_iterable(my_dict.values()))
+        # stocks in QC500 universe that have both Magic Formula ratios
+        top_fine = [x for x in chain.from_iterable(my_dict.values())
+                    if not isnan(x.valuation_ratios.ev_to_ebitda) and not isnan(x.valuation_ratios.forward_roa)]
 
         #  Magic Formula:
         ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first

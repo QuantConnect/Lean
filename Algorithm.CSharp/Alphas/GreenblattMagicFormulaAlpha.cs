@@ -271,8 +271,11 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     )
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                // Stocks in QC500 universe
-                var topFine = myDict.Values.SelectMany(x => x).ToList();
+                // Stocks in QC500 universe that have both Magic Formula ratios
+                var topFine = myDict.Values
+                    .SelectMany(x => x)
+                    .Where(x => !double.IsNaN(x.ValuationRatios.EVToEBITDA) && !double.IsNaN(x.ValuationRatios.ForwardROA))
+                    .ToList();
 
                 // Magic Formula:
                 // Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first
