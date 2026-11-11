@@ -18,11 +18,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Contains additional properties and settings for an order submitted to Fix Interactive Brokers
     /// </summary>
-    public class InteractiveBrokersFixOrderProperties : OrderProperties
+    public class InteractiveBrokersFixOrderProperties : InteractiveBrokersOrderProperties
     {
-        /// <summary>
-        /// The linked account for which to submit the order (only used by Financial Advisors)
-        /// </summary>
-        public string Account { get; set; }
     }
 }
