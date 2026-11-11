@@ -45,9 +45,26 @@ namespace QuantConnect.Securities.Positions
         /// <param name="strategyMatcherOptions">The option strategy matcher options instance to use</param>
         /// <param name="securities">The algorithms securities</param>
         public OptionStrategyPositionGroupResolver(SecurityManager securities, OptionStrategyMatcherOptions strategyMatcherOptions)
+            : this(securities, strategyMatcherOptions, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates the default option strategy group resolver for <see cref="OptionStrategyDefinitions.AllDefinitions"/>,
+        /// which also compares the maintenance margin of candidate matches against the portfolio's securities
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        internal OptionStrategyPositionGroupResolver(SecurityPortfolioManager portfolio)
+            : this(portfolio.Securities, OptionStrategyMatcherOptions.ForDefinitions(OptionStrategyDefinitions.AllDefinitions),
+                new OptionStrategyMatchMarginFunction(portfolio))
+        {
+        }
+
+        private OptionStrategyPositionGroupResolver(SecurityManager securities, OptionStrategyMatcherOptions strategyMatcherOptions,
+            OptionStrategyMatchMarginFunction marginFunction)
         {
             _securities = securities;
-            _strategyMatcher = new OptionStrategyMatcher(strategyMatcherOptions);
+            _strategyMatcher = new OptionStrategyMatcher(strategyMatcherOptions, marginFunction);
         }
 
         /// <summary>
@@ -185,7 +202,7 @@ namespace QuantConnect.Securities.Positions
                     // if there isn't any option position we aren't really interested, can't create any option strategy!
                     continue;
                 }
-                var contractMultiplier = (_securities[optionPosition.Symbol].SymbolProperties as OptionSymbolProperties)?.ContractUnitOfTrade ?? 100;
+                var contractMultiplier = GetContractMultiplier(_securities, optionPosition.Symbol);
 
                 var optionPositionCollection = OptionPositionCollection.FromPositions(positionsByUnderlying, contractMultiplier);
 
@@ -204,27 +221,43 @@ namespace QuantConnect.Securities.Positions
 
                 foreach (var matchedStrategy in matches.Strategies)
                 {
-                    var groupQuantity = Math.Abs(matchedStrategy.OptionLegs.Cast<Leg>().Concat(matchedStrategy.UnderlyingLegs)
-                        .Select(leg => leg.Quantity)
-                        .GreatestCommonDivisor());
-                    var positionsToGroup = matchedStrategy.OptionLegs
-                        .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity,
-                            // The unit quantity of each position is the ratio of the quantity of the leg to the group quantity.
-                            // e.g. a butterfly call strategy three legs: 10:-20:10, the unit quantity of each leg is 1:2:1
-                            Math.Abs(optionLeg.Quantity) / groupQuantity))
-                        .Concat(matchedStrategy.UnderlyingLegs.Select(underlyingLeg => new Position(underlyingLeg.Symbol,
-                            underlyingLeg.Quantity * contractMultiplier,
-                            // Same as for the option legs, but we need to multiply by the contract multiplier.
-                            // e.g. a covered call strategy has 100 shares of the underlying, per shorted contract
-                            (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
-                        .ToDictionary(position => position.Symbol);
-
-                    yield return new PositionGroup(
-                        new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), positionsToGroup.Values),
-                        groupQuantity,
-                        positionsToGroup);
+                    yield return CreatePositionGroup(matchedStrategy, contractMultiplier);
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the quantity of underlying units each contract of the specified option is for
+        /// </summary>
+        internal static int GetContractMultiplier(SecurityManager securities, Symbol option)
+        {
+            return (securities[option].SymbolProperties as OptionSymbolProperties)?.ContractUnitOfTrade ?? 100;
+        }
+
+        /// <summary>
+        /// Creates the position group modeling the buying power of the specified matched option strategy
+        /// </summary>
+        internal static PositionGroup CreatePositionGroup(OptionStrategy matchedStrategy, int contractMultiplier)
+        {
+            var groupQuantity = Math.Abs(matchedStrategy.OptionLegs.Cast<Leg>().Concat(matchedStrategy.UnderlyingLegs)
+                .Select(leg => leg.Quantity)
+                .GreatestCommonDivisor());
+            var positionsToGroup = matchedStrategy.OptionLegs
+                .Select(optionLeg => (IPosition)new Position(optionLeg.Symbol, optionLeg.Quantity,
+                    // The unit quantity of each position is the ratio of the quantity of the leg to the group quantity.
+                    // e.g. a butterfly call strategy three legs: 10:-20:10, the unit quantity of each leg is 1:2:1
+                    Math.Abs(optionLeg.Quantity) / groupQuantity))
+                .Concat(matchedStrategy.UnderlyingLegs.Select(underlyingLeg => new Position(underlyingLeg.Symbol,
+                    underlyingLeg.Quantity * contractMultiplier,
+                    // Same as for the option legs, but we need to multiply by the contract multiplier.
+                    // e.g. a covered call strategy has 100 shares of the underlying, per shorted contract
+                    (Math.Abs(underlyingLeg.Quantity) * contractMultiplier / groupQuantity))))
+                .ToDictionary(position => position.Symbol);
+
+            return new PositionGroup(
+                new PositionGroupKey(new OptionStrategyPositionGroupBuyingPowerModel(matchedStrategy), positionsToGroup.Values),
+                groupQuantity,
+                positionsToGroup);
         }
     }
 }

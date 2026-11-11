@@ -686,6 +686,64 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, _portfolio.TotalMarginUsed);
         }
 
+        [TestCase(OptionRight.Put)]
+        [TestCase(OptionRight.Call)]
+        public void CoveredCreditSpreadsRequireOnlyTheirCombinedStrikeWidths(OptionRight right)
+        {
+            _equity.SetMarketPrice(new Tick { Value = 500 });
+            var expiry = new DateTime(2025, 2, 21);
+            var direction = right == OptionRight.Put ? -1 : 1;
+            foreach (var offset in new[] { 0, 5 })
+            {
+                var shortOption = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", right,
+                    500 + direction * offset, expiry));
+                var longOption = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", right,
+                    500 + direction * (offset + 30), expiry));
+                shortOption.SetMarketPrice(new Tick { Value = 5 });
+                longOption.SetMarketPrice(new Tick { Value = 2 });
+                shortOption.Holdings.SetHoldings(shortOption.Price, -1);
+                longOption.Holdings.SetHoldings(longOption.Price, 1);
+            }
+
+            Assert.AreEqual(6000, _portfolio.TotalMarginUsed);
+        }
+
+        [Test]
+        public void FarOutOfTheMoneyCallSpreadsDoNotRequireMoreMarginThanANakedCall()
+        {
+            // both 13 point wide spreads count as covered against 10% of their short strike, but a naked call is
+            // charged 10% of the underlying price, which is less here: a bear call ladder plus a naked call is cheaper
+            AddFarOutOfTheMoneyCallBook(lastLongPrice: 0.02m);
+
+            Assert.LessOrEqual(_portfolio.TotalMarginUsed, 2310m);
+        }
+
+        [Test]
+        public void FarOutOfTheMoneyCallSpreadsFallBackToCoverageWithoutPrices()
+        {
+            AddFarOutOfTheMoneyCallBook(lastLongPrice: 0m);
+
+            var groups = _portfolio.Positions.Groups.Where(group => group.Count > 1).ToList();
+            Assert.AreEqual(2, groups.Count);
+            Assert.IsTrue(groups.All(group => group.BuyingPowerModel.ToString()
+                == OptionStrategyDefinitions.BearCallSpread.Name), string.Join(", ", groups.Select(group => group.BuyingPowerModel)));
+        }
+
+        private void AddFarOutOfTheMoneyCallBook(decimal lastLongPrice)
+        {
+            _equity.SetMarketPrice(new Tick { Value = 100 });
+            var expiry = new DateTime(2025, 2, 21);
+            foreach (var (strike, quantity, price) in new[] { (150m, -1, 0.15m), (151m, -1, 0.10m), (163m, 1, 0.05m), (164m, 1, lastLongPrice) })
+            {
+                var option = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, strike, expiry));
+                if (price != 0)
+                {
+                    option.SetMarketPrice(new Tick { Value = price });
+                }
+                option.Holdings.SetHoldings(price, quantity);
+            }
+        }
+
         [Test]
         public void OverlappingDebitSpreadOrderRequiresOnlyPremium()
         {
