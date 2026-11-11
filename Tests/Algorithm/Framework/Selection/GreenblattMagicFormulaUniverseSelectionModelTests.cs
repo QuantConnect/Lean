@@ -92,6 +92,38 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 10).Select(i => $"S{i:00}"), selected);
         }
 
+        // N01-N10 and M01-M10 tie on one factor (or both) and N stocks are better on the other. Tied stocks share a rank,
+        // and equal combined ranks are ordered by symbol, so neither the industry nor the input order changes the selection
+        [TestCase(Language.CSharp, "ForwardROA", true, "N")]
+        [TestCase(Language.Python, "ForwardROA", true, "N")]
+        [TestCase(Language.CSharp, "ForwardROA", false, "N")]
+        [TestCase(Language.Python, "ForwardROA", false, "N")]
+        [TestCase(Language.CSharp, "EVToEBITDA", true, "N")]
+        [TestCase(Language.Python, "EVToEBITDA", true, "N")]
+        [TestCase(Language.CSharp, "EVToEBITDA", false, "N")]
+        [TestCase(Language.Python, "EVToEBITDA", false, "N")]
+        [TestCase(Language.CSharp, "Both", true, "M")]
+        [TestCase(Language.Python, "Both", true, "M")]
+        [TestCase(Language.CSharp, "Both", false, "M")]
+        [TestCase(Language.Python, "Both", false, "M")]
+        public void BreaksTiesIndependentlyOfInputOrder(Language language, string tiedFactor, bool industryMFirst, string expectedIndustry)
+        {
+            var industries = industryMFirst ? new[] { "M", "N" } : new[] { "N", "M" };
+            var stocks = industries
+                .SelectMany(industry => Enumerable.Range(1, 10).Select(i =>
+                {
+                    var rank = industry == "N" ? i : 10 + i;
+                    var evToEbitda = tiedFactor is "EVToEBITDA" or "Both" ? 10 : rank;
+                    var forwardRoa = tiedFactor is "ForwardROA" or "Both" ? 0.1 : (21 - rank) / 100d;
+                    return new TestStock($"{industry}{i:00}", "NAS", industry, 1e6, evToEbitda, forwardRoa);
+                }))
+                .ToList();
+
+            var selected = Select(language, stocks);
+
+            CollectionAssert.AreEquivalent(Enumerable.Range(1, 10).Select(i => $"{expectedIndustry}{i:00}"), selected);
+        }
+
         // Neither factor alone picks the stocks with the lowest sum of both ranks:
         // S01-S05 and S11-S15 score 12, 14, 16, 18 and 20, and the next stocks score 22
         [TestCase(Language.CSharp)]

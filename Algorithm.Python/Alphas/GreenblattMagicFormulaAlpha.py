@@ -203,11 +203,13 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first
         ## Rank stocks by the valuation ratio Return on Assets (ROA), the highest ratio ranking first
         ## Select the stocks with the lowest combined rank
-        sorted_by_roa = sorted(top_fine, key=lambda x: x.valuation_ratios.forward_roa, reverse=True)
-        roa_rank_by_symbol = {x.symbol: rank for rank, x in enumerate(sorted_by_roa)}
+        ## Stocks with equal ratios share the best rank among them, and equal combined ranks are ordered by symbol,
+        ## so the selection doesn't depend on the order of the candidates
+        sorted_ev_to_ebitda = sorted(x.valuation_ratios.ev_to_ebitda for x in top_fine)
+        sorted_roa = sorted((x.valuation_ratios.forward_roa for x in top_fine), reverse=True)
 
-        sorted_by_ev_to_ebitda = sorted(top_fine, key=lambda x: x.valuation_ratios.ev_to_ebitda)
-        sorted_by_combined_rank = sorted(enumerate(sorted_by_ev_to_ebitda), key=lambda x: x[0] + roa_rank_by_symbol[x[1].symbol])
+        sorted_by_combined_rank = sorted(top_fine, key=lambda x: (sorted_ev_to_ebitda.index(x.valuation_ratios.ev_to_ebitda)
+                                                                  + sorted_roa.index(x.valuation_ratios.forward_roa), str(x.symbol.id)))
 
         # retrieve list of securites in portfolio
-        return [x.symbol for _, x in sorted_by_combined_rank[:self.number_of_symbols_in_portfolio]]
+        return [x.symbol for x in sorted_by_combined_rank[:self.number_of_symbols_in_portfolio]]

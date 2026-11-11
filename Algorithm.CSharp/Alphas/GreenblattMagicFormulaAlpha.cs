@@ -281,15 +281,14 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // Rank stocks by Enterprise Value to EBITDA (EV/EBITDA), the lowest ratio ranking first
                 // Rank stocks by the valuation ratio Return on Assets (ROA), the highest ratio ranking first
                 // Select the stocks with the lowest combined rank
-                var roaRankBySymbol = topFine
-                    .OrderByDescending(x => x.ValuationRatios.ForwardROA)
-                    .Select((x, rank) => new { x.Symbol, rank })
-                    .ToDictionary(x => x.Symbol, x => x.rank);
+                // Stocks with equal ratios share the best rank among them, and equal combined ranks are ordered by symbol,
+                // so the selection doesn't depend on the order of the candidates
+                var sortedEVToEBITDA = topFine.Select(x => x.ValuationRatios.EVToEBITDA).OrderBy(x => x).ToList();
+                var sortedROA = topFine.Select(x => x.ValuationRatios.ForwardROA).OrderByDescending(x => x).ToList();
 
                 return topFine
-                    .OrderBy(x => x.ValuationRatios.EVToEBITDA)
-                    .Select((x, rank) => new { x.Symbol, CombinedRank = rank + roaRankBySymbol[x.Symbol] })
-                    .OrderBy(x => x.CombinedRank)
+                    .OrderBy(x => sortedEVToEBITDA.IndexOf(x.ValuationRatios.EVToEBITDA) + sortedROA.IndexOf(x.ValuationRatios.ForwardROA))
+                    .ThenBy(x => x.Symbol.ID.ToString(), StringComparer.Ordinal)
                     .Take(_numberOfSymbolsInPortfolio)
                     .Select(x => x.Symbol);
             }
