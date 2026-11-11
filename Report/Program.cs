@@ -37,7 +37,13 @@ namespace QuantConnect.Report
             // Parse report arguments and merge with config to use in report creator:
             if (args.Length > 0)
             {
-                Config.MergeCommandLineArgumentsWithConfiguration(ReportArgumentParser.ParseArguments(args));
+                var cliArguments = ReportArgumentParser.ParseArguments(args);
+                // Unknown arguments throw, so arguments that parse to no options only requested help or version, already shown
+                if (cliArguments.Count == 0)
+                {
+                    return;
+                }
+                Config.MergeCommandLineArgumentsWithConfiguration(cliArguments);
             }
 
             // initialize required lean handlers
