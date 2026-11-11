@@ -24,6 +24,7 @@ using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using System.Collections.Generic;
 using DataFeed = QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.Custom.IconicTypes;
@@ -216,6 +217,45 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // the whole history
                 Assert.AreEqual(expectedLowResolutionStart.ConvertToUtc(timezone), arguments.StartUtc);
                 Assert.AreEqual(expectedLowResolutionEndUtc, arguments.EndUtc);
+            }
+        }
+
+        [Test]
+        public void DownloadsUniverseWhenItsDirectoryDoesNotExist()
+        {
+            var downloader = new DataDownloaderTest();
+            using var dataProvider = new DataFeed.DownloaderDataProvider(downloader);
+
+            var date = new DateTime(2024, 11, 12);
+            var underlying = Symbol.Create("NOUNIVERSEDIR", SecurityType.Equity, Market.USA);
+            var contract = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, 230m, new DateTime(2024, 11, 15));
+            downloader.Data.Add(new TradeBar(date, underlying, 225, 226, 224, 225, 1000, Time.OneDay));
+            downloader.Data.Add(new TradeBar(date, contract, 1, 2, 1, 2, 100, Time.OneDay));
+
+            var path = BaseChainUniverseData.GetUniverseFullFilePath(contract.Canonical, date);
+            var universeDirectory = Path.GetDirectoryName(path);
+            if (Directory.Exists(universeDirectory))
+            {
+                Directory.Delete(universeDirectory, true);
+            }
+
+            try
+            {
+                using var stream = dataProvider.Fetch(path);
+
+                Assert.IsNotNull(stream);
+                using var reader = new StreamReader(stream);
+                var lines = reader.ReadToEnd().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                Assert.AreEqual(3, lines.Length);
+                Assert.IsTrue(lines[0].StartsWith('#'));
+                Assert.IsTrue(lines[2].StartsWith("20241115,230,C,1,2,1,2,100,", StringComparison.InvariantCulture), lines[2]);
+            }
+            finally
+            {
+                if (Directory.Exists(universeDirectory))
+                {
+                    Directory.Delete(universeDirectory, true);
+                }
             }
         }
 
