@@ -139,7 +139,10 @@ namespace QuantConnect.Report
                         var pdfDestination = destination.Replace(".html", ".pdf");
                         Process process = new();
                         process.StartInfo.FileName = "xvfb-run";
-                        process.StartInfo.Arguments = $"--server-args=\"-screen 0, 1600x1200x24+32\" wkhtmltopdf {destination} {pdfDestination}";
+                        process.StartInfo.ArgumentList.Add("--server-args=-screen 0, 1600x1200x24+32");
+                        process.StartInfo.ArgumentList.Add("wkhtmltopdf");
+                        process.StartInfo.ArgumentList.Add(destination);
+                        process.StartInfo.ArgumentList.Add(pdfDestination);
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.RedirectStandardOutput = true;
                         process.StartInfo.RedirectStandardError = true;
@@ -155,19 +158,26 @@ namespace QuantConnect.Report
 
                         var processExited = process.WaitForExit(1*60*1000); // wait for up to 1 minutes
 
-                        if (processExited)
-                        {
-                            Log.Trace("QuantConnect.Report.Main(): Convert to PDF process exited with code " + process.ExitCode);
-                        }
-                        else
+                        if (!processExited)
                         {
                             Log.Error("QuantConnect.Report.Main(): Process did not exit within the timeout period.");
                             process.Kill(); // kill the process if it's still running
+                            Environment.ExitCode = 1;
+                        }
+                        else if (process.ExitCode != 0)
+                        {
+                            Log.Error("QuantConnect.Report.Main(): Convert to PDF process exited with code " + process.ExitCode);
+                            Environment.ExitCode = 1;
+                        }
+                        else
+                        {
+                            Log.Trace("QuantConnect.Report.Main(): Convert to PDF process exited with code " + process.ExitCode);
                         }
                     }
                     catch (Exception ex)
                     {
                         Log.Error($"QuantConnect.Report.Main(): {ex.Message}");
+                        Environment.ExitCode = 1;
                     }
                 }
             }
