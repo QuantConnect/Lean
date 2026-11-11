@@ -21,6 +21,7 @@ using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Tests.Optimizer.Strategies
 {
@@ -141,6 +142,94 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 
                 CollectionAssert.AreEqual(new[] { 0m, 10m }, values);
                 Assert.AreEqual(10m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
+            [TestCase(true)]
+            [TestCase(false)]
+            public void RefinesWhenABacktestOfTheRoundFails(bool failureLast)
+            {
+                var scheduled = InitializeTwoSegmentSearch();
+                var success = new OptimizationResult(_stringify(0, 0), scheduled[0], "success");
+                var failure = new OptimizationResult(null, scheduled[1], "failure");
+
+                _strategy.PushNewResults(failureLast ? success : failure);
+                _strategy.PushNewResults(failureLast ? failure : success);
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m, 0m, 5m }, scheduled.Select(set => set.Value["x"].ToDecimal()));
+                Assert.AreEqual(0m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
+            [Test]
+            public void EndsWhenEveryBacktestOfTheRoundFails()
+            {
+                var scheduled = InitializeTwoSegmentSearch();
+
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[0], "failure1"));
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[1], "failure2"));
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m }, scheduled.Select(set => set.Value["x"].ToDecimal()));
+                Assert.IsNull(_strategy.Solution);
+            }
+
+            [Test]
+            public void EndsWhenEveryBacktestOfALaterRoundFails()
+            {
+                var scheduled = InitializeTwoSegmentSearch();
+                _strategy.PushNewResults(new OptimizationResult(_stringify(0, 0), scheduled[0], "success1"));
+                _strategy.PushNewResults(new OptimizationResult(_stringify(10, 0), scheduled[1], "success2"));
+
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[2], "failure1"));
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[3], "failure2"));
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m, 5m, 10m }, scheduled.Select(set => set.Value["x"].ToDecimal()));
+                Assert.AreEqual(10m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
+            [Test]
+            public void LaunchFailureWhileSchedulingDoesNotStartANewRound()
+            {
+                _strategy.Initialize(
+                    new Target("Profit", new Maximization(), null),
+                    new List<Constraint>(),
+                    new HashSet<OptimizationParameter> { new OptimizationStepParameter("x", 0, 10, 10, 1) },
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 2 });
+                var pendingOptimizationResults = new Queue<OptimizationResult>();
+                var values = new List<decimal>();
+                _strategy.NewParameterSet += (s, parameterSet) =>
+                {
+                    var value = parameterSet.Value["x"].ToDecimal();
+                    values.Add(value);
+                    if (value == 5m)
+                    {
+                        // the optimizer reports a backtest it couldn't launch right away, while the strategy is still scheduling
+                        _strategy.PushNewResults(new OptimizationResult(null, parameterSet, ""));
+                        return;
+                    }
+                    pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(value, 0), parameterSet, ""));
+                };
+
+                _strategy.PushNewResults(OptimizationResult.Initial);
+
+                while (pendingOptimizationResults.TryDequeue(out var item))
+                {
+                    _strategy.PushNewResults(item);
+                }
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m, 5m, 10m, 7.5m, 10m, 8.75m, 10m, 9m, 10m }, values);
+                Assert.AreEqual(10m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
+            private List<ParameterSet> InitializeTwoSegmentSearch()
+            {
+                _strategy.Initialize(
+                    new Target("Profit", new Maximization(), null),
+                    new List<Constraint>(),
+                    new HashSet<OptimizationParameter> { new OptimizationStepParameter("x", 0, 10, 10, 1) },
+                    new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 2 });
+                var scheduled = new List<ParameterSet>();
+                _strategy.NewParameterSet += (s, parameterSet) => scheduled.Add(parameterSet);
+                _strategy.PushNewResults(OptimizationResult.Initial);
+                return scheduled;
             }
 
             [Test]
