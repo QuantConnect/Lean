@@ -30,6 +30,7 @@ namespace QuantConnect.Optimizer.Strategies
         private readonly HashSet<ParameterSet> _runningParameterSet = new HashSet<ParameterSet>();
         private int _segmentsAmount = 4;
         private bool _schedulingParameterSets;
+        private bool _roundHasResult;
 
         /// <summary>
         /// Initializes the strategy using generator, extremum settings and optimization parameters
@@ -82,6 +83,7 @@ namespace QuantConnect.Optimizer.Strategies
                 else if (result.Id > 0)
                 {
                     _runningParameterSet.Remove(result.ParameterSet);
+                    _roundHasResult = true;
                     ProcessNewResult(result);
                 }
 
@@ -92,8 +94,9 @@ namespace QuantConnect.Optimizer.Strategies
                 }
 
                 // Once all running backtests have ended, for the current collection of optimization parameters, for each parameter we determine if
-                // we can create a new smaller/finer optimization scope. Fewer than two segments can't shrink the step, refining would never end
-                if (Target.Current.HasValue && _segmentsAmount > 1 && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
+                // we can create a new smaller/finer optimization scope. Fewer than two segments can't shrink the step, refining would never end.
+                // A round where every backtest failed ends the search: refining around an earlier round's solution would repeat backtests that already ran
+                if (_roundHasResult && Target.Current.HasValue && _segmentsAmount > 1 && OptimizationParameters.OfType<OptimizationStepParameter>().Any(s => s.Step > s.MinStep))
                 {
                     var boundaries = new HashSet<OptimizationParameter>();
                     var parameterSet = Solution.ParameterSet;
@@ -130,6 +133,7 @@ namespace QuantConnect.Optimizer.Strategies
                     return;
                 }
 
+                _roundHasResult = false;
                 _schedulingParameterSets = true;
                 try
                 {

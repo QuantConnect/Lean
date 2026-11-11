@@ -172,6 +172,20 @@ namespace QuantConnect.Tests.Optimizer.Strategies
             }
 
             [Test]
+            public void EndsWhenEveryBacktestOfALaterRoundFails()
+            {
+                var scheduled = InitializeTwoSegmentSearch();
+                _strategy.PushNewResults(new OptimizationResult(_stringify(0, 0), scheduled[0], "success1"));
+                _strategy.PushNewResults(new OptimizationResult(_stringify(10, 0), scheduled[1], "success2"));
+
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[2], "failure1"));
+                _strategy.PushNewResults(new OptimizationResult(null, scheduled[3], "failure2"));
+
+                CollectionAssert.AreEqual(new[] { 0m, 10m, 5m, 10m }, scheduled.Select(set => set.Value["x"].ToDecimal()));
+                Assert.AreEqual(10m, _strategy.Solution.ParameterSet.Value["x"].ToDecimal());
+            }
+
+            [Test]
             public void LaunchFailureWhileSchedulingDoesNotStartANewRound()
             {
                 _strategy.Initialize(
