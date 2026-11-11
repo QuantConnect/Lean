@@ -134,7 +134,7 @@ namespace QuantConnect.Data.Custom.Intrinio
                 // Force the engine to wait at least 1000 ms between API calls.
                 IntrinioConfig.RateGate.WaitToProceed();
 
-                // In backtesting mode, there is only one call at the beggining with all the data 
+                // In backtesting mode, there is only one call at the beginning with all the data 
                 _backtestingFirstTimeCallOrLiveMode = false || isLiveMode;
                 subscription = GetIntrinioSubscription(config, isLiveMode);
             }
