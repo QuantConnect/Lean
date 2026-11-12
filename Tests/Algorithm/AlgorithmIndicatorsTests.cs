@@ -270,8 +270,9 @@ namespace QuantConnect.Tests.Algorithm
 
             var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
             var lastPoint = indicatorValues.Last();
-            Assert.AreEqual(0.477585951081753m, lastPoint.Price);
-            Assert.AreEqual(0.477585951081753m, lastPoint.Current.Value);
+            Assert.AreEqual(0.664648990718509m, lastPoint.Price);
+            Assert.AreEqual(0.664648990718509m, lastPoint.Current.Value);
+            Assert.AreEqual(indicator.Current.Value, lastPoint.Current.Value);
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
@@ -311,11 +312,55 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(expectedValue, (double)indicator.Current.Value, 1e-6);
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), indicator.Current.EndTime);
 
-            // The indicator history is taken on the first of the two updates each time step gets, so
-            // its last row holds the value the indicator had before the last pair of prices was fit
             var lastPoint = indicatorValues.Last();
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
-            Assert.AreEqual(indicator.Previous.Value, lastPoint.Current.Value);
+            Assert.AreEqual(indicator.Current.Value, lastPoint.Current.Value);
+            Assert.AreEqual(indicator.Slope.Current.Value, lastPoint["Slope"].Value);
+        }
+
+        [Test]
+        public void MultiSymbolIndicatorHistoryMatchesSynchronizedUpdates()
+        {
+            var symbols = new[]
+            {
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Symbol.Create("IBM", SecurityType.Equity, Market.USA)
+            };
+            var prices = new[]
+            {
+                new[] { 10m, 9.62m, 9.35m, 9.47m, 9.89m },
+                new[] { 20m, 20.95m, 20m, 20.72m, 20.28m }
+            };
+            var slices = Enumerable.Range(0, 5).Select(day =>
+            {
+                var bars = symbols.Select((symbol, i) =>
+                {
+                    var price = prices[i][day];
+                    return new TradeBar(new DateTime(2024, 1, 1).AddDays(day), symbol, price, price, price, price, 1000, TimeSpan.FromDays(1));
+                }).ToList();
+                return new Slice(bars[0].EndTime, bars, bars[0].EndTime);
+            }).ToList();
+
+            var direct = new Correlation(symbols[0], symbols[1], 3);
+            var expected = new List<IndicatorDataPoint>();
+            foreach (var slice in slices)
+            {
+                foreach (var bar in slice.Bars.Values)
+                {
+                    direct.Update(bar);
+                }
+                if (direct.IsReady)
+                {
+                    expected.Add(direct.Current);
+                }
+            }
+
+            var indicatorValues = _algorithm.IndicatorHistory(new Correlation(symbols[0], symbols[1], 3), slices);
+
+            Assert.AreEqual(3, expected.Count);
+            CollectionAssert.AreEqual(expected.Select(x => x.EndTime), indicatorValues.Select(x => x.EndTime));
+            CollectionAssert.AreEqual(expected.Select(x => x.Value), indicatorValues.Current.Select(x => x.Value));
+            CollectionAssert.AreEqual(expected.Select(x => x.Value), indicatorValues.Select(x => x.Current.Value));
         }
 
         [Test]

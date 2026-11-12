@@ -110,8 +110,23 @@ namespace QuantConnect.Indicators
         /// </summary>
         public virtual IndicatorDataPoint UpdateValue()
         {
-            Values.Add(Indicator.Current);
+            AddOrReplace(Indicator.Current);
             return Indicator.Current;
+        }
+
+        /// <summary>
+        /// Adds the given point, or replaces the last one if it has the same end time
+        /// </summary>
+        protected void AddOrReplace(IndicatorDataPoint point)
+        {
+            if (Values.Count == 0 || point.EndTime != Values[^1].EndTime)
+            {
+                Values.Add(point);
+            }
+            else
+            {
+                Values[^1] = point;
+            }
         }
 
         /// <summary>
@@ -174,17 +189,7 @@ namespace QuantConnect.Indicators
                 }
                 var point = value as IndicatorDataPoint;
 
-                if (Values.Count == 0 || point.EndTime != Values[^1].EndTime)
-                {
-                    // If the list is empty or the new point has a different EndTime, add it to the list
-                    Values.Add(point);
-                }
-                else
-                {
-                    // If the new point has the same EndTime as the last point, update the last point
-                    Values[^1] = point;
-                }
-
+                AddOrReplace(point);
                 return point;
             }
         }
