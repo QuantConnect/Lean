@@ -99,8 +99,20 @@ namespace QuantConnect.Securities
             {
                 if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
                 {
+                    var symbolsBeingLiquidated = Portfolio.Transactions
+                        .GetOpenOrders(order => order.Tag == Messages.DefaultMarginCallModel.MarginCallOrderTag)
+                        .Select(order => order.Symbol)
+                        .ToHashSet();
+
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
+                        // a margin call order can stay open for a while, such as a market order waiting for the next daily bar
+                        // in backtesting, and generating it again would liquidate the position more than once
+                        if (positionGroup.Positions.Any(position => symbolsBeingLiquidated.Contains(position.Symbol)))
+                        {
+                            continue;
+                        }
+
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
                         if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))

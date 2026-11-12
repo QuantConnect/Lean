@@ -256,8 +256,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, marginCallOrders.Count);
         }
 
-        [Test]
-        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated(bool openOrderIsMarginCall)
         {
             const int quantity = 1000;
             const decimal leverage = 1m;
@@ -304,14 +305,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(1, marginCallOrders.Count);
 
-            // the margin call order hasn't been filled yet, the position is still the same
-            var liquidationRequest = marginCallOrders[0];
-            liquidationRequest.SetOrderId(1);
-            orderProcessor.AddTicket(new OrderTicket(null, liquidationRequest));
+            // the order reducing the position hasn't been filled yet, the position is still the same
+            var openOrder = openOrderIsMarginCall
+                ? Order.CreateOrder(marginCallOrders[0])
+                : new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss");
+            openOrder.Id = 1;
+            orderProcessor.AddOrder(openOrder);
 
-            // scanning the portfolio again must not duplicate the liquidation, which would flip the position
+            // scanning the portfolio again must not duplicate the liquidation, which would flip the position,
+            // but an open order the algorithm placed itself must not prevent the margin call
             marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(0, marginCallOrders.Count);
+            Assert.AreEqual(openOrderIsMarginCall ? 0 : 1, marginCallOrders.Count);
         }
 
         [Test]
