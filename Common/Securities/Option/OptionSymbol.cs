@@ -27,6 +27,7 @@ namespace QuantConnect.Securities.Option
     public static class OptionSymbol
     {
         private static readonly Dictionary<string, byte> _optionExpirationErrorLog = new();
+        private static readonly TimeSpan _pmSettledIndexOptionsExpiryTime = TimeSpan.FromHours(15);
 
         /// <summary>
         /// Returns true if the option is a standard contract that expires 3rd Friday of the month
@@ -152,12 +153,14 @@ namespace QuantConnect.Securities.Option
             {
                 expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
             }
-            // 0DTE PM-settled index options expire at 4:00 PM ET, not the regular 4:15 PM ET (CBOE spec)
+            // 0DTE PM-settled index options expire at 4:00 PM ET, not the regular 4:15 PM ET (CBOE spec),
+            // unless the session closes earlier, as on an early close
             else if (expiryTime.Date == symbol.ID.Date.Date
                 && symbol.SecurityType == SecurityType.IndexOption
-                && !IndexOptionSymbol.IsAMSettled(symbol))
+                && !IndexOptionSymbol.IsAMSettled(symbol)
+                && expiryTime.TimeOfDay > _pmSettledIndexOptionsExpiryTime)
             {
-                expiryTime = expiryTime.Date.Add(TimeSpan.FromHours(15));
+                expiryTime = expiryTime.Date.Add(_pmSettledIndexOptionsExpiryTime);
             }
 
             return expiryTime;

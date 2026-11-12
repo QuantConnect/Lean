@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Securities;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 
@@ -120,6 +121,24 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var settlement = OptionSymbol.GetSettlementDateTime(option);
 
             Assert.AreEqual(expiry.Date.AddHours(15), settlement);
+        }
+
+        [TestCase("SPXW", 2025, 7, 3)]
+        [TestCase("SPXW", 2025, 11, 28)]
+        [TestCase("SPXW", 2025, 12, 24)]
+        [TestCase("RUTW", 2025, 7, 3)]
+        [TestCase("NDXP", 2025, 11, 28)]
+        public void ZeroDTEPMSettledIndexOptionsExpireAtEarlyClose(string ticker, int year, int month, int day)
+        {
+            var expiry = new DateTime(year, month, day);
+            var underlying = Symbol.Create(IndexOptionSymbol.MapToUnderlying(ticker), SecurityType.Index, Market.USA);
+            var option = Symbol.CreateOption(underlying, ticker, Market.USA, OptionStyle.European, OptionRight.Call, 200m, expiry);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, option, SecurityType.IndexOption);
+
+            var settlement = OptionSymbol.GetSettlementDateTime(option);
+
+            Assert.AreEqual(expiry.Date.AddHours(12), settlement);
+            Assert.AreEqual(exchangeHours.GetLastDailyMarketClose(expiry, false), settlement);
         }
 
         // AM-settled: SPX, NDX, RUT, VIX -> settle at market open on expiry day
