@@ -173,6 +173,69 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void PublishesOneValuePerCrossSection()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            var average = new SimpleMovingAverage(3).Of(indicator);
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                UpdateAll(indicator, i);
+            }
+
+            CollectionAssert.AreEqual(ExpectedValues.Select(value => (decimal)(value ?? 0)), published.Select(value => Math.Round(value, 9)));
+            // Of waits for the coefficient to be ready, so the average gets exactly the ready coefficients
+            Assert.AreEqual(ExpectedValues.Count(value => value.HasValue), average.Samples);
+            Assert.AreEqual(ExpectedValues.TakeLast(3).Average(value => value.Value), (double)average.Current.Value, 1e-9);
+        }
+
+        [Test]
+        public void CorrelatesALargeCrossSection()
+        {
+            // each asset grows at its own constant rate, so its previous return ranks the same as its next one
+            var symbols = Enumerable.Range(0, 1000).Select(i => Symbol.Create($"A{i}", SecurityType.Equity, Market.USA)).ToList();
+            var indicator = new CrossSectionalInformationCoefficient(symbols, _ => new RateOfChange(1));
+            var published = 0;
+            indicator.Updated += (_, _) => published++;
+
+            for (var period = 0; period < 4; period++)
+            {
+                for (var i = 0; i < symbols.Count; i++)
+                {
+                    var price = 100m * (decimal)Math.Pow(1 + 0.0001 * (i + 1), period);
+                    indicator.Update(CreateBar(symbols[i], period, price));
+                }
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(1m, Math.Round(indicator.Current.Value, 9));
+            Assert.AreEqual(4, published);
+        }
+
+        [Test]
+        public void RejectsACompositeSignal()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1).Times(-1m)));
+        }
+
+        [Test]
+        public void WarmsUpOneInputForASignalWithoutWarmUpPeriod()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new ReadyOnFirstInputIndicator());
+
+            Assert.AreEqual(2, indicator.WarmUpPeriod);
+            for (var i = 0; i < indicator.WarmUpPeriod; i++)
+            {
+                Assert.IsFalse(indicator.IsReady);
+                UpdateAll(indicator, i);
+            }
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
         public void ThrowsWithFewerThanThreeSymbols()
         {
             Assert.Throws<ArgumentException>(() =>

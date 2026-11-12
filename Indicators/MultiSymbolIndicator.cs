@@ -29,6 +29,9 @@ namespace QuantConnect.Indicators
     public abstract class MultiSymbolIndicator<TInput> : IndicatorBase<TInput>, IIndicatorWarmUpPeriodProvider
         where TInput : IBaseData
     {
+        private DateTime _latestInputEndTimeUtc;
+        private int _symbolsWithLatestInputEndTime;
+
         /// <summary>
         /// Relevant data for each symbol the indicator works on, including all inputs
         /// and actual data points used for calculation.
@@ -85,13 +88,29 @@ namespace QuantConnect.Indicators
             if (Samples == 1)
             {
                 SetResolution(input);
+                _latestInputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
+                _symbolsWithLatestInputEndTime = 1;
                 return decimal.Zero;
             }
 
+            var previousInputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
             symbolData.CurrentInput = input;
 
+            // Counting the symbols at the latest time, instead of comparing every symbol's time on each input,
+            // keeps a period linear in the number of symbols. Each symbol's input times only move forward.
+            var inputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
+            if (inputEndTimeUtc > _latestInputEndTimeUtc)
+            {
+                _latestInputEndTimeUtc = inputEndTimeUtc;
+                _symbolsWithLatestInputEndTime = 1;
+            }
+            else if (inputEndTimeUtc == _latestInputEndTimeUtc && previousInputEndTimeUtc != inputEndTimeUtc)
+            {
+                _symbolsWithLatestInputEndTime++;
+            }
+
             // Ready to calculate when all symbols get data for the same time
-            if (DataBySymbol.Values.Select(data => data.CurrentInputEndTimeUtc).Distinct().Count() == 1)
+            if (_symbolsWithLatestInputEndTime == DataBySymbol.Count)
             {
                 // Add the actual inputs that should be used to the rolling windows
                 foreach (var data in DataBySymbol.Values)
@@ -117,6 +136,8 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             IndicatorValue = 0;
+            _latestInputEndTimeUtc = default;
+            _symbolsWithLatestInputEndTime = 0;
             foreach (var data in DataBySymbol.Values)
             {
                 data.Reset();

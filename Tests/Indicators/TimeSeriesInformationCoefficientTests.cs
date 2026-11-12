@@ -174,6 +174,27 @@ namespace QuantConnect.Tests.Indicators
             Assert.Throws<InvalidOperationException>(() => indicator.Update(CreateBar(time, 100m)));
         }
 
+        [Test]
+        public void RejectsACompositeSignal()
+        {
+            Assert.Throws<ArgumentException>(() => new TimeSeriesInformationCoefficient(new RateOfChange(1).Times(-1m), 5));
+        }
+
+        [Test]
+        public void WarmsUpOneInputForASignalWithoutWarmUpPeriod()
+        {
+            var indicator = new TimeSeriesInformationCoefficient(new ReadyOnFirstInputIndicator(), 3);
+            var time = new DateTime(2024, 1, 1);
+
+            Assert.AreEqual(4, indicator.WarmUpPeriod);
+            for (var i = 0; i < indicator.WarmUpPeriod; i++)
+            {
+                Assert.IsFalse(indicator.IsReady);
+                indicator.Update(CreateBar(time.AddDays(i), Prices[i]));
+            }
+            Assert.IsTrue(indicator.IsReady);
+        }
+
         [TestCase(2)]
         [TestCase(0)]
         public void ThrowsWhenPeriodIsLessThanThree(int period)
@@ -184,6 +205,25 @@ namespace QuantConnect.Tests.Indicators
         private static TradeBar CreateBar(DateTime time, decimal price)
         {
             return new TradeBar(time, Symbols.SPY, price, price, price, price, 1000, TimeSpan.FromDays(1));
+        }
+    }
+
+    /// <summary>
+    /// A signal that is ready on its first input and advertises no warm-up, as a custom Python indicator without one does
+    /// </summary>
+    public class ReadyOnFirstInputIndicator : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
+    {
+        public ReadyOnFirstInputIndicator() : base("ReadyOnFirstInput")
+        {
+        }
+
+        public override bool IsReady => Samples > 0;
+
+        public int WarmUpPeriod => 0;
+
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            return input.Value;
         }
     }
 }

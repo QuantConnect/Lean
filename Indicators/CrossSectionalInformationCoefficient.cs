@@ -27,7 +27,8 @@ namespace QuantConnect.Indicators
     ///
     /// The indicator owns one signal per asset: each input updates its asset's signal first, so the signals must not be
     /// updated elsewhere, such as by an algorithm helper that registered them. The indicator throws when it detects such
-    /// an update. An asset's price is its input's value. The indicator updates when every asset has an input
+    /// an update. The signals can't be built from other indicators, as <see cref="TimeSeriesInformationCoefficient"/>
+    /// explains. An asset's price is its input's value. The indicator updates when every asset has an input
     /// for the same time.
     /// </summary>
     public class CrossSectionalInformationCoefficient : MultiSymbolIndicator<IBaseData>
@@ -35,6 +36,7 @@ namespace QuantConnect.Indicators
         private readonly Dictionary<Symbol, decimal> _previousSignalValues = new();
         private readonly Dictionary<Symbol, long> _signalSamples;
         private bool _isReady;
+        private bool _hasNewValue;
 
         /// <summary>
         /// The signal of each asset whose information coefficient this indicator measures
@@ -61,7 +63,7 @@ namespace QuantConnect.Indicators
             }
             Signals = DataBySymbol.Keys.ToDictionary(symbol => symbol, signalFactory);
             _signalSamples = Signals.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Samples);
-            var signalWarmUpPeriod = Signals.Values.Max(signal => (signal as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 1);
+            var signalWarmUpPeriod = Signals.Values.Max(signal => TimeSeriesInformationCoefficient.ValidateOwnedSignal(signal, name));
             WarmUpPeriod += signalWarmUpPeriod - 1;
         }
 
@@ -73,6 +75,19 @@ namespace QuantConnect.Indicators
         public CrossSectionalInformationCoefficient(IEnumerable<Symbol> symbols, Func<Symbol, IIndicator> signalFactory)
             : this("CSIC", symbols, signalFactory)
         {
+        }
+
+        /// <summary>
+        /// Publishes a value only when the input completes a cross-section, instead of repeating the last one for every
+        /// asset's input, so indicators chained to this one get one value per period
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>The result of the cross-section the input completes, if any</returns>
+        protected override IndicatorResult ValidateAndComputeNextValue(IBaseData input)
+        {
+            _hasNewValue = false;
+            var value = ComputeNextValue(input);
+            return new IndicatorResult(value, _hasNewValue ? IndicatorStatus.Success : IndicatorStatus.ValueNotReady);
         }
 
         /// <summary>
@@ -118,10 +133,12 @@ namespace QuantConnect.Indicators
 
             if (signalValues.Count < DataBySymbol.Count)
             {
+                _hasNewValue = !_isReady;
                 return IndicatorValue;
             }
 
             _isReady = true;
+            _hasNewValue = true;
             var correlation = MathNet.Numerics.Statistics.Correlation.Spearman(signalValues, returns);
             return correlation.IsNaNOrZero() ? 0m : Extensions.SafeDecimalCast(correlation);
         }

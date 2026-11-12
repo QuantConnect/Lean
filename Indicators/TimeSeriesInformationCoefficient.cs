@@ -25,6 +25,9 @@ namespace QuantConnect.Indicators
     ///
     /// The indicator owns its signal: each input updates the signal first, so the signal must not be updated elsewhere,
     /// such as by an algorithm helper that registered it. The indicator throws when it detects such an update.
+    /// Because the indicator feeds its signal directly, the signal can't be built from other indicators: a
+    /// <see cref="CompositeIndicator"/> is rejected, and an indicator chained with <see cref="IndicatorExtensions.Of{T}"/>
+    /// would get the prices instead of its source's values.
     /// The asset's price is the input's value.
     /// </summary>
     public class TimeSeriesInformationCoefficient : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
@@ -63,12 +66,11 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException($"Period parameter for TimeSeriesInformationCoefficient indicator must be greater than 2 but was {period}");
             }
+            WarmUpPeriod = ValidateOwnedSignal(signal, name) + period;
             Signal = signal;
             _signalSamples = signal.Samples;
             _signalValues = new RollingWindow<double>(period);
             _nextReturns = new RollingWindow<double>(period);
-            var signalWarmUpPeriod = (signal as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 1;
-            WarmUpPeriod = signalWarmUpPeriod + period;
         }
 
         /// <summary>
@@ -107,6 +109,23 @@ namespace QuantConnect.Indicators
 
             var correlation = MathNet.Numerics.Statistics.Correlation.Spearman(_signalValues, _nextReturns);
             return correlation.IsNaNOrZero() ? 0m : Extensions.SafeDecimalCast(correlation);
+        }
+
+        /// <summary>
+        /// Checks that an information coefficient indicator can feed the given signal directly
+        /// </summary>
+        /// <param name="signal">The signal the indicator will own</param>
+        /// <param name="ownerName">The name of the indicator that owns the signal</param>
+        /// <returns>The inputs the signal needs to be ready, at least one even when it advertises none</returns>
+        internal static int ValidateOwnedSignal(IIndicator signal, string ownerName)
+        {
+            if (signal is CompositeIndicator)
+            {
+                throw new ArgumentException($"{ownerName}: its signal {signal.Name} is a composite indicator, which can't be fed " +
+                    "directly. Use a signal that computes its value from the asset's data itself, such as a custom indicator.");
+            }
+            var warmUpPeriod = (signal as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 1;
+            return Math.Max(1, warmUpPeriod);
         }
 
         /// <summary>

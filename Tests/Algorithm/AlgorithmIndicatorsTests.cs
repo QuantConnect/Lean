@@ -434,6 +434,46 @@ class CustomSimpleMovingAverage(PythonIndicator):
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void InformationCoefficientHelpersAcceptCustomPythonSignals(bool inheritsPythonIndicator)
+        {
+            var symbols = new[] { _equity, _algorithm.AddEquity("AIG").Symbol, _algorithm.AddEquity("BAC").Symbol };
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), $@"
+from AlgorithmImports import *
+
+class CustomMomentum({(inheritsPythonIndicator ? "PythonIndicator" : "object")}):
+    def __init__(self):
+        {(inheritsPythonIndicator ? "super().__init__()" : "self.is_ready = False")}
+        self.name = 'CustomMomentum'
+        self.warm_up_period = 2
+        self.value = 0
+        self.last_price = None
+
+    def update(self, input):
+        if self.last_price:
+            self.value = input.value / self.last_price - 1
+        ready = self.last_price is not None
+        {(inheritsPythonIndicator ? "" : "self.is_ready = ready")}
+        self.last_price = input.value
+        return ready
+
+def create(algorithm, symbols):
+    return algorithm.tsic(symbols[0], CustomMomentum(), 3), algorithm.csic(symbols, lambda symbol: CustomMomentum())
+");
+                using var indicators = module.GetAttr("create").Invoke(_algorithm.ToPython(), symbols.ToList().ToPython());
+                var timeSeries = indicators[0].GetAndDispose<TimeSeriesInformationCoefficient>();
+                var crossSectional = indicators[1].GetAndDispose<CrossSectionalInformationCoefficient>();
+
+                Assert.IsTrue(timeSeries.IsReady);
+                Assert.IsTrue(crossSectional.IsReady);
+                Assert.IsTrue(timeSeries.Signal.IsReady);
+                Assert.IsTrue(crossSectional.Signals.Values.All(signal => signal.IsReady));
+            }
+        }
+
         [TestCase("count")]
         [TestCase("StartAndEndDate")]
         public void IndicatorUpdatedWithSymbol(string testCase)
