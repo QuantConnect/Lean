@@ -566,6 +566,24 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
         }
 
+        [Test]
+        public void LiquidatesMultiLotPositionGroupsOnceWithTheirHeldQuantities()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            // 3 covered calls (+300 SPY / -3 calls)
+            var portfolio = GetSpyPortfolio(orderProcessor, -26000, -3);
+            Assert.AreEqual(1, portfolio.Positions.Groups.Count);
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(2, marginCallOrders.Count);
+            Assert.AreEqual(-300, marginCallOrders.Single(request => request.Symbol == Symbols.SPY).Quantity);
+            Assert.AreEqual(3, marginCallOrders.Single(request => request.Symbol == Symbols.SPY_C_192_Feb19_2016).Quantity);
+            Assert.AreEqual(2, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
+
+            // the combo order is still open: the group isn't liquidated again
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
+        }
+
         public enum OpenOrderKind
         {
             MarginCall,

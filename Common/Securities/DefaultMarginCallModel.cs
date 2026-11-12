@@ -207,14 +207,15 @@ namespace QuantConnect.Securities
             return positionGroup.Positions.Select(position =>
             {
                 var security = Portfolio.Securities[position.Symbol];
-                // Always reducing, so we take the absolute quantity times the opposite sign of the position
+                // Always reducing, so we take the absolute quantity times the opposite sign of the position.
+                // This is the leg's total quantity, which is what combo order requests expect too
                 var legQuantity = absQuantity * position.UnitQuantity * -Math.Sign(position.Quantity);
 
                 return new SubmitOrderRequest(
                     orderType,
                     security.Type,
                     security.Symbol,
-                    legQuantity.GetOrderLegGroupQuantity(groupOrderManager),
+                    legQuantity,
                     0,
                     0,
                     security.LocalTime.ConvertToUtc(security.Exchange.TimeZone),
