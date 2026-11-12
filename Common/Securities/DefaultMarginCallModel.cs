@@ -209,6 +209,23 @@ namespace QuantConnect.Securities
             // order by losers first
             var executedOrders = new List<OrderTicket>();
             var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
+
+            // OnMarginCall can replace the generated requests with new ones, which are tracked with the position groups whose
+            // unsubmitted requests on the same symbol they replaced, so these groups aren't liquidated again while they're open
+            var replacedPositionGroupOrders = _marginCallOrdersByPositionGroup.Values
+                .Where(positionGroupOrders => positionGroupOrders.Any(request => request.OrderId < 1 && !ordersWithSecurities.ContainsKey(request)))
+                .ToList();
+            var replacements = ordersWithSecurities.Keys
+                .Where(request => !_marginCallOrdersByPositionGroup.Values.Any(positionGroupOrders => positionGroupOrders.Contains(request)))
+                .ToList();
+            foreach (var replacement in replacements)
+            {
+                foreach (var positionGroupOrders in replacedPositionGroupOrders.Where(orders => orders.Any(request => request.Symbol == replacement.Symbol)))
+                {
+                    positionGroupOrders.Add(replacement);
+                }
+            }
+
             var groupManagerTemporalIds = -ordersWithSecurities.Count;
             var orderedByLosers = ordersWithSecurities
                 // group orders by their group manager id so they are executed together

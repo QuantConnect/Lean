@@ -257,9 +257,10 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, marginCallOrders.Count);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated(bool openOrderIsMarginCall)
+        [TestCase(OpenOrderKind.MarginCall)]
+        [TestCase(OpenOrderKind.MarginCallReplacedOnMarginCall)]
+        [TestCase(OpenOrderKind.StopLoss)]
+        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated(OpenOrderKind openOrderKind)
         {
             const int quantity = 1000;
             const decimal leverage = 1m;
@@ -267,7 +268,7 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = GetPortfolio(orderProcessor, quantity);
             portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
 
-            var security = GetSecurity(Symbols.AAPL);
+            var security = GetSecurity(Symbols.AAPL, portfolio.CashBook);
             portfolio.Securities.Add(security);
 
             var time = DateTime.Now;
@@ -308,21 +309,34 @@ namespace QuantConnect.Tests.Common.Securities
 
             // the order reducing the position hasn't been filled yet, the position is still the same
             Order openOrder;
-            if (openOrderIsMarginCall)
+            switch (openOrderKind)
             {
-                marginCallOrders[0].SetOrderId(1);
-                openOrder = Order.CreateOrder(marginCallOrders[0]);
-            }
-            else
-            {
-                openOrder = new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss") { Id = 1 };
+                case OpenOrderKind.MarginCall:
+                    marginCallOrders[0].SetOrderId(1);
+                    openOrder = Order.CreateOrder(marginCallOrders[0]);
+                    break;
+
+                case OpenOrderKind.MarginCallReplacedOnMarginCall:
+                    // like OnMarginCall replacing the generated request with a new one, which the model then executes
+                    var replacement = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
+                        marginCallOrders[0].Quantity * 1.1m, 0, 0, time, "OnMarginCall");
+                    marginCallOrders.Clear();
+                    marginCallOrders.Add(replacement);
+                    portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+                    Assert.AreEqual(1, portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders).Count);
+                    openOrder = Order.CreateOrder(replacement);
+                    break;
+
+                default:
+                    openOrder = new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss") { Id = 1 };
+                    break;
             }
             orderProcessor.AddOrder(openOrder);
 
             // scanning the portfolio again must not duplicate the liquidation, which would flip the position,
             // but an open order the algorithm placed itself must not prevent the margin call
             marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(openOrderIsMarginCall ? 0 : 1, marginCallOrders.Count);
+            Assert.AreEqual(openOrderKind == OpenOrderKind.StopLoss ? 1 : 0, marginCallOrders.Count);
         }
 
         [Test]
@@ -468,6 +482,13 @@ namespace QuantConnect.Tests.Common.Securities
             CollectionAssert.AreEquivalent(canceledLiquidation.Select(request => request.Symbol), marginCallOrders.Select(request => request.Symbol));
         }
 
+        public enum OpenOrderKind
+        {
+            MarginCall,
+            MarginCallReplacedOnMarginCall,
+            StopLoss
+        }
+
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
         {
             var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
@@ -480,7 +501,7 @@ namespace QuantConnect.Tests.Common.Securities
             return portfolio;
         }
 
-        private Security GetSecurity(Symbol symbol)
+        private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null)
         {
             return new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -496,7 +517,7 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
+                currencyConverter ?? ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
