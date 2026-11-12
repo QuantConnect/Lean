@@ -758,28 +758,48 @@ def Test4(dataFrame):
             SymbolCache.Set("SPY", symbol);
             var ticker = column.ToUpperInvariant();
             var tickerSymbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
-            SymbolCache.Set(ticker, tickerSymbol);
 
             using (Py.GIL())
             {
                 using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(symbol, Resolution.Minute, rawBars));
                 using var module = PyModule.FromString("testModule",
                     @"
-def Test(data_frame, symbol, column, ticker_symbol):
-    expected = data_frame.loc[symbol][column].copy()
-    assert data_frame.loc[symbol, column].equals(expected)
-    assert data_frame.loc['SPY', column].equals(expected)
+import pandas as pd
+
+def lookups(data_frame, symbol, column):
+    time = data_frame.index.get_level_values('time')[1]
+    flat = data_frame.loc[symbol]
+    return [
+        data_frame.loc[symbol, column],
+        data_frame.loc['SPY', column],
+        data_frame.loc[(symbol, time), column],
+        data_frame.loc[(slice(None), time), column],
+        data_frame.loc[pd.IndexSlice[:, time], column],
+        data_frame.loc[lambda d: d['close'] > d[column], column],
+        flat.loc[lambda d: d.close > 0, column]
+    ]
+
+def assert_lookups(data_frame, symbol, column, expected):
+    for actual, expected_value in zip(lookups(data_frame, symbol, column), expected):
+        assert type(actual) is type(expected_value), f'{type(actual)} != {type(expected_value)}'
+        assert actual.equals(expected_value) if hasattr(actual, 'equals') else actual == expected_value, f'{actual} != {expected_value}'
+
+def Test(data_frame, symbol, column, ticker_symbol, cache_ticker):
+    expected = lookups(data_frame, symbol, column)
+    cache_ticker()
+    assert_lookups(data_frame, symbol, column, expected)
 
     data_frame[ticker_symbol] = 999.0
-    assert data_frame.loc[symbol, column].equals(expected)
-    assert data_frame.loc['SPY', column].equals(expected)
+    assert_lookups(data_frame, symbol, column, expected)
     assert (data_frame.loc[symbol][ticker_symbol] == 999.0).all()");
                 using var test = module.GetAttr("Test");
                 using var pySymbol = symbol.ToPython();
                 using var pyColumn = new PyString(column);
                 using var pyTickerSymbol = tickerSymbol.ToPython();
-                using var result = test.Invoke(dataFrame, pySymbol, pyColumn, pyTickerSymbol);
+                using var cacheTicker = new Action(() => SymbolCache.Set(ticker, tickerSymbol)).ToPython();
+                using var result = test.Invoke(dataFrame, pySymbol, pyColumn, pyTickerSymbol, cacheTicker);
             }
+            Assert.IsTrue(SymbolCache.TryGetSymbol(ticker, out _));
         }
 
         [TestCase("dataFrame['opne']", "'opne'")]

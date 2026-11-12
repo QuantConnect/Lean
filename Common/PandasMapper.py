@@ -20,10 +20,14 @@ Allowing support for indexing of Lean created Indexes with tickers like "SPY", S
 
 import pandas as pd
 from pandas.core.indexes.frozen import FrozenList as pdFrozenList
+from threading import local
 
 from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
+
+# Labels that mapper keeps as they are while a DataFrame.loc[row, column] lookup selects them as literal columns
+literal_labels = local()
 
 class PandasColumn(str):
     '''
@@ -51,6 +55,8 @@ def mapper(key):
     '''
     keyType = type(key)
     if keyType is str:
+        if key == getattr(literal_labels, 'column', None):
+            return key
         kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
             return kvp[1]
@@ -104,8 +110,8 @@ def wrap_keyerror_function(f):
     return wrapped_function
 
 def wrap_location_getitem(f):
-    '''Wraps the location indexers' __getitem__ with wrap_keyerror_function, and selects a
-    DataFrame.loc[row, column] string column that matches a ticker by its literal label instead
+    '''Wraps the location indexers' __getitem__ with wrap_keyerror_function. A DataFrame.loc[row, column]
+    string column that is a column of the frame and matches a ticker keeps its literal label during the lookup
     '''
     wrapped_getitem = wrap_keyerror_function(f)
 
@@ -113,13 +119,16 @@ def wrap_location_getitem(f):
         if (isinstance(indexer, pd.core.indexing._LocIndexer)
                 and isinstance(indexer.obj, pd.DataFrame)
                 and type(key) is tuple and len(key) == 2):
-            row, column = key
-            if type(column) is str and mapper(column) is not column:
-                # PandasColumn isn't mapped, so the column can't become the ticker's Symbol column.
-                # Selecting it before the row also keeps pandas from reading the column as part of a row key
-                literal_column = PandasColumn(column)
-                if literal_column in indexer.obj.columns:
-                    return indexer.obj[literal_column].loc[row]
+            column = key[1]
+            if (type(column) is str and mapper(column) is not column
+                    and PandasColumn(column) in indexer.obj.columns):
+                # The ticker's Symbol would be read as part of a row key, or select the Symbol's column if the frame has one
+                previous = getattr(literal_labels, 'column', None)
+                literal_labels.column = column
+                try:
+                    return wrapped_getitem(indexer, key)
+                finally:
+                    literal_labels.column = previous
         return wrapped_getitem(indexer, key)
 
     wrapped_function.__name__ = f.__name__
