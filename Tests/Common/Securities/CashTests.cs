@@ -360,6 +360,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(baseCurrencySymbol, config2.Symbol.Value);
         }
 
+        [Test]
         public void EnsureInternalCurrencyDataFeedsForNonUsdQuoteCurrencyGetAdded()
         {
             const int quantity = 100;
@@ -390,11 +391,15 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             cashJPY.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
-            var config1 = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
+            var config1 = subscriptions.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(Symbols.USDJPY, includeInternalConfigs: true)
+                .Single();
             Assert.IsTrue(config1.IsInternalFeed);
 
             cashGBP.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
-            var config2 = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.GBPUSD);
+            var config2 = subscriptions.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(Symbols.GBPUSD, includeInternalConfigs: true)
+                .Single();
             Assert.IsTrue(config2.IsInternalFeed);
         }
 
