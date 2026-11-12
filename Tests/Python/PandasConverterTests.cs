@@ -775,7 +775,7 @@ def lookups(data_frame, symbol, column):
         data_frame.loc[(symbol, time), column],
         data_frame.loc[(slice(None), time), column],
         data_frame.loc[pd.IndexSlice[:, time], column],
-        data_frame.loc[lambda d: d['close'] > d[column], column],
+        data_frame.loc[lambda d: d['close'] > d['close'].mean(), column],
         flat.loc[lambda d: d.close > 0, column]
     ]
 
@@ -784,10 +784,22 @@ def assert_lookups(data_frame, symbol, column, expected):
         assert type(actual) is type(expected_value), f'{type(actual)} != {type(expected_value)}'
         assert actual.equals(expected_value) if hasattr(actual, 'equals') else actual == expected_value, f'{actual} != {expected_value}'
 
+def assert_ticker_keys_still_map(data_frame, column, ticker_symbol):
+    time = data_frame.index.get_level_values('time')[1]
+    ticker_rows = pd.DataFrame({column: [3.0], 'close': [4.0]}, index=pd.Index([ticker_symbol], name='symbol'))
+    assert ticker_rows.loc[column, column] == 3.0
+    ticker_history = pd.DataFrame({column: [1.0, 2.0]}, index=pd.MultiIndex.from_product([[ticker_symbol], data_frame.index.levels[1]]))
+    assert ticker_history.loc[(column, time), column] == 2.0
+    pairs = pd.DataFrame({column: [1.0, 2.0]}, index=pd.MultiIndex.from_tuples([('pair', ticker_symbol), ('pair', 'other')]))
+    assert pairs.loc(axis=0)['pair', column][column] == 1.0
+    ticker_column = pd.DataFrame({ticker_symbol: 1.0}, index=data_frame.index)
+    assert data_frame.loc[lambda d: ticker_column[column] > 0, column].equals(data_frame[column])
+
 def Test(data_frame, symbol, column, ticker_symbol, cache_ticker):
     expected = lookups(data_frame, symbol, column)
     cache_ticker()
     assert_lookups(data_frame, symbol, column, expected)
+    assert_ticker_keys_still_map(data_frame, column, ticker_symbol)
 
     data_frame[ticker_symbol] = 999.0
     assert_lookups(data_frame, symbol, column, expected)

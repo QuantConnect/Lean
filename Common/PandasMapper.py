@@ -26,7 +26,7 @@ from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
 
-# Labels that mapper keeps as they are while a DataFrame.loc[row, column] lookup selects them as literal columns
+# The column label object that mapper keeps as it is while a DataFrame.loc[row, column] lookup selects it as a literal column
 literal_labels = local()
 
 class PandasColumn(str):
@@ -55,7 +55,7 @@ def mapper(key):
     '''
     keyType = type(key)
     if keyType is str:
-        if key == getattr(literal_labels, 'column', None):
+        if key is getattr(literal_labels, 'column', None):
             return key
         kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
@@ -117,18 +117,23 @@ def wrap_location_getitem(f):
 
     def wrapped_function(indexer, key):
         if (isinstance(indexer, pd.core.indexing._LocIndexer)
+                and indexer.axis is None
                 and isinstance(indexer.obj, pd.DataFrame)
                 and type(key) is tuple and len(key) == 2):
-            column = key[1]
+            row, column = key
             if (type(column) is str and mapper(column) is not column
                     and PandasColumn(column) in indexer.obj.columns):
-                # The ticker's Symbol would be read as part of a row key, or select the Symbol's column if the frame has one
-                previous = getattr(literal_labels, 'column', None)
-                literal_labels.column = column
-                try:
-                    return wrapped_getitem(indexer, key)
-                finally:
-                    literal_labels.column = previous
+                # The ticker's Symbol would be read as part of a row key, or select the Symbol's column if the frame has one.
+                # mapper skips only this copy of the label, so equal strings in the row key or in callables still map
+                literal_column = column.encode().decode()
+                # Single latin-1 characters are shared objects, so a copy of one can't be told apart
+                if literal_column is not column:
+                    previous = getattr(literal_labels, 'column', None)
+                    literal_labels.column = literal_column
+                    try:
+                        return wrapped_getitem(indexer, (row, literal_column))
+                    finally:
+                        literal_labels.column = previous
         return wrapped_getitem(indexer, key)
 
     wrapped_function.__name__ = f.__name__
