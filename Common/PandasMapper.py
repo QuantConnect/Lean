@@ -86,7 +86,8 @@ def wrap_keyerror_function(f):
                 newkwargs = mapper(kwargs)
 
             return f(*newargs, **newkwargs)
-        except KeyError as e:
+        # A mapped key can also be invalid for the index, like a column label mapped to a Symbol that pandas reads as part of a row key
+        except (KeyError, pd.errors.InvalidIndexError) as e:
             # No key was mapped, so the original error already tells what is missing
             if newargs is args and newkwargs is kwargs:
                 raise

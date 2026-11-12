@@ -744,6 +744,83 @@ def Test4(dataFrame):
             }
         }
 
+        [TestCase("open")]
+        [TestCase("low")]
+        [TestCase("high")]
+        public void HistoryColumnLookupWorksWhenTickerMatchesColumn(string column)
+        {
+            var symbol = Symbols.SPY;
+            var rawBars = new[]
+            {
+                new TradeBar(new DateTime(2020, 1, 2, 9, 30, 0), symbol, 10m, 30m, 5m, 20m, 1000m),
+                new TradeBar(new DateTime(2020, 1, 2, 9, 31, 0), symbol, 11m, 31m, 6m, 21m, 1000m)
+            };
+            SymbolCache.Set("SPY", symbol);
+            var ticker = column.ToUpperInvariant();
+            var tickerSymbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+
+            using (Py.GIL())
+            {
+                using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(symbol, Resolution.Minute, rawBars));
+                using var module = PyModule.FromString("testModule",
+                    @"
+import pandas as pd
+
+def lookups(data_frame, symbol, column):
+    time = data_frame.index.get_level_values('time')[1]
+    flat = data_frame.loc[symbol]
+    return [
+        data_frame.loc[symbol, column],
+        data_frame.loc['SPY', column],
+        data_frame.loc[(symbol, time), column],
+        data_frame.loc[(slice(None), time), column],
+        data_frame.loc[pd.IndexSlice[:, time], column],
+        data_frame.loc[lambda d: d['close'] > d['close'].mean(), column],
+        flat.loc[lambda d: d.close > 0, column]
+    ]
+
+def assert_lookups(data_frame, symbol, column, expected):
+    for actual, expected_value in zip(lookups(data_frame, symbol, column), expected):
+        assert type(actual) is type(expected_value), f'{type(actual)} != {type(expected_value)}'
+        assert actual.equals(expected_value) if hasattr(actual, 'equals') else actual == expected_value, f'{actual} != {expected_value}'
+
+def assert_ticker_keys_still_map(data_frame, column, ticker_symbol):
+    time = data_frame.index.get_level_values('time')[1]
+    ticker_rows = pd.DataFrame({column: [3.0], 'close': [4.0]}, index=pd.Index([ticker_symbol], name='symbol'))
+    assert ticker_rows.loc[column, column] == 3.0
+    ticker_history = pd.DataFrame({column: [1.0, 2.0]}, index=pd.MultiIndex.from_product([[ticker_symbol], data_frame.index.levels[1]]))
+    assert ticker_history.loc[(column, time), column] == 2.0
+    pairs = pd.DataFrame({column: [1.0, 2.0], 'close': [3.0, 4.0]}, index=pd.MultiIndex.from_tuples([('pair', ticker_symbol), ('pair', 'other')]))
+    assert pairs.loc(axis=0)['pair', column].tolist() == [1.0, 3.0]
+    assert pairs.loc['pair', column].tolist() == [1.0, 3.0]
+    ticker_column = pd.DataFrame({ticker_symbol: 1.0}, index=data_frame.index)
+    assert data_frame.loc[lambda d: ticker_column[column] > 0, column].equals(data_frame[column])
+
+def Test(data_frame, symbol, column, ticker_symbol, cache_ticker):
+    expected = lookups(data_frame, symbol, column)
+    cache_ticker()
+    assert_lookups(data_frame, symbol, column, expected)
+    assert_ticker_keys_still_map(data_frame, column, ticker_symbol)
+
+    data_frame[ticker_symbol] = 999.0
+    time = data_frame.index.get_level_values('time')[1]
+    flat = data_frame.loc[symbol].copy()
+    for frame, row in ((data_frame, (symbol, time)), (data_frame, ('SPY', time)), (flat, time)):
+        before = frame.loc[row, column]
+        total = frame.values.sum()
+        frame.loc[row, column] += 1
+        assert frame.loc[row, column] == before + 1
+        assert frame.values.sum() == total + 1");
+                using var test = module.GetAttr("Test");
+                using var pySymbol = symbol.ToPython();
+                using var pyColumn = new PyString(column);
+                using var pyTickerSymbol = tickerSymbol.ToPython();
+                using var cacheTicker = new Action(() => SymbolCache.Set(ticker, tickerSymbol)).ToPython();
+                using var result = test.Invoke(dataFrame, pySymbol, pyColumn, pyTickerSymbol, cacheTicker);
+            }
+            Assert.IsTrue(SymbolCache.TryGetSymbol(ticker, out _));
+        }
+
         [TestCase("dataFrame['opne']", "'opne'")]
         [TestCase("dataFrame.loc[symbol, 'opne']", "'opne'")]
         [TestCase("dataFrame.loc[symbol].loc[[pd.Timestamp(1999, 1, 1)]]", "1999-01-01")]
