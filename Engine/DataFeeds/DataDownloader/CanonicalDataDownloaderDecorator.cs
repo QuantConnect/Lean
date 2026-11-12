@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Data;
@@ -256,18 +255,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 }
             });
 
-            // blocks until the first data point arrives or the producer completes with no data.
-            // We keep the data point we take: checking with Any() would remove it from the collection and drop it
-            if (!blockingCollection.TryTake(out var firstDataPoint, Timeout.Infinite))
+            // blocks until the first data point arrives or the producer completes with no data
+            var contractsData = blockingCollection.GetConsumingEnumerableOrNull();
+            if (contractsData == null && Interlocked.Read(ref processedContracts) == 0)
             {
-                if (Interlocked.Read(ref processedContracts) == 0)
-                {
-                    Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: No contracts were found. Do you have universe data?");
-                }
-                return null;
+                Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: No contracts were found. Do you have universe data?");
             }
 
-            return blockingCollection.GetConsumingEnumerable().Prepend(firstDataPoint);
+            return contractsData;
         }
 
         /// <summary>

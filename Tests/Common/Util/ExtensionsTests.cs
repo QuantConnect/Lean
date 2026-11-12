@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -60,6 +61,66 @@ namespace QuantConnect.Tests.Common.Util
             var parsed = uint.Parse(saleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             var enums = Extensions.GetFlags<TradeConditionFlags>(parsed).ToArray();
             Assert.AreEqual(expected, enums);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(6)]
+        public void GetConsumingEnumerableOrNullReturnsEveryItem(int count)
+        {
+            using var collection = new BlockingCollection<int>();
+            var expected = Enumerable.Range(0, count).ToList();
+            expected.ForEach(collection.Add);
+            collection.CompleteAdding();
+
+            var items = collection.GetConsumingEnumerableOrNull();
+
+            Assert.IsNotNull(items);
+            CollectionAssert.AreEqual(expected, items.ToList());
+        }
+
+        [Test]
+        public void GetConsumingEnumerableOrNullReturnsNullWhenCompletedWithoutItems()
+        {
+            using var collection = new BlockingCollection<int>();
+            collection.CompleteAdding();
+
+            Assert.IsNull(collection.GetConsumingEnumerableOrNull());
+        }
+
+        [Test]
+        public void GetConsumingEnumerableOrNullWaitsForTheProducer()
+        {
+            using var collection = new BlockingCollection<int>();
+            var producer = Task.Run(() =>
+            {
+                Thread.Sleep(100);
+                collection.Add(1);
+                Thread.Sleep(100);
+                collection.Add(2);
+                collection.Add(3);
+                collection.CompleteAdding();
+            });
+
+            var items = collection.GetConsumingEnumerableOrNull();
+
+            Assert.IsNotNull(items);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, items.ToList());
+            Assert.IsTrue(producer.Wait(TimeSpan.FromSeconds(5)));
+        }
+
+        [Test]
+        public void GetConsumingEnumerableOrNullWaitsForTheProducerToCompleteWithoutItems()
+        {
+            using var collection = new BlockingCollection<int>();
+            var producer = Task.Run(() =>
+            {
+                Thread.Sleep(100);
+                collection.CompleteAdding();
+            });
+
+            Assert.IsNull(collection.GetConsumingEnumerableOrNull());
+            Assert.IsTrue(producer.Wait(TimeSpan.FromSeconds(5)));
         }
 
         [TestCase(Market.CME, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest)]

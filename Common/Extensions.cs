@@ -1086,6 +1086,25 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Waits for the first item of a blocking collection and returns an enumerable that consumes every item, that first one included.
+        /// Returns null if the collection completes adding without an item.
+        /// </summary>
+        /// <remarks>Checking a consuming enumerable with Any() removes its first item from the collection and drops it, this method keeps it</remarks>
+        /// <typeparam name="T">The type of the items</typeparam>
+        /// <param name="collection">The collection a producer adds to and completes adding when done</param>
+        /// <returns>An enumerable that consumes every item of the collection, or null if the collection completed adding without an item</returns>
+        public static IEnumerable<T> GetConsumingEnumerableOrNull<T>(this BlockingCollection<T> collection)
+        {
+            // blocks until the first item arrives or the producer completes adding without an item
+            if (!collection.TryTake(out var first, Timeout.Infinite))
+            {
+                return null;
+            }
+
+            return collection.GetConsumingEnumerable().Prepend(first);
+        }
+
+        /// <summary>
         /// Extension method to convert a byte array into a string.
         /// </summary>
         /// <param name="bytes">Byte array to convert.</param>
