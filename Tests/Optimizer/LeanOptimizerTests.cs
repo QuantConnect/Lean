@@ -318,5 +318,97 @@ namespace QuantConnect.Tests.Optimizer
                             + int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture)
                             + int.Parse(runtimeStatistics["Running"], CultureInfo.InvariantCulture), totalBacktest);
         }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LaunchFailureDoesNotDiscardPendingParameterSets(bool throwOnLaunch)
+        {
+            var packet = new OptimizationNodePacket
+            {
+                OptimizationStrategy = "QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy",
+                Criterion = new Target("Profit", new Maximization(), null),
+                OptimizationParameters = new HashSet<OptimizationParameter>
+                {
+                    new OptimizationStepParameter("x", 0, 20, 10, 5)
+                },
+                MaximumConcurrentBacktests = 1,
+                OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 2 }
+            };
+            OptimizationResult result = null;
+            LaunchFailureLeanOptimizer optimizer;
+            lock (_configLock)
+            {
+                optimizer = new LaunchFailureLeanOptimizer(packet, throwOnLaunch);
+            }
+            using var _ = optimizer;
+            optimizer.Ended += (s, solution) => result = solution;
+
+            optimizer.Start();
+            CollectionAssert.AreEqual(new[] { "0" }, optimizer.Attempts);
+
+            // the next launch fails, the one after it must still run
+            optimizer.CompleteLastLaunched();
+            CollectionAssert.AreEqual(new[] { "0", "10", "20" }, optimizer.Attempts);
+            Assert.IsNull(result);
+
+            // the failed launch was reported to the strategy, so its round ends and the search is refined around x = 20
+            optimizer.CompleteLastLaunched();
+            CollectionAssert.AreEqual(new[] { "0", "10", "20", "15" }, optimizer.Attempts);
+            Assert.IsNull(result);
+
+            optimizer.CompleteLastLaunched();
+            CollectionAssert.AreEqual(new[] { "0", "10", "20", "15", "20" }, optimizer.Attempts);
+            Assert.IsNull(result);
+
+            optimizer.CompleteLastLaunched();
+            Assert.IsNotNull(result);
+            Assert.AreEqual("20", result.ParameterSet.Value["x"]);
+            var runtimeStatistics = optimizer.GetRuntimeStatistics();
+            Assert.AreEqual("4", runtimeStatistics["Completed"]);
+            Assert.AreEqual("1", runtimeStatistics["Failed"]);
+        }
+
+        private class LaunchFailureLeanOptimizer : LeanOptimizer
+        {
+            private readonly bool _throwOnLaunch;
+            private string _lastLaunchedId;
+
+            public List<string> Attempts { get; } = new();
+
+            public LaunchFailureLeanOptimizer(OptimizationNodePacket packet, bool throwOnLaunch) : base(packet)
+            {
+                _throwOnLaunch = throwOnLaunch;
+            }
+
+            public void CompleteLastLaunched()
+            {
+                var x = RunningParameterSetForBacktest[_lastLaunchedId].Value["x"].ToDecimal();
+                NewResult(BacktestResult.Create(x).ToJson(), _lastLaunchedId);
+            }
+
+            protected override string RunLean(ParameterSet parameterSet, string backtestName)
+            {
+                var x = parameterSet.Value["x"];
+                Attempts.Add(x);
+                if (x != "10")
+                {
+                    _lastLaunchedId = $"backtest-{Attempts.Count}";
+                    return _lastLaunchedId;
+                }
+                if (_throwOnLaunch)
+                {
+                    throw new InvalidOperationException("Launch failure");
+                }
+                return null;
+            }
+
+            protected override void AbortLean(string backtestId)
+            {
+            }
+
+            protected override void SendUpdate()
+            {
+            }
+        }
     }
 }
