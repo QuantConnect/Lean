@@ -39,6 +39,11 @@ namespace QuantConnect.Securities
         private readonly decimal _marginBuffer;
 
         /// <summary>
+        /// The margin call orders last generated for each position group, which get an order id once submitted
+        /// </summary>
+        private readonly Dictionary<PositionGroupKey, List<SubmitOrderRequest>> _marginCallOrdersByPositionGroup = new();
+
+        /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
         /// </summary>
         protected SecurityPortfolioManager Portfolio { get; }
@@ -99,22 +104,19 @@ namespace QuantConnect.Securities
             {
                 if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
                 {
-                    var symbolsBeingLiquidated = Portfolio.Transactions
-                        .GetOpenOrders(order => order.Tag == Messages.DefaultMarginCallModel.MarginCallOrderTag)
-                        .Select(order => order.Symbol)
-                        .ToHashSet();
-
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
                         // a margin call order can stay open for a while, such as a market order waiting for the next daily bar
-                        // in backtesting, and generating it again would liquidate the position more than once
-                        if (positionGroup.Positions.Any(position => symbolsBeingLiquidated.Contains(position.Symbol)))
+                        // in backtesting, and generating it again would liquidate the position group more than once
+                        if (_marginCallOrdersByPositionGroup.TryGetValue(positionGroup.Key, out var previousMarginCallOrders)
+                            && previousMarginCallOrders.Any(request => Portfolio.Transactions.GetOrderById(request.OrderId)?.Status.IsOpen() == true))
                         {
                             continue;
                         }
 
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
+                        _marginCallOrdersByPositionGroup[positionGroup.Key] = positionMarginCallOrders;
                         if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
                         {
                             marginCallOrders.AddRange(positionMarginCallOrders);

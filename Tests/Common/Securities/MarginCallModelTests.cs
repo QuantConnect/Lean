@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -306,10 +307,16 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, marginCallOrders.Count);
 
             // the order reducing the position hasn't been filled yet, the position is still the same
-            var openOrder = openOrderIsMarginCall
-                ? Order.CreateOrder(marginCallOrders[0])
-                : new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss");
-            openOrder.Id = 1;
+            Order openOrder;
+            if (openOrderIsMarginCall)
+            {
+                marginCallOrders[0].SetOrderId(1);
+                openOrder = Order.CreateOrder(marginCallOrders[0]);
+            }
+            else
+            {
+                openOrder = new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss") { Id = 1 };
+            }
             orderProcessor.AddOrder(openOrder);
 
             // scanning the portfolio again must not duplicate the liquidation, which would flip the position,
@@ -405,6 +412,60 @@ namespace QuantConnect.Tests.Common.Securities
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(2, marginCallOrders.Count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void RegeneratesMarginCallOrdersForCanceledLiquidationOfPositionGroupSharingALeg(bool cancelComboLiquidation)
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, 0m);
+
+            var underlying = GetSecurity(Symbols.SPY);
+            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
+            callOption.Underlying = underlying;
+            portfolio.Securities.Add(underlying);
+            portfolio.Securities.Add(callOption);
+
+            var time = DateTime.Now;
+            underlying.SetLeverage(2);
+            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, 100m, 100m));
+            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, 1m, 1m));
+
+            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY
+            underlying.Holdings.SetHoldings(100m, 300);
+            callOption.Holdings.SetHoldings(1m, -1);
+            portfolio.CashBook[Currencies.USD].SetAmount(-22400);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            var comboLiquidation = marginCallOrders.Where(request => request.GroupOrderManager != null).ToList();
+            var standaloneLiquidation = marginCallOrders.Where(request => request.GroupOrderManager == null).ToList();
+            Assert.AreEqual(2, comboLiquidation.Count);
+            Assert.AreEqual(1, standaloneLiquidation.Count);
+
+            // both liquidations are submitted, then one of them is canceled while the other one is still open
+            var orders = new List<Order>();
+            for (var i = 0; i < marginCallOrders.Count; i++)
+            {
+                marginCallOrders[i].SetOrderId(i + 1);
+                var order = Order.CreateOrder(marginCallOrders[i]);
+                orderProcessor.AddOrder(order);
+                orders.Add(order);
+            }
+            var canceledLiquidation = cancelComboLiquidation ? comboLiquidation : standaloneLiquidation;
+            foreach (var order in orders.Where(order => canceledLiquidation.Any(request => request.OrderId == order.Id)))
+            {
+                order.Status = OrderStatus.Canceled;
+            }
+
+            // the canceled liquidation is generated again, the one still open is not duplicated
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(canceledLiquidation.Count, marginCallOrders.Count);
+            Assert.IsTrue(marginCallOrders.All(request => (request.GroupOrderManager != null) == cancelComboLiquidation));
+            CollectionAssert.AreEquivalent(canceledLiquidation.Select(request => request.Symbol), marginCallOrders.Select(request => request.Symbol));
         }
 
         private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int cash)
