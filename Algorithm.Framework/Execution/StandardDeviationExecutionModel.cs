@@ -119,12 +119,10 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             foreach (var added in changes.AddedSecurities)
             {
-                // A security can leave the algorithm and be selected again later. The removal notification is
-                // only sent when the security is deselected; if the removal is deferred because a position is
-                // still open, the data subscription is removed later without another notification. Rebuild the
-                // cached symbol data when its consolidator is not part of the security subscriptions anymore,
-                // otherwise the SMA and STD would never be updated again.
-                if (_symbolData.TryGetValue(added.Symbol, out var data) && !IsConsolidatorRegistered(added, data.Consolidator))
+                // a security removed while it still had a position loses its data subscription later, without another
+                // removal notification, so when selected again our cached consolidator no longer receives data
+                if (_symbolData.TryGetValue(added.Symbol, out var data)
+                    && !added.Subscriptions.Any(subscription => subscription.Consolidators.Contains(data.Consolidator)))
                 {
                     _symbolData.Remove(added.Symbol);
                     algorithm.SubscriptionManager.RemoveConsolidator(added.Symbol, data.Consolidator);
@@ -168,14 +166,6 @@ namespace QuantConnect.Algorithm.Framework.Execution
             return unorderedQuantity > 0
                 ? data.Security.BidPrice < data.SMA - deviations
                 : data.Security.AskPrice > data.SMA + deviations;
-        }
-
-        /// <summary>
-        /// Determines whether the given consolidator is still attached to one of the security data subscriptions
-        /// </summary>
-        private static bool IsConsolidatorRegistered(Security security, IDataConsolidator consolidator)
-        {
-            return security.Subscriptions.Any(subscription => subscription.Consolidators.Contains(consolidator));
         }
 
         /// <summary>

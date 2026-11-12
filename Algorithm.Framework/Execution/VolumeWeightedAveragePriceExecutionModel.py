@@ -73,6 +73,13 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                     algorithm.subscription_manager.remove_consolidator(removed.symbol, data.consolidator)
 
         for added in changes.added_securities:
+            # a security removed while it still had a position loses its data subscription later, without another
+            # removal notification, so when selected again our cached consolidator no longer receives data
+            data = self.symbol_data.get(added.symbol, None)
+            if data and not any(data.consolidator in subscription.consolidators for subscription in added.subscriptions):
+                self.symbol_data.pop(added.symbol)
+                algorithm.subscription_manager.remove_consolidator(added.symbol, data.consolidator)
+
             if added.symbol not in self.symbol_data:
                 self.symbol_data[added.symbol] = SymbolData(algorithm, added)
 

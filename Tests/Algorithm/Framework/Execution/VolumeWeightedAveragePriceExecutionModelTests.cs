@@ -146,8 +146,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
-        [Test]
-        public void ReAddedSecurityGetsFreshSymbolData()
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ReAddedSecurityGetsFreshSymbolData(Language language)
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
 
@@ -161,7 +162,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
             try
             {
-                var model = new VolumeWeightedAveragePriceExecutionModel();
+                var model = GetExecutionModel(language);
                 algorithm.SetExecution(model);
                 model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
