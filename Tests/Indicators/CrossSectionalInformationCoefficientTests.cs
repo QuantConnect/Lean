@@ -75,6 +75,67 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void SpansTheTimeAnAssetHasNoData()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            // scipy.stats.spearmanr when AAPL has no bar at index 3: index 4 correlates the signals at index 2 with the returns
+            // since index 2, and AAPL's signal at index 4 is its rate of change since index 2
+            var expectedValues = new double?[] { null, null, -0.7, -0.7, -0.1, -0.2, 0.9 };
+
+            for (var i = 0; i < expectedValues.Length; i++)
+            {
+                foreach (var (symbol, prices) in PricesBySymbol)
+                {
+                    if (i != 3 || symbol != Symbols.AAPL)
+                    {
+                        indicator.Update(CreateBar(symbol, i, prices[i]));
+                    }
+                }
+
+                Assert.AreEqual(expectedValues[i].HasValue, indicator.IsReady, $"Index {i}");
+                Assert.AreEqual(expectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
+            }
+        }
+
+        [Test]
+        public void KeepsItsValueWhenAnAssetsPreviousPriceIsZero()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            for (var i = 0; i < 3; i++)
+            {
+                UpdateAll(indicator, i);
+            }
+            foreach (var (symbol, prices) in PricesBySymbol)
+            {
+                indicator.Update(CreateBar(symbol, 3, symbol == Symbols.AAPL ? 0m : prices[3]));
+            }
+            var value = indicator.Current.Value;
+
+            UpdateAll(indicator, 4);
+            Assert.AreEqual(value, indicator.Current.Value);
+
+            UpdateAll(indicator, 5);
+            Assert.AreNotEqual(value, indicator.Current.Value);
+        }
+
+        [Test]
+        public void ThrowsWhenASignalIsAlsoUpdatedElsewhere()
+        {
+            var signals = PricesBySymbol.Keys.ToDictionary(symbol => symbol, _ => new RateOfChange(1));
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, symbol => signals[symbol]);
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                for (var i = 0; i < ExpectedValues.Length; i++)
+                {
+                    var bar = CreateBar(Symbols.AAPL, i, PricesBySymbol[Symbols.AAPL][i]);
+                    signals[Symbols.AAPL].Update(bar.EndTime, bar.Close);
+                    UpdateAll(indicator, i);
+                }
+            });
+        }
+
+        [Test]
         public void WarmUpPeriodIsTheSamplesNeededToBeReady()
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(2));

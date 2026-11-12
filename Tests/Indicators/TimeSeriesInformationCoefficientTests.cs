@@ -118,6 +118,62 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(0m, indicator.Current.Value);
         }
 
+        [Test]
+        public void SkipsTheReturnFromAZeroPrice()
+        {
+            var prices = new[] { 100m, 101m, 0m, 102m, 103.5m, 103m, 105m, 104m, 106.5m };
+            // scipy.stats.spearmanr over the last 3 pairs, leaving out the pair whose previous price is zero
+            var expectedValues = new double?[] { null, null, null, null, null, -0.5, -1, -1, -1 };
+            var indicator = new TimeSeriesInformationCoefficient(new RateOfChange(1), 3);
+            var time = new DateTime(2024, 1, 1);
+
+            for (var i = 0; i < prices.Length; i++)
+            {
+                indicator.Update(CreateBar(time.AddDays(i), prices[i]));
+
+                Assert.AreEqual(expectedValues[i].HasValue, indicator.IsReady, $"Index {i}");
+                Assert.AreEqual(expectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ThrowsWhenItsSignalIsAlsoUpdatedElsewhere(bool updatedElsewhereFirst)
+        {
+            var signal = new RateOfChange(1);
+            var indicator = new TimeSeriesInformationCoefficient(signal, 5);
+            var time = new DateTime(2024, 1, 1);
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                for (var i = 0; i < Prices.Length; i++)
+                {
+                    var bar = CreateBar(time.AddDays(i), Prices[i]);
+                    if (updatedElsewhereFirst)
+                    {
+                        signal.Update(bar.EndTime, bar.Close);
+                        indicator.Update(bar);
+                    }
+                    else
+                    {
+                        indicator.Update(bar);
+                        signal.Update(bar.EndTime, bar.Close);
+                    }
+                }
+            });
+        }
+
+        [Test]
+        public void ThrowsWhenItsSignalRejectsAnInput()
+        {
+            var signal = new RateOfChange(1);
+            var time = new DateTime(2024, 1, 1);
+            signal.Update(CreateBar(time.AddDays(10), 100m));
+            var indicator = new TimeSeriesInformationCoefficient(signal, 5);
+
+            Assert.Throws<InvalidOperationException>(() => indicator.Update(CreateBar(time, 100m)));
+        }
+
         [TestCase(2)]
         [TestCase(0)]
         public void ThrowsWhenPeriodIsLessThanThree(int period)

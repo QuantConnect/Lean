@@ -26,12 +26,14 @@ namespace QuantConnect.Indicators
     /// their returns over this period.
     ///
     /// The indicator owns one signal per asset: each input updates its asset's signal first, so the signals must not be
-    /// updated elsewhere. An asset's price is its input's value. The indicator updates when every asset has an input
+    /// updated elsewhere, such as by an algorithm helper that registered them. The indicator throws when it detects such
+    /// an update. An asset's price is its input's value. The indicator updates when every asset has an input
     /// for the same time.
     /// </summary>
     public class CrossSectionalInformationCoefficient : MultiSymbolIndicator<IBaseData>
     {
         private readonly Dictionary<Symbol, decimal> _previousSignalValues = new();
+        private readonly Dictionary<Symbol, long> _signalSamples;
         private bool _isReady;
 
         /// <summary>
@@ -58,6 +60,7 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException($"CrossSectionalInformationCoefficient indicator needs at least 3 symbols but got {DataBySymbol.Count}");
             }
             Signals = DataBySymbol.Keys.ToDictionary(symbol => symbol, signalFactory);
+            _signalSamples = Signals.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Samples);
             var signalWarmUpPeriod = Signals.Values.Max(signal => (signal as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? 1);
             WarmUpPeriod += signalWarmUpPeriod - 1;
         }
@@ -81,7 +84,7 @@ namespace QuantConnect.Indicators
         {
             if (Signals.TryGetValue(input.Symbol, out var signal))
             {
-                signal.Update(input);
+                _signalSamples[input.Symbol] = TimeSeriesInformationCoefficient.UpdateOwnedSignal(signal, input, _signalSamples[input.Symbol], Name);
             }
             return base.ComputeNextValue(input);
         }
@@ -128,9 +131,10 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            foreach (var signal in Signals.Values)
+            foreach (var (symbol, signal) in Signals)
             {
                 signal.Reset();
+                _signalSamples[symbol] = 0;
             }
             _previousSignalValues.Clear();
             _isReady = false;
