@@ -221,7 +221,9 @@ namespace QuantConnect.Data.UniverseSelection
                     continue;
                 }
 
-                using var writer = new StreamWriter(universeDownloadParameters.GetUniverseFileName(processingDate));
+                var universeFileName = universeDownloadParameters.GetUniverseFileName(processingDate);
+                Directory.CreateDirectory(Path.GetDirectoryName(universeFileName));
+                using var writer = new StreamWriter(universeFileName);
 
                 var securityType = universeDownloadParameters.Symbol.SecurityType;
                 writer.WriteLine($"#{(securityType == SecurityType.Future ? FutureUniverse.CsvHeader : OptionUniverse.CsvHeader(securityType))}");
