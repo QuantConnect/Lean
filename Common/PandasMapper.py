@@ -68,23 +68,7 @@ def mapper(key):
         return mapped
     return key
 
-def map_location_args(args):
-    mapped = mapper(args)
-    if mapped is args:
-        return args
-    indexer, key = args
-    if (isinstance(indexer, pd.core.indexing._LocIndexer)
-            and isinstance(indexer.obj, pd.DataFrame)
-            and type(key) is tuple and len(key) == 2):
-        row, column = key
-        mapped_row, mapped_column = mapped[1]
-        # Check for a literal column before pandas interprets the two-axis key.
-        if (type(column) is str and mapped_column is not column
-                and PandasColumn(column) in indexer.obj.columns):
-            return args if mapped_row is row else (indexer, (mapped_row, column))
-    return mapped
-
-def wrap_keyerror_function(f, map_args=mapper):
+def wrap_keyerror_function(f):
     '''Wraps function f with wrapped_function, used for functions that throw KeyError when not found.
     wrapped_function converts the args / kwargs to use alternative index keys and then calls the function.
     If this fails we fall back to the original key and try it as well, if they both fail we throw our error.
@@ -97,7 +81,7 @@ def wrap_keyerror_function(f, map_args=mapper):
             newkwargs = kwargs
 
             if len(args) > 1:
-                newargs = map_args(args)
+                newargs = mapper(args)
             if len(kwargs) > 0:
                 newkwargs = mapper(kwargs)
 
@@ -115,6 +99,28 @@ def wrap_keyerror_function(f, map_args=mapper):
             mKey = [str(arg) for arg in newargs if isinstance(arg, str) or isinstance(arg, Symbol)]
             oKey = [str(arg) for arg in args if isinstance(arg, str) or isinstance(arg, Symbol)]
             raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
+
+    wrapped_function.__name__ = f.__name__
+    return wrapped_function
+
+def wrap_location_getitem(f):
+    '''Wraps the location indexers' __getitem__ with wrap_keyerror_function, and selects a
+    DataFrame.loc[row, column] string column that matches a ticker by its literal label instead
+    '''
+    wrapped_getitem = wrap_keyerror_function(f)
+
+    def wrapped_function(indexer, key):
+        if (isinstance(indexer, pd.core.indexing._LocIndexer)
+                and isinstance(indexer.obj, pd.DataFrame)
+                and type(key) is tuple and len(key) == 2):
+            row, column = key
+            if type(column) is str and mapper(column) is not column:
+                # PandasColumn isn't mapped, so the column can't become the ticker's Symbol column.
+                # Selecting it before the row also keeps pandas from reading the column as part of a row key
+                literal_column = PandasColumn(column)
+                if literal_column in indexer.obj.columns:
+                    return indexer.obj[literal_column].loc[row]
+        return wrapped_getitem(indexer, key)
 
     wrapped_function.__name__ = f.__name__
     return wrapped_function
@@ -147,8 +153,7 @@ def wrap_bool_function(f):
 
 
 # Wrap all core indexing functions that are shared, yet still throw key errors if index not found
-pd.core.indexing._LocationIndexer.__getitem__ = wrap_keyerror_function(
-    pd.core.indexing._LocationIndexer.__getitem__, map_location_args)
+pd.core.indexing._LocationIndexer.__getitem__ = wrap_location_getitem(pd.core.indexing._LocationIndexer.__getitem__)
 pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
 pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 

@@ -757,21 +757,28 @@ def Test4(dataFrame):
             };
             SymbolCache.Set("SPY", symbol);
             var ticker = column.ToUpperInvariant();
-            SymbolCache.Set(ticker, Symbol.Create(ticker, SecurityType.Equity, Market.USA));
+            var tickerSymbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            SymbolCache.Set(ticker, tickerSymbol);
 
             using (Py.GIL())
             {
                 using var dataFrame = (PyObject)_converter.GetDataFrame(GetHistory(symbol, Resolution.Minute, rawBars));
                 using var module = PyModule.FromString("testModule",
                     @"
-def Test(data_frame, symbol, column):
-    expected = data_frame.loc[symbol][column]
+def Test(data_frame, symbol, column, ticker_symbol):
+    expected = data_frame.loc[symbol][column].copy()
     assert data_frame.loc[symbol, column].equals(expected)
-    assert data_frame.loc['SPY', column].equals(expected)");
+    assert data_frame.loc['SPY', column].equals(expected)
+
+    data_frame[ticker_symbol] = 999.0
+    assert data_frame.loc[symbol, column].equals(expected)
+    assert data_frame.loc['SPY', column].equals(expected)
+    assert (data_frame.loc[symbol][ticker_symbol] == 999.0).all()");
                 using var test = module.GetAttr("Test");
                 using var pySymbol = symbol.ToPython();
                 using var pyColumn = new PyString(column);
-                using var result = test.Invoke(dataFrame, pySymbol, pyColumn);
+                using var pyTickerSymbol = tickerSymbol.ToPython();
+                using var result = test.Invoke(dataFrame, pySymbol, pyColumn, pyTickerSymbol);
             }
         }
 
