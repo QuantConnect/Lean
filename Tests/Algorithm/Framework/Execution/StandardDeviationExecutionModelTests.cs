@@ -184,6 +184,97 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.DoesNotThrow(() => model.OnSecuritiesChanged(algorithm, changes));
         }
 
+        [Test]
+        public void ReAddedSecurityGetsFreshSymbolData()
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+            var historicalPrice = 100m;
+
+            var historyProvider = new Mock<IHistoryProvider>();
+            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns(() => CreateHistory(time, historicalPrice));
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetHistoryProvider(historyProvider.Object);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+            try
+            {
+                var model = new StandardDeviationExecutionModel(period: 3);
+                algorithm.SetExecution(model);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the SMA is around $100 and the quote sits below it, so selling is not favorable
+                security.SetMarketPrice(new TradeBar { Time = time, Symbol = Symbols.AAPL, Close = 100m });
+                security.SetMarketPrice(new Tick(time, Symbols.AAPL, 99.98m, 99.99m));
+
+                var subscription = security.Subscriptions.First();
+                var consolidators = subscription.Consolidators.ToList();
+
+                // The engine reports a removal only once, when the security is deselected. When the removal
+                // is deferred because a position is still open, the data subscription and its consolidators
+                // are taken down later without another notification, so the model is never told to clear
+                // its cached symbol data.
+                security.Reset();
+                algorithm.Securities.Remove(security.Symbol);
+                foreach (var consolidator in consolidators)
+                {
+                    algorithm.SubscriptionManager.RemoveConsolidator(security.Symbol, consolidator);
+                }
+
+                // the symbol is selected again and gets its data subscription back
+                historicalPrice = 50m;
+                security.AddData(subscription);
+                security.MakeTradable();
+                algorithm.Securities.Add(security);
+
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the price is now far below the SMA computed for the previous subscription
+                security.SetMarketPrice(new TradeBar { Time = time.AddMinutes(1), Symbol = Symbols.AAPL, Close = 50m });
+                security.SetMarketPrice(new Tick(time.AddMinutes(1), Symbols.AAPL, 50m, 50.01m));
+
+                // ask price of $50.01 is above the new SMA of $50, so selling is favorable
+                model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(-10, orders[0].Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage?.Dispose();
+            }
+        }
+
+        private static IEnumerable<Slice> CreateHistory(DateTime time, decimal price)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                yield return new Slice(time.AddMinutes(i),
+                    new List<BaseData>
+                    {
+                        new TradeBar
+                        {
+                            Time = time.AddMinutes(i),
+                            Symbol = Symbols.AAPL,
+                            Open = price,
+                            High = price,
+                            Low = price,
+                            Close = price,
+                            Volume = 100m
+                        }
+                    }, time.AddMinutes(i));
+            }
+        }
+
         private static IExecutionModel GetExecutionModel(Language language)
         {
             const int period = 2;
