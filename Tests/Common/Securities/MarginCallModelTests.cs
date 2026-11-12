@@ -433,26 +433,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void RegeneratesMarginCallOrdersForCanceledLiquidationOfPositionGroupSharingALeg(bool cancelComboLiquidation)
         {
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, 0);
+            var portfolio = GetPortfolioWithPositionGroupsSharingALeg(orderProcessor);
             portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, 0m);
-
-            var underlying = GetSecurity(Symbols.SPY);
-            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
-            callOption.Underlying = underlying;
-            portfolio.Securities.Add(underlying);
-            portfolio.Securities.Add(callOption);
-
-            var time = DateTime.Now;
-            underlying.SetLeverage(2);
-            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, 100m, 100m));
-            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, 1m, 1m));
-
-            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY
-            underlying.Holdings.SetHoldings(100m, 300);
-            callOption.Holdings.SetHoldings(1m, -1);
-            portfolio.CashBook[Currencies.USD].SetAmount(-22400);
-            portfolio.InvalidateTotalPortfolioValue();
-            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
 
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             var comboLiquidation = marginCallOrders.Where(request => request.GroupOrderManager != null).ToList();
@@ -482,6 +464,35 @@ namespace QuantConnect.Tests.Common.Securities
             CollectionAssert.AreEquivalent(canceledLiquidation.Select(request => request.Symbol), marginCallOrders.Select(request => request.Symbol));
         }
 
+        [Test]
+        public void DoesNotTrackReplacedMarginCallOrdersWithPositionGroupsThatWereNotMarginCalled()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolioWithPositionGroupsSharingALeg(orderProcessor);
+            var marginCallModel = new ZeroComboQuantityMarginCallModel(portfolio);
+            portfolio.MarginCallModel = marginCallModel;
+
+            // the covered call group's requests have a leg with quantity 0, so only the stock group is margin called
+            var marginCallOrders = marginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.IsNull(marginCallOrders[0].GroupOrderManager);
+
+            // OnMarginCall replaces the stock group's request with a new one on the same symbol, which is executed
+            var replacement = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.SPY,
+                marginCallOrders[0].Quantity * 1.1m, 0, 0, DateTime.UtcNow, "OnMarginCall");
+            marginCallOrders.Clear();
+            marginCallOrders.Add(replacement);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            Assert.AreEqual(1, marginCallModel.ExecuteMarginCall(marginCallOrders).Count);
+            orderProcessor.AddOrder(Order.CreateOrder(replacement));
+
+            // the covered call group, which wasn't liquidated, is margin called while the replacement is still open
+            marginCallModel.ZeroComboQuantity = false;
+            marginCallOrders = marginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(2, marginCallOrders.Count);
+            Assert.IsTrue(marginCallOrders.All(request => request.GroupOrderManager != null));
+        }
+
         public enum OpenOrderKind
         {
             MarginCall,
@@ -497,6 +508,31 @@ namespace QuantConnect.Tests.Common.Securities
 
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(cash);
+
+            return portfolio;
+        }
+
+        private SecurityPortfolioManager GetPortfolioWithPositionGroupsSharingALeg(IOrderProcessor orderProcessor)
+        {
+            var portfolio = GetPortfolio(orderProcessor, 0);
+
+            var underlying = GetSecurity(Symbols.SPY, portfolio.CashBook);
+            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
+            callOption.Underlying = underlying;
+            portfolio.Securities.Add(underlying);
+            portfolio.Securities.Add(callOption);
+
+            var time = DateTime.Now;
+            underlying.SetLeverage(2);
+            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, 100m, 100m));
+            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, 1m, 1m));
+
+            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY
+            underlying.Holdings.SetHoldings(100m, 300);
+            callOption.Holdings.SetHoldings(1m, -1);
+            portfolio.CashBook[Currencies.USD].SetAmount(-22400);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
 
             return portfolio;
         }
@@ -541,6 +577,27 @@ namespace QuantConnect.Tests.Common.Securities
                 new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null);
+        }
+
+        private class ZeroComboQuantityMarginCallModel : DefaultMarginCallModel
+        {
+            public bool ZeroComboQuantity { get; set; } = true;
+
+            public ZeroComboQuantityMarginCallModel(SecurityPortfolioManager portfolio)
+                : base(portfolio, null, 0m)
+            {
+            }
+
+            protected override IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
+            {
+                var requests = base.GenerateMarginCallOrders(parameters);
+                if (!ZeroComboQuantity || parameters.PositionGroup.Count == 1)
+                {
+                    return requests;
+                }
+                return requests.Select(request => new SubmitOrderRequest(request.OrderType, request.SecurityType, request.Symbol, 0, 0, 0,
+                    request.Time, request.Tag, groupOrderManager: request.GroupOrderManager));
+            }
         }
     }
 }

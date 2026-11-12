@@ -116,10 +116,14 @@ namespace QuantConnect.Securities
 
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
-                        _marginCallOrdersByPositionGroup[positionGroup.Key] = positionMarginCallOrders;
                         if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
                         {
                             marginCallOrders.AddRange(positionMarginCallOrders);
+                            _marginCallOrdersByPositionGroup[positionGroup.Key] = positionMarginCallOrders;
+                        }
+                        else
+                        {
+                            _marginCallOrdersByPositionGroup.Remove(positionGroup.Key);
                         }
                     }
                 }
