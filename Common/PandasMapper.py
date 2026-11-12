@@ -20,14 +20,10 @@ Allowing support for indexing of Lean created Indexes with tickers like "SPY", S
 
 import pandas as pd
 from pandas.core.indexes.frozen import FrozenList as pdFrozenList
-from threading import local
 
 from clr import AddReference
 AddReference("QuantConnect.Common")
 from QuantConnect import *
-
-# The column label object that mapper keeps as it is while a DataFrame.loc[row, column] lookup selects it as a literal column
-literal_labels = local()
 
 class PandasColumn(str):
     '''
@@ -55,8 +51,6 @@ def mapper(key):
     '''
     keyType = type(key)
     if keyType is str:
-        if key is getattr(literal_labels, 'column', None):
-            return key
         kvp = SymbolCache.try_get_symbol(key, None)
         if kvp[0]:
             return kvp[1]
@@ -92,7 +86,8 @@ def wrap_keyerror_function(f):
                 newkwargs = mapper(kwargs)
 
             return f(*newargs, **newkwargs)
-        except KeyError as e:
+        # A mapped key can also be invalid for the index, like a column label mapped to a Symbol that pandas reads as part of a row key
+        except (KeyError, pd.errors.InvalidIndexError) as e:
             # No key was mapped, so the original error already tells what is missing
             if newargs is args and newkwargs is kwargs:
                 raise
@@ -105,36 +100,6 @@ def wrap_keyerror_function(f):
             mKey = [str(arg) for arg in newargs if isinstance(arg, str) or isinstance(arg, Symbol)]
             oKey = [str(arg) for arg in args if isinstance(arg, str) or isinstance(arg, Symbol)]
             raise KeyError(f"No key found for either mapped or original key. Mapped Key: {mKey}; Original Key: {oKey}")
-
-    wrapped_function.__name__ = f.__name__
-    return wrapped_function
-
-def wrap_location_getitem(f):
-    '''Wraps the location indexers' __getitem__ with wrap_keyerror_function. A DataFrame.loc[row, column]
-    string column that is a column of the frame and matches a ticker keeps its literal label during the lookup
-    '''
-    wrapped_getitem = wrap_keyerror_function(f)
-
-    def wrapped_function(indexer, key):
-        if (isinstance(indexer, pd.core.indexing._LocIndexer)
-                and indexer.axis is None
-                and isinstance(indexer.obj, pd.DataFrame)
-                and type(key) is tuple and len(key) == 2):
-            row, column = key
-            if (type(column) is str and mapper(column) is not column
-                    and PandasColumn(column) in indexer.obj.columns):
-                # The ticker's Symbol would be read as part of a row key, or select the Symbol's column if the frame has one.
-                # mapper skips only this copy of the label, so equal strings in the row key or in callables still map
-                literal_column = column.encode().decode()
-                # Single latin-1 characters are shared objects, so a copy of one can't be told apart
-                if literal_column is not column:
-                    previous = getattr(literal_labels, 'column', None)
-                    literal_labels.column = literal_column
-                    try:
-                        return wrapped_getitem(indexer, (row, literal_column))
-                    finally:
-                        literal_labels.column = previous
-        return wrapped_getitem(indexer, key)
 
     wrapped_function.__name__ = f.__name__
     return wrapped_function
@@ -167,7 +132,7 @@ def wrap_bool_function(f):
 
 
 # Wrap all core indexing functions that are shared, yet still throw key errors if index not found
-pd.core.indexing._LocationIndexer.__getitem__ = wrap_location_getitem(pd.core.indexing._LocationIndexer.__getitem__)
+pd.core.indexing._LocationIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._LocationIndexer.__getitem__)
 pd.core.indexing._ScalarAccessIndexer.__getitem__ = wrap_keyerror_function(pd.core.indexing._ScalarAccessIndexer.__getitem__)
 pd.core.indexes.base.Index.get_loc = wrap_keyerror_function(pd.core.indexes.base.Index.get_loc)
 

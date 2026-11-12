@@ -747,7 +747,7 @@ def Test4(dataFrame):
         [TestCase("open")]
         [TestCase("low")]
         [TestCase("high")]
-        public void HistoryColumnLookupPreservesLabelsThatMatchTickers(string column)
+        public void HistoryColumnLookupWorksWhenTickerMatchesColumn(string column)
         {
             var symbol = Symbols.SPY;
             var rawBars = new[]
@@ -790,8 +790,9 @@ def assert_ticker_keys_still_map(data_frame, column, ticker_symbol):
     assert ticker_rows.loc[column, column] == 3.0
     ticker_history = pd.DataFrame({column: [1.0, 2.0]}, index=pd.MultiIndex.from_product([[ticker_symbol], data_frame.index.levels[1]]))
     assert ticker_history.loc[(column, time), column] == 2.0
-    pairs = pd.DataFrame({column: [1.0, 2.0]}, index=pd.MultiIndex.from_tuples([('pair', ticker_symbol), ('pair', 'other')]))
-    assert pairs.loc(axis=0)['pair', column][column] == 1.0
+    pairs = pd.DataFrame({column: [1.0, 2.0], 'close': [3.0, 4.0]}, index=pd.MultiIndex.from_tuples([('pair', ticker_symbol), ('pair', 'other')]))
+    assert pairs.loc(axis=0)['pair', column].tolist() == [1.0, 3.0]
+    assert pairs.loc['pair', column].tolist() == [1.0, 3.0]
     ticker_column = pd.DataFrame({ticker_symbol: 1.0}, index=data_frame.index)
     assert data_frame.loc[lambda d: ticker_column[column] > 0, column].equals(data_frame[column])
 
@@ -802,8 +803,14 @@ def Test(data_frame, symbol, column, ticker_symbol, cache_ticker):
     assert_ticker_keys_still_map(data_frame, column, ticker_symbol)
 
     data_frame[ticker_symbol] = 999.0
-    assert_lookups(data_frame, symbol, column, expected)
-    assert (data_frame.loc[symbol][ticker_symbol] == 999.0).all()");
+    time = data_frame.index.get_level_values('time')[1]
+    flat = data_frame.loc[symbol].copy()
+    for frame, row in ((data_frame, (symbol, time)), (data_frame, ('SPY', time)), (flat, time)):
+        before = frame.loc[row, column]
+        total = frame.values.sum()
+        frame.loc[row, column] += 1
+        assert frame.loc[row, column] == before + 1
+        assert frame.values.sum() == total + 1");
                 using var test = module.GetAttr("Test");
                 using var pySymbol = symbol.ToPython();
                 using var pyColumn = new PyString(column);
