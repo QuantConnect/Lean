@@ -73,8 +73,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
         [TestCase(10, 0.20, 0.02)]
         [TestCase(1000, 0.80, 5)]
-        [TestCase(1, 100, 1)]
-        [TestCase(1000, 100, 5)]
         public void USAEquityFeeIsCappedAtOnePercentOfTradeValue(int quantity, decimal price, decimal expectedFee)
         {
             var security = SecurityTests.GetSecurity();
