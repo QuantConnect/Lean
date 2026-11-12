@@ -146,6 +146,92 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ReAddedSecurityGetsFreshSymbolData(Language language)
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+            try
+            {
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // VWAP is around $100 and the quote sits below it, so selling is not favorable
+                SetMarketData(security, time, 100m, 1000m, 99.98m, 99.99m);
+
+                var subscription = security.Subscriptions.First();
+                var consolidators = subscription.Consolidators.ToList();
+
+                // The engine reports a removal only once, when the security is deselected. When the removal
+                // is deferred because a position is still open, the data subscription and its consolidators
+                // are taken down later without another notification, so the model is never told to clear
+                // its cached symbol data.
+                security.Reset();
+                algorithm.Securities.Remove(security.Symbol);
+                foreach (var consolidator in consolidators)
+                {
+                    algorithm.SubscriptionManager.RemoveConsolidator(security.Symbol, consolidator);
+                }
+
+                // the symbol is selected again and gets its data subscription back
+                security.AddData(subscription);
+                security.MakeTradable();
+                algorithm.Securities.Add(security);
+
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the price is now far below the VWAP computed for the previous subscription
+                SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
+
+                // ask price of $50.01 is above the new VWAP of $50, so selling is favorable
+                model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(-10, orders[0].Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage?.Dispose();
+            }
+        }
+
+        private static void SetMarketData(Security security, DateTime time, decimal price, decimal volume,
+            decimal bidPrice, decimal askPrice)
+        {
+            var bar = new TradeBar
+            {
+                Time = time,
+                Symbol = security.Symbol,
+                Open = price,
+                High = price,
+                Low = price,
+                Close = price,
+                Volume = volume
+            };
+            security.SetMarketPrice(bar);
+
+            // feed the execution model's consolidator, it's not wired to a data feed in this test
+            foreach (var consolidator in security.Subscriptions.SelectMany(subscription => subscription.Consolidators).ToList())
+            {
+                consolidator.Update(bar);
+            }
+
+            security.SetMarketPrice(new Tick(time, security.Symbol, bidPrice, askPrice));
+        }
+
         private static IExecutionModel GetExecutionModel(Language language)
         {
             if (language == Language.Python)

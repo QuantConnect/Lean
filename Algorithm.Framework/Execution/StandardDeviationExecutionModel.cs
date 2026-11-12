@@ -119,6 +119,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             foreach (var added in changes.AddedSecurities)
             {
+                // a security removed while it still had a position loses its data subscription later, without another
+                // removal notification, so when selected again our cached consolidator no longer receives data
+                if (_symbolData.TryGetValue(added.Symbol, out var data)
+                    && !added.Subscriptions.Any(subscription => subscription.Consolidators.Contains(data.Consolidator)))
+                {
+                    _symbolData.Remove(added.Symbol);
+                    algorithm.SubscriptionManager.RemoveConsolidator(added.Symbol, data.Consolidator);
+                }
+
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {

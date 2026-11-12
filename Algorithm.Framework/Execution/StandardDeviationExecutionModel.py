@@ -78,6 +78,13 @@ class StandardDeviationExecutionModel(ExecutionModel):
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
         for added in changes.added_securities:
+            # a security removed while it still had a position loses its data subscription later, without another
+            # removal notification, so when selected again our cached consolidator no longer receives data
+            data = self._symbol_data.get(added.symbol, None)
+            if data and not any(data.consolidator in subscription.consolidators for subscription in added.subscriptions):
+                self._symbol_data.pop(added.symbol)
+                algorithm.subscription_manager.remove_consolidator(added.symbol, data.consolidator)
+
             if added.symbol not in self._symbol_data:
                 self._symbol_data[added.symbol] = SymbolData(algorithm, added, self.period, self.resolution)
 
