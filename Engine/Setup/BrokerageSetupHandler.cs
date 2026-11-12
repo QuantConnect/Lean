@@ -184,6 +184,10 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 brokerage.Message += brokerageOnMessage;
 
+                // messages the brokerage raises while connecting are logged with the algorithm time,
+                // which is otherwise still the default start date
+                algorithm.SetDateTime(DateTime.UtcNow);
+
                 Log.Trace("BrokerageSetupHandler.Setup(): Connecting to brokerage...");
                 try
                 {
