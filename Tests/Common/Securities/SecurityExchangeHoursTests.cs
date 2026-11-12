@@ -470,6 +470,52 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Parse.DateTime(expectedNextMarketOpen), nextMarketOpen);
         }
 
+        [TestCase("2024-01-07 17:00:00", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-07 19:00:00", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-07 23:59:59", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-08 00:00:00", false, "2024-01-08 14:00:00")]
+        [TestCase("2024-01-07 17:00:00", true, "2024-01-07 18:00:00")]
+        [TestCase("2024-01-07 19:00:00", true, "2024-01-08 14:00:00")]
+        [TestCase("2024-01-07 23:59:59", true, "2024-01-08 14:00:00")]
+        [TestCase("2024-01-08 00:00:00", true, "2024-01-08 14:00:00")]
+        public void GetNextMarketOpenIgnoresExcludedExtendedHoursBeforeMidnightOpen(string startTime, bool extendedMarketHours, string expectedNextMarketOpen)
+        {
+            var exchangeHours = CreateExchangeHoursWithPreMarketBeforeMidnightOpen();
+
+            var nextMarketOpen = exchangeHours.GetNextMarketOpen(Parse.DateTime(startTime), extendedMarketHours);
+
+            Assert.AreEqual(Parse.DateTime(expectedNextMarketOpen), nextMarketOpen);
+        }
+
+        [TestCase(false, "2024-01-08 00:00:00")]
+        [TestCase(true, "2024-01-07 18:00:00")]
+        public void GetPreviousMarketOpenIgnoresExcludedExtendedHoursBeforeMidnightOpen(bool extendedMarketHours, string expectedPreviousMarketOpen)
+        {
+            var exchangeHours = CreateExchangeHoursWithPreMarketBeforeMidnightOpen();
+
+            var previousMarketOpen = exchangeHours.GetPreviousMarketOpen(new DateTime(2024, 1, 8, 10, 0, 0), extendedMarketHours);
+
+            Assert.AreEqual(Parse.DateTime(expectedPreviousMarketOpen), previousMarketOpen);
+        }
+
+        private static SecurityExchangeHours CreateExchangeHoursWithPreMarketBeforeMidnightOpen()
+        {
+            var marketHours = Enum.GetValues<DayOfWeek>()
+                .Select(day => LocalMarketHours.ClosedAllDay(day))
+                .ToDictionary(x => x.DayOfWeek);
+            marketHours[DayOfWeek.Sunday] = new LocalMarketHours(DayOfWeek.Sunday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, TimeSpan.FromHours(18), TimeSpan.FromHours(24)));
+            marketHours[DayOfWeek.Monday] = new LocalMarketHours(DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.Market, TimeSpan.Zero, TimeSpan.FromHours(12)),
+                new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(14), TimeSpan.FromHours(16)));
+            return new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                marketHours,
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>());
+        }
+
         [TestCase("2012-07-04 00:00:01", true, "2012-07-04 18:00:00")]
         [TestCase("2012-07-04 09:30:00", true, "2012-07-04 18:00:00")]
         [TestCase("2012-07-04 10:00:00", true, "2012-07-04 18:00:00")]
