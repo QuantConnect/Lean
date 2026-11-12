@@ -260,7 +260,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(OpenOrderKind.MarginCall)]
         [TestCase(OpenOrderKind.MarginCallReplacedOnMarginCall)]
         [TestCase(OpenOrderKind.StopLoss)]
-        public void DoesNotGenerateMarginCallOrdersForPositionsAlreadyBeingLiquidated(OpenOrderKind openOrderKind)
+        public void DoesNotGenerateMarginCallOrdersWhileMarginCallOrdersAreOpen(OpenOrderKind openOrderKind)
         {
             const int quantity = 1000;
             const decimal leverage = 1m;
@@ -307,36 +307,37 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(issueMarginCallWarning);
             Assert.AreEqual(1, marginCallOrders.Count);
 
-            // the order reducing the position hasn't been filled yet, the position is still the same
-            Order openOrder;
-            switch (openOrderKind)
+            if (openOrderKind == OpenOrderKind.StopLoss)
             {
-                case OpenOrderKind.MarginCall:
-                    marginCallOrders[0].SetOrderId(1);
-                    openOrder = Order.CreateOrder(marginCallOrders[0]);
-                    break;
-
-                case OpenOrderKind.MarginCallReplacedOnMarginCall:
-                    // like OnMarginCall replacing the generated request with a new one, which the model then executes
-                    var replacement = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
-                        marginCallOrders[0].Quantity * 1.1m, 0, 0, time, "OnMarginCall");
-                    marginCallOrders.Clear();
-                    marginCallOrders.Add(replacement);
-                    portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
-                    Assert.AreEqual(1, portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders).Count);
-                    openOrder = Order.CreateOrder(replacement);
-                    break;
-
-                default:
-                    openOrder = new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss") { Id = 1 };
-                    break;
+                // an open order the algorithm placed itself doesn't prevent the margin call
+                orderProcessor.AddOrder(new StopMarketOrder(Symbols.AAPL, marginCallOrders[0].Quantity, lowPrice / 2, time, "Stop loss") { Id = 1 });
+                Assert.AreEqual(1, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
+                return;
             }
-            orderProcessor.AddOrder(openOrder);
 
-            // scanning the portfolio again must not duplicate the liquidation, which would flip the position,
-            // but an open order the algorithm placed itself must not prevent the margin call
-            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(openOrderKind == OpenOrderKind.StopLoss ? 1 : 0, marginCallOrders.Count);
+            var submittedRequest = marginCallOrders[0];
+            if (openOrderKind == OpenOrderKind.MarginCallReplacedOnMarginCall)
+            {
+                // like OnMarginCall replacing the generated request with a new one
+                submittedRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol,
+                    marginCallOrders[0].Quantity * 1.1m, 0, 0, time, "OnMarginCall");
+                marginCallOrders.Clear();
+                marginCallOrders.Add(submittedRequest);
+            }
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+            Assert.AreEqual(1, tickets.Count);
+            var openOrder = Order.CreateOrder(submittedRequest);
+            orderProcessor.AddOrder(openOrder);
+            tickets[0].SetOrder(openOrder);
+
+            // the margin call order hasn't been filled yet, the position is still the same: scanning the portfolio
+            // again must not duplicate the liquidation, which would flip the position
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
+
+            // once the margin call order is closed without liquidating the position, the margin call is generated again
+            openOrder.Status = OrderStatus.Canceled;
+            Assert.AreEqual(1, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
         }
 
         [Test]
@@ -430,67 +431,52 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(true)]
         [TestCase(false)]
-        public void RegeneratesMarginCallOrdersForCanceledLiquidationOfPositionGroupSharingALeg(bool cancelComboLiquidation)
+        public void WaitsForOpenMarginCallOrdersOfPositionGroupsSharingALeg(bool cancelComboLiquidation)
         {
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolioWithPositionGroupsSharingALeg(orderProcessor);
-            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, 0m);
+            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY
+            var portfolio = GetSpyPortfolio(orderProcessor, -22400, -1);
+            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
 
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            var comboLiquidation = marginCallOrders.Where(request => request.GroupOrderManager != null).ToList();
-            var standaloneLiquidation = marginCallOrders.Where(request => request.GroupOrderManager == null).ToList();
-            Assert.AreEqual(2, comboLiquidation.Count);
-            Assert.AreEqual(1, standaloneLiquidation.Count);
+            Assert.AreEqual(2, marginCallOrders.Count(request => request.GroupOrderManager != null));
+            Assert.AreEqual(1, marginCallOrders.Count(request => request.GroupOrderManager == null));
+            var orders = ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
+            Assert.AreEqual(3, orders.Count);
 
-            // both liquidations are submitted, then one of them is canceled while the other one is still open
-            var orders = new List<Order>();
-            for (var i = 0; i < marginCallOrders.Count; i++)
-            {
-                marginCallOrders[i].SetOrderId(i + 1);
-                var order = Order.CreateOrder(marginCallOrders[i]);
-                orderProcessor.AddOrder(order);
-                orders.Add(order);
-            }
-            var canceledLiquidation = cancelComboLiquidation ? comboLiquidation : standaloneLiquidation;
-            foreach (var order in orders.Where(order => canceledLiquidation.Any(request => request.OrderId == order.Id)))
+            // one of the liquidations is canceled while the other one is still open: the next margin call waits for it, since
+            // each margin call order is sized for the whole margin deficit of the current holdings, which the open order changes
+            foreach (var order in orders.Where(order => (order.GroupOrderManager != null) == cancelComboLiquidation))
             {
                 order.Status = OrderStatus.Canceled;
             }
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
 
-            // the canceled liquidation is generated again, the one still open is not duplicated
-            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(canceledLiquidation.Count, marginCallOrders.Count);
-            Assert.IsTrue(marginCallOrders.All(request => (request.GroupOrderManager != null) == cancelComboLiquidation));
-            CollectionAssert.AreEquivalent(canceledLiquidation.Select(request => request.Symbol), marginCallOrders.Select(request => request.Symbol));
+            // once every margin call order is closed, the margin call is generated again from the current holdings
+            foreach (var order in orders)
+            {
+                order.Status = OrderStatus.Canceled;
+            }
+            Assert.AreEqual(3, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
         }
 
         [Test]
-        public void DoesNotTrackReplacedMarginCallOrdersWithPositionGroupsThatWereNotMarginCalled()
+        public void DoesNotLiquidateHoldingsAgainWhenTheyRegroupWhileMarginCallOrdersAreOpen()
         {
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolioWithPositionGroupsSharingALeg(orderProcessor);
-            var marginCallModel = new ZeroComboQuantityMarginCallModel(portfolio);
-            portfolio.MarginCallModel = marginCallModel;
+            var portfolio = GetSpyPortfolio(orderProcessor, -26000, 0);
 
-            // the covered call group's requests have a leg with quantity 0, so only the stock group is margin called
-            var marginCallOrders = marginCallModel.GetMarginCallOrders(out _);
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             Assert.AreEqual(1, marginCallOrders.Count);
-            Assert.IsNull(marginCallOrders[0].GroupOrderManager);
+            Assert.AreEqual(-221, marginCallOrders[0].Quantity);
+            ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
 
-            // OnMarginCall replaces the stock group's request with a new one on the same symbol, which is executed
-            var replacement = new SubmitOrderRequest(OrderType.Market, SecurityType.Equity, Symbols.SPY,
-                marginCallOrders[0].Quantity * 1.1m, 0, 0, DateTime.UtcNow, "OnMarginCall");
-            marginCallOrders.Clear();
-            marginCallOrders.Add(replacement);
-            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
-            Assert.AreEqual(1, marginCallModel.ExecuteMarginCall(marginCallOrders).Count);
-            orderProcessor.AddOrder(Order.CreateOrder(replacement));
-
-            // the covered call group, which wasn't liquidated, is margin called while the replacement is still open
-            marginCallModel.ZeroComboQuantity = false;
-            marginCallOrders = marginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(2, marginCallOrders.Count);
-            Assert.IsTrue(marginCallOrders.All(request => request.GroupOrderManager != null));
+            // a short call fills while the stock liquidation is open, regrouping the holdings into a covered call group
+            // (+100 SPY / -1 call) and a +200 SPY group: the shares already being liquidated must not be liquidated again
+            portfolio.Securities[Symbols.SPY_C_192_Feb19_2016].Holdings.SetHoldings(1m, -1);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
         }
 
         public enum OpenOrderKind
@@ -512,12 +498,14 @@ namespace QuantConnect.Tests.Common.Securities
             return portfolio;
         }
 
-        private SecurityPortfolioManager GetPortfolioWithPositionGroupsSharingALeg(IOrderProcessor orderProcessor)
+        private SecurityPortfolioManager GetSpyPortfolio(IOrderProcessor orderProcessor, decimal cash, int callQuantity)
         {
             var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null, 0m);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
 
             var underlying = GetSecurity(Symbols.SPY, portfolio.CashBook);
-            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016);
+            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016, portfolio.CashBook);
             callOption.Underlying = underlying;
             portfolio.Securities.Add(underlying);
             portfolio.Securities.Add(callOption);
@@ -527,14 +515,29 @@ namespace QuantConnect.Tests.Common.Securities
             underlying.SetMarketPrice(new Tick(time, underlying.Symbol, 100m, 100m));
             callOption.SetMarketPrice(new Tick(time, callOption.Symbol, 1m, 1m));
 
-            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY
             underlying.Holdings.SetHoldings(100m, 300);
-            callOption.Holdings.SetHoldings(1m, -1);
-            portfolio.CashBook[Currencies.USD].SetAmount(-22400);
+            callOption.Holdings.SetHoldings(1m, callQuantity);
+            portfolio.CashBook[Currencies.USD].SetAmount(cash);
             portfolio.InvalidateTotalPortfolioValue();
-            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
 
             return portfolio;
+        }
+
+        /// <summary>
+        /// Executes the margin call orders, which stay open like market orders waiting for the next daily bar in backtesting
+        /// </summary>
+        private static List<Order> ExecuteMarginCall(SecurityPortfolioManager portfolio, FakeOrderProcessor orderProcessor,
+            List<SubmitOrderRequest> marginCallOrders)
+        {
+            var orders = new List<Order>();
+            foreach (var ticket in portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders))
+            {
+                var order = Order.CreateOrder(ticket.SubmitRequest);
+                orderProcessor.AddOrder(order);
+                ticket.SetOrder(order);
+                orders.Add(order);
+            }
+            return orders;
         }
 
         private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null)
@@ -559,7 +562,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
         }
 
-        private Option GetOption(Symbol symbol)
+        private Option GetOption(Symbol symbol, ICurrencyConverter currencyConverter = null)
         {
             return new Option(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -575,29 +578,8 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
-                ErrorCurrencyConverter.Instance,
+                currencyConverter ?? ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null);
-        }
-
-        private class ZeroComboQuantityMarginCallModel : DefaultMarginCallModel
-        {
-            public bool ZeroComboQuantity { get; set; } = true;
-
-            public ZeroComboQuantityMarginCallModel(SecurityPortfolioManager portfolio)
-                : base(portfolio, null, 0m)
-            {
-            }
-
-            protected override IEnumerable<SubmitOrderRequest> GenerateMarginCallOrders(MarginCallOrdersParameters parameters)
-            {
-                var requests = base.GenerateMarginCallOrders(parameters);
-                if (!ZeroComboQuantity || parameters.PositionGroup.Count == 1)
-                {
-                    return requests;
-                }
-                return requests.Select(request => new SubmitOrderRequest(request.OrderType, request.SecurityType, request.Symbol, 0, 0, 0,
-                    request.Time, request.Tag, groupOrderManager: request.GroupOrderManager));
-            }
         }
     }
 }

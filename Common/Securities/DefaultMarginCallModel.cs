@@ -39,9 +39,9 @@ namespace QuantConnect.Securities
         private readonly decimal _marginBuffer;
 
         /// <summary>
-        /// The margin call orders last generated for each position group, which get an order id once submitted
+        /// The orders submitted by the last executed margin call
         /// </summary>
-        private readonly Dictionary<PositionGroupKey, List<SubmitOrderRequest>> _marginCallOrdersByPositionGroup = new();
+        private List<OrderTicket> _marginCallTickets = new();
 
         /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
@@ -102,28 +102,17 @@ namespace QuantConnect.Securities
             // if we still have margin remaining then there's no need for a margin call
             if (marginRemaining <= 0)
             {
-                if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
+                // margin call orders can stay open for a while, such as market orders waiting for the next daily bar in backtesting:
+                // the next margin call waits for them, so it doesn't liquidate the holdings they're already liquidating again
+                if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer) && !_marginCallTickets.Any(ticket => ticket.Status.IsOpen()))
                 {
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
-                        // a margin call order can stay open for a while, such as a market order waiting for the next daily bar
-                        // in backtesting, and generating it again would liquidate the position group more than once
-                        if (_marginCallOrdersByPositionGroup.TryGetValue(positionGroup.Key, out var previousMarginCallOrders)
-                            && previousMarginCallOrders.Any(request => Portfolio.Transactions.GetOrderById(request.OrderId)?.Status.IsOpen() == true))
-                        {
-                            continue;
-                        }
-
                         var positionMarginCallOrders = GenerateMarginCallOrders(
                             new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
                         if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
                         {
                             marginCallOrders.AddRange(positionMarginCallOrders);
-                            _marginCallOrdersByPositionGroup[positionGroup.Key] = positionMarginCallOrders;
-                        }
-                        else
-                        {
-                            _marginCallOrdersByPositionGroup.Remove(positionGroup.Key);
                         }
                     }
                 }
@@ -212,24 +201,8 @@ namespace QuantConnect.Securities
 
             // order by losers first
             var executedOrders = new List<OrderTicket>();
+            _marginCallTickets = executedOrders;
             var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
-
-            // OnMarginCall can replace the generated requests with new ones, which are tracked with the position groups whose
-            // unsubmitted requests on the same symbol they replaced, so these groups aren't liquidated again while they're open
-            var replacedPositionGroupOrders = _marginCallOrdersByPositionGroup.Values
-                .Where(positionGroupOrders => positionGroupOrders.Any(request => request.OrderId < 1 && !ordersWithSecurities.ContainsKey(request)))
-                .ToList();
-            var replacements = ordersWithSecurities.Keys
-                .Where(request => !_marginCallOrdersByPositionGroup.Values.Any(positionGroupOrders => positionGroupOrders.Contains(request)))
-                .ToList();
-            foreach (var replacement in replacements)
-            {
-                foreach (var positionGroupOrders in replacedPositionGroupOrders.Where(orders => orders.Any(request => request.Symbol == replacement.Symbol)))
-                {
-                    positionGroupOrders.Add(replacement);
-                }
-            }
-
             var groupManagerTemporalIds = -ordersWithSecurities.Count;
             var orderedByLosers = ordersWithSecurities
                 // group orders by their group manager id so they are executed together
