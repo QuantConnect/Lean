@@ -77,6 +77,14 @@ namespace QuantConnect.Securities
         /// <returns>True for a margin call on the holdings.</returns>
         public List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning)
         {
+            return GetMarginCallOrders(out issueMarginCallWarning, new HashSet<Symbol>());
+        }
+
+        /// <summary>
+        /// Gets the margin call orders, without liquidating the position groups holding any of the excluded symbols
+        /// </summary>
+        private List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning, ISet<Symbol> excludedSymbols)
+        {
             issueMarginCallWarning = false;
 
             var totalMarginUsed = Portfolio.TotalMarginUsed;
@@ -122,6 +130,10 @@ namespace QuantConnect.Securities
                         if (marginUsedAfterLiquidations <= totalPortfolioValue)
                         {
                             break;
+                        }
+                        if (positionGroup.Positions.Any(position => excludedSymbols.Contains(position.Symbol)))
+                        {
+                            continue;
                         }
 
                         var positionMarginCallOrders = GenerateMarginCallOrders(
@@ -227,7 +239,8 @@ namespace QuantConnect.Securities
                     // margin is negative, we need to reduce positions, no minimum
                     minimumOrderMarginPortfolioPercentage: 0
                 ));
-                absQuantity = Math.Abs(result.NumberOfLots);
+                // the security's buying power model sizes from all of its holdings, which other position groups can share
+                absQuantity = Math.Min(Math.Abs(result.NumberOfLots), Math.Abs(positionGroup.Quantity));
             }
             else
             {
@@ -239,7 +252,7 @@ namespace QuantConnect.Securities
                 while (lowerLots < upperLots)
                 {
                     var lots = Math.Floor((lowerLots + upperLots) / 2);
-                    var positionGroupLeft = positionGroup.WithQuantity(Math.Sign(positionGroup.Quantity) * (heldLots - lots), Portfolio.Positions);
+                    var positionGroupLeft = positionGroup.WithQuantity(heldLots - lots, Portfolio.Positions);
                     var releasedBuyingPower = currentlyUsedBuyingPower
                         - positionGroupLeft.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroupLeft);
                     if (releasedBuyingPower >= deltaAccountCurrency)
@@ -298,40 +311,59 @@ namespace QuantConnect.Securities
                 return new List<OrderTicket>();
             }
 
-            // order by losers first
             var executedOrders = new List<OrderTicket>();
-            var ordersWithSecurities = generatedMarginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
-            var groupManagerTemporalIds = -ordersWithSecurities.Count;
-            var orderedByLosers = ordersWithSecurities
-                // group orders by their group manager id so they are executed together
-                .GroupBy(x => x.Key.GroupOrderManager?.Id ?? groupManagerTemporalIds++)
-                .OrderBy(x => x.Sum(kvp => kvp.Value.UnrealizedProfit))
-                .Select(x => x.Select(kvp => kvp.Key));
-            foreach (var requests in orderedByLosers)
+            var failedLiquidationSymbols = new HashSet<Symbol>();
+            var marginCallOrders = generatedMarginCallOrders;
+            while (true)
             {
-                var tickets = new List<OrderTicket>();
-                foreach (var request in requests)
+                // order by losers first
+                var ordersWithSecurities = marginCallOrders.ToDictionary(x => x, x => Portfolio[x.Symbol]);
+                var groupManagerTemporalIds = -ordersWithSecurities.Count;
+                var orderedByLosers = ordersWithSecurities
+                    // group orders by their group manager id so they are executed together
+                    .GroupBy(x => x.Key.GroupOrderManager?.Id ?? groupManagerTemporalIds++)
+                    .OrderBy(x => x.Sum(kvp => kvp.Value.UnrealizedProfit))
+                    .Select(x => x.Select(kvp => kvp.Key));
+                var failedLiquidationsCount = failedLiquidationSymbols.Count;
+                foreach (var requests in orderedByLosers)
                 {
-                    var ticket = Portfolio.Transactions.AddOrder(request);
-                    tickets.Add(ticket);
-                    _marginCallTickets.Add(ticket);
-                }
-
-                foreach (var ticket in tickets)
-                {
-                    if (ticket.Status.IsOpen())
+                    var tickets = new List<OrderTicket>();
+                    foreach (var request in requests)
                     {
-                        Portfolio.Transactions.WaitForOrder(ticket.OrderId);
+                        var ticket = Portfolio.Transactions.AddOrder(request);
+                        tickets.Add(ticket);
+                        _marginCallTickets.Add(ticket);
                     }
-                    executedOrders.Add(ticket);
+
+                    foreach (var ticket in tickets)
+                    {
+                        if (ticket.Status.IsOpen())
+                        {
+                            Portfolio.Transactions.WaitForOrder(ticket.OrderId);
+                        }
+                        executedOrders.Add(ticket);
+                    }
+
+                    if (tickets.Any(ticket => ticket.Status.IsClosed() && ticket.Status != OrderStatus.Filled))
+                    {
+                        failedLiquidationSymbols.UnionWith(tickets.Select(ticket => ticket.Symbol));
+                    }
+
+                    // if our margin used, once the margin call orders still open are filled, is back under the portfolio value
+                    // then we can stop liquidating
+                    if (Portfolio.MarginRemaining + GetMarginReleased(GetOpenMarginCallOrderQuantities()) >= 0)
+                    {
+                        return executedOrders;
+                    }
                 }
 
-                // if our margin used, once the margin call orders still open are filled, is back under the portfolio value
-                // then we can stop liquidating
-                if (Portfolio.MarginRemaining + GetMarginReleased(GetOpenMarginCallOrderQuantities()) >= 0)
+                // each margin call order is sized for the deficit the earlier ones leave, so one that doesn't fill, such as
+                // one the brokerage rejects, leaves part of it uncovered: the other position groups are liquidated for it instead
+                if (failedLiquidationSymbols.Count == failedLiquidationsCount)
                 {
                     break;
                 }
+                marginCallOrders = GetMarginCallOrders(out _, failedLiquidationSymbols);
             }
             return executedOrders;
         }

@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -685,6 +686,93 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual(2, calls.Single(request => request.GroupOrderManager == null).Quantity);
                 Assert.AreEqual(-36, shares.Single(request => request.GroupOrderManager == null).Quantity);
             }
+        }
+
+        [Test]
+        public void LiquidatesOtherPositionGroupsWhenAMarginCallOrderIsRejected()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
+            // IBM, bought at $120, is the loser, so it's liquidated first
+            var time = DateTime.Now;
+            foreach (var (symbol, averagePrice) in new[] { (Symbols.IBM, 120m), (Symbols.MSFT, 100m) })
+            {
+                var security = GetSecurity(symbol, portfolio.CashBook);
+                portfolio.Securities.Add(security);
+                security.SetLeverage(2);
+                security.SetMarketPrice(new Tick(time, symbol, 100m, 100m));
+                security.Holdings.SetHoldings(averagePrice, 100);
+            }
+            portfolio.CashBook[Currencies.USD].SetAmount(-14000);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.AreEqual(Symbols.IBM, marginCallOrders[0].Symbol);
+
+            // the brokerage rejects IBM's order: MSFT is liquidated for the $4000 deficit instead
+            orderProcessor.RejectedSymbols.Add(Symbols.IBM);
+            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+            Assert.AreEqual(2, tickets.Count);
+            Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
+            Assert.AreEqual(OrderStatus.Invalid, tickets[0].Status);
+            Assert.AreEqual(Symbols.MSFT, tickets[1].Symbol);
+            Assert.AreEqual(-81, tickets[1].Quantity);
+        }
+
+        [Test]
+        public void LiquidatesAllTheSharesOfAStockGroupSharingTheSecurityWithAnotherGroup()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY, with no equity left
+            var portfolio = GetSpyPortfolio(orderProcessor, -29900, -1);
+            Assert.AreEqual(0, portfolio.TotalPortfolioValue);
+
+            // the stock group is sized from its own 200 shares, not the 300 SPY held
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(3, marginCallOrders.Count);
+            Assert.AreEqual(-100, marginCallOrders.Single(request => request.Symbol == Symbols.SPY && request.GroupOrderManager != null).Quantity);
+            Assert.AreEqual(1, marginCallOrders.Single(request => request.Symbol == Symbols.SPY_C_192_Feb19_2016).Quantity);
+            Assert.AreEqual(-200, marginCallOrders.Single(request => request.GroupOrderManager == null).Quantity);
+        }
+
+        [Test]
+        public void LiquidatesTheShortPositionsLeftAfterOpenMarginCallOrders()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            // without option strategies, the short calls are a position group of their own, with short option margin
+            portfolio.SetPositions(SecurityPositionGroupModel.Null);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
+            var underlying = GetSecurity(Symbols.SPY, portfolio.CashBook);
+            var callOption = GetOption(Symbols.SPY_C_192_Feb19_2016, portfolio.CashBook);
+            callOption.Underlying = underlying;
+            portfolio.Securities.Add(underlying);
+            portfolio.Securities.Add(callOption);
+            var time = DateTime.Now;
+            underlying.SetMarketPrice(new Tick(time, underlying.Symbol, 100m, 100m));
+            callOption.SetMarketPrice(new Tick(time, callOption.Symbol, 1m, 1m));
+            callOption.Holdings.SetHoldings(1m, -3);
+            portfolio.CashBook[Currencies.USD].SetAmount(3200);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            // $3300 of margin for the 3 short calls against $2900 of equity: one is bought back, and the order stays open
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.AreEqual(1, marginCallOrders[0].Quantity);
+            ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
+
+            // the equity falls to $500: the 2 short calls left, $2200 of margin, are both bought back
+            portfolio.CashBook[Currencies.USD].SetAmount(800);
+            portfolio.InvalidateTotalPortfolioValue();
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.AreEqual(2, marginCallOrders[0].Quantity);
         }
 
         [Test]
