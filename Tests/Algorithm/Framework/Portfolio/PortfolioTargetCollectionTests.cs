@@ -131,6 +131,20 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
+        public void ContainsKeyValuePair()
+        {
+            var target = new PortfolioTarget(Symbols.SPY, 1);
+            var collection = new PortfolioTargetCollection { target };
+            ICollection<KeyValuePair<Symbol, IPortfolioTarget>> kvpCollection = collection;
+
+            Assert.IsTrue(kvpCollection.Contains(new KeyValuePair<Symbol, IPortfolioTarget>(Symbols.SPY, target)));
+            Assert.IsTrue(collection.Contains(new KeyValuePair<Symbol, IPortfolioTarget>(Symbols.SPY, target)));
+            // a different target for the same symbol is not the same pair
+            Assert.IsFalse(kvpCollection.Contains(new KeyValuePair<Symbol, IPortfolioTarget>(Symbols.SPY, new PortfolioTarget(Symbols.SPY, 1))));
+            Assert.IsFalse(kvpCollection.Contains(new KeyValuePair<Symbol, IPortfolioTarget>(Symbols.AAPL, target)));
+        }
+
+        [Test]
         public void RemoveTargetRespectsReference()
         {
             var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
