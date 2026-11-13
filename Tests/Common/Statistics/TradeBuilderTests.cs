@@ -41,6 +41,51 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void FillWithoutQuantityIsIgnored(
+            [Values] FillGroupingMethod groupingMethod,
+            [Values] FillMatchingMethod matchingMethod,
+            [Values(OrderStatus.Filled, OrderStatus.PartiallyFilled)] OrderStatus status)
+        {
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
+            var time = _startTime;
+
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time, OrderStatus.PartiallyFilled, OrderDirection.Buy,
+                    fillPrice: 300m, fillQuantity: 2, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            // the brokerage closes the order short of its quantity after its last fill was reported
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time.AddMinutes(1), status, OrderDirection.Buy,
+                    fillPrice: 0m, fillQuantity: 0, orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+
+            // a zero quantity event with no open position does not open a trade either
+            builder.ProcessFill(
+                new OrderEvent(3, Symbols.AAPL, time.AddMinutes(1), status, OrderDirection.Sell,
+                    fillPrice: 0m, fillQuantity: 0, orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.AAPL));
+
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(10), OrderStatus.Filled, OrderDirection.Sell,
+                    fillPrice: 301m, fillQuantity: -2, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.SPY));
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade = builder.ClosedTrades[0];
+            Assert.AreEqual(2, trade.Quantity);
+            Assert.AreEqual(300m, trade.EntryPrice);
+            Assert.AreEqual(301m, trade.ExitPrice);
+            Assert.AreEqual(2m, trade.ProfitLoss);
+            Assert.AreEqual(0m, trade.MAE);
+            Assert.AreEqual(0m, trade.EndTradeDrawdown);
+        }
+
+        [Test]
         public void AllInAllOutLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,

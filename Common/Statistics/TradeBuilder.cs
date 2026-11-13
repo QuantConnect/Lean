@@ -228,6 +228,12 @@ namespace QuantConnect.Statistics
             decimal feeInAccountCurrency,
             decimal multiplier = 1.0m)
         {
+            // an event with no fill quantity, such as the brokerage closing an order short of its quantity, trades nothing
+            if (fill.FillQuantity == 0)
+            {
+                return;
+            }
+
             // If we have multiple fills per order, we assign the order fee only to its first fill
             // to avoid counting the same order fee multiple times.
             var orderFee = 0m;

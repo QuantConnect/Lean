@@ -79,9 +79,10 @@ namespace QuantConnect.Securities
                     security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, fill.UtcTime, new CashAmount(fill.FillQuantity, forex.BaseCurrency.Symbol), fill));
                 }
 
-                // did we close or open a position further?
-                closedPosition = isLong && fill.Direction == OrderDirection.Sell
-                             || isShort && fill.Direction == OrderDirection.Buy;
+                // did we close or open a position further? an event with no fill quantity, such as the brokerage
+                // closing an order short of its quantity after its last fill, trades nothing
+                closedPosition = fill.FillQuantity != 0
+                    && (isLong && fill.Direction == OrderDirection.Sell || isShort && fill.Direction == OrderDirection.Buy);
 
                 // calculate the last trade profit
                 if (closedPosition)
