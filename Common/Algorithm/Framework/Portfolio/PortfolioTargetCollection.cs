@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="target">The portfolio target to add</param>
         public void Add(KeyValuePair<Symbol, IPortfolioTarget> target)
         {
-            Add(target);
+            Add(target.Value);
         }
 
         /// <summary>
