@@ -555,7 +555,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <param name="minNearDaysTillExpiry">The minimum days till expiry of the closer contract from the current time, closest expiry will be selected</param>
-        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
+        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further contract from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Call Calendar Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
         public TUniverse CallCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
@@ -568,7 +568,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <param name="minNearDaysTillExpiry">The minimum days till expiry of the closer contract from the current time, closest expiry will be selected</param>
-        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
+        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further contract from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Put Calendar Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
         public TUniverse PutCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
@@ -948,7 +948,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <param name="minNearDaysTillExpiry">The minimum days till expiry of the closer contract from the current time, closest expiry will be selected</param>
-        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
+        /// <param name="minFarDaysTillExpiry">The minimum days till expiry of the further contract from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Jelly Roll Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
         public TUniverse JellyRoll(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)

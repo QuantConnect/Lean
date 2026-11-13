@@ -98,7 +98,7 @@ namespace QuantConnect.Indicators
         public decimal POCPrice { get; private set; }
 
         /// <summary>
-        /// Volume where the most tradding occurred (Point of Control(POC))
+        /// Volume where the most trading occurred (Point of Control(POC))
         /// </summary>
         public decimal POCVolume { get; private set; }
 

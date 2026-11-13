@@ -43,7 +43,7 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod => _sma.WarmUpPeriod;
 
         /// <summary>
-        /// Initializeds a new instance of the EaseOfMovement class using the specufued period
+        /// Initializes a new instance of the EaseOfMovement class using the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         /// <param name="scale">The size of the number outputted by EMV</param>
