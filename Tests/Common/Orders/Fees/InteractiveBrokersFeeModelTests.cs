@@ -94,14 +94,18 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
         [TestCase(OrderType.StopMarket)]
         [TestCase(OrderType.TrailingStop)]
-        public void USAEquityStopFeeIsCappedAtOnePercentOfMarketValue(OrderType orderType)
+        [TestCase(OrderType.ComboLimit)]
+        public void USAEquityFeeIsCappedOnMarketValueOfOrdersTradingAtTheMarket(OrderType orderType)
         {
             var security = SecurityTests.GetSecurity();
-            // the market gapped past the stop price, so the triggered stop trades at $100
+            // a triggered stop that the market gapped past, or a combo leg priced against the combo's net limit, trades at $100
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
-            Order order = orderType == OrderType.StopMarket
-                ? new StopMarketOrder(security.Symbol, 1, 50, DateTime.UtcNow)
-                : new TrailingStopOrder(security.Symbol, 1, 50, 1, false, DateTime.UtcNow);
+            Order order = orderType switch
+            {
+                OrderType.StopMarket => new StopMarketOrder(security.Symbol, 1, 50, DateTime.UtcNow),
+                OrderType.TrailingStop => new TrailingStopOrder(security.Symbol, 1, 50, 1, false, DateTime.UtcNow),
+                _ => new ComboLimitOrder(security.Symbol, 1, 0.10m, DateTime.UtcNow, new GroupOrderManager(1, 2, 1, 0.10m))
+            };
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
