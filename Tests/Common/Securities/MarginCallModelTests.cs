@@ -688,8 +688,9 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
-        [Test]
-        public void LiquidatesOtherPositionGroupsWhenAMarginCallOrderIsRejected()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void LiquidatesOtherPositionGroupsOnTheNextScanWhenAMarginCallOrderIsRejected(bool msftExchangeOpen)
         {
             var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, 0);
@@ -698,9 +699,13 @@ namespace QuantConnect.Tests.Common.Securities
 
             // IBM, bought at $120, is the loser, so it's liquidated first
             var time = DateTime.Now;
+            var closedExchangeHours = new SecurityExchangeHours(TimeZones.NewYork, Enumerable.Empty<DateTime>(),
+                Enum.GetValues<DayOfWeek>().Select(LocalMarketHours.ClosedAllDay).ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(), new Dictionary<DateTime, TimeSpan>());
             foreach (var (symbol, averagePrice) in new[] { (Symbols.IBM, 120m), (Symbols.MSFT, 100m) })
             {
-                var security = GetSecurity(symbol, portfolio.CashBook);
+                var security = GetSecurity(symbol, portfolio.CashBook,
+                    symbol == Symbols.MSFT && !msftExchangeOpen ? closedExchangeHours : null);
                 portfolio.Securities.Add(security);
                 security.SetLeverage(2);
                 security.SetMarketPrice(new Tick(time, symbol, 100m, 100m));
@@ -713,14 +718,29 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, marginCallOrders.Count);
             Assert.AreEqual(Symbols.IBM, marginCallOrders[0].Symbol);
 
-            // the brokerage rejects IBM's order: MSFT is liquidated for the $4000 deficit instead
+            // the brokerage rejects IBM's order: only the orders the margin call was given are submitted,
+            // which the engine checks for open exchanges and passes to OnMarginCall first
             orderProcessor.RejectedSymbols.Add(Symbols.IBM);
             var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-            Assert.AreEqual(2, tickets.Count);
-            Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
+            Assert.AreEqual(1, tickets.Count);
             Assert.AreEqual(OrderStatus.Invalid, tickets[0].Status);
-            Assert.AreEqual(Symbols.MSFT, tickets[1].Symbol);
-            Assert.AreEqual(-81, tickets[1].Quantity);
+
+            // the next scan liquidates MSFT for the $4000 deficit instead, which the engine executes once its exchange is open
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.AreEqual(Symbols.MSFT, marginCallOrders[0].Symbol);
+            Assert.AreEqual(-81, marginCallOrders[0].Quantity);
+            Assert.AreEqual(msftExchangeOpen, portfolio.Securities[Symbols.MSFT].Exchange.ExchangeOpen);
+            if (!msftExchangeOpen)
+            {
+                // not executed: IBM is tried again on the following scan
+                Assert.AreEqual(Symbols.IBM, portfolio.MarginCallModel.GetMarginCallOrders(out _).Single().Symbol);
+                return;
+            }
+
+            // the MSFT order stays open and covers the deficit: nothing more is liquidated
+            Assert.AreEqual(1, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
         }
 
         [Test]
@@ -880,10 +900,10 @@ namespace QuantConnect.Tests.Common.Securities
             return orders;
         }
 
-        private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null)
+        private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null, SecurityExchangeHours exchangeHours = null)
         {
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                exchangeHours ?? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new SubscriptionDataConfig(
                     typeof(TradeBar),
                     symbol,
