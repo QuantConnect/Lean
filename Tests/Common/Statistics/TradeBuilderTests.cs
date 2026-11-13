@@ -21,8 +21,10 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
@@ -38,6 +40,139 @@ namespace QuantConnect.Tests.Common.Statistics
         public void SetUp()
         {
             _securityManager = new SecurityManager(new TimeKeeper(_startTime));
+        }
+
+        [TestCaseSource(nameof(CryptoFutureTradeCases))]
+        public void CryptoFutureTradeProfitLoss(string ticker, string market, decimal quantity, decimal expectedProfit,
+            FillGroupingMethod groupingMethod, int direction)
+        {
+            var builder = CreateCryptoFutureTradeBuilder(ticker, groupingMethod, FillMatchingMethod.FIFO, out var security, market);
+            var rate = security.QuoteCurrency.ConversionRate;
+            var multiplier = security.SymbolProperties.ContractMultiplier;
+            security.BaseCurrency.ConversionRate = 40000m;
+            builder.ProcessFill(new OrderEvent(1, security.Symbol, _startTime, OrderStatus.Filled,
+                direction > 0 ? OrderDirection.Buy : OrderDirection.Sell, 40000m, direction * quantity, _orderFee),
+                rate, 1m, multiplier);
+            security.BaseCurrency.ConversionRate = 44000m;
+            builder.ProcessFill(new OrderEvent(2, security.Symbol, _startTime.AddHours(1), OrderStatus.Filled,
+                direction > 0 ? OrderDirection.Sell : OrderDirection.Buy, 44000m, -direction * quantity, _orderFee),
+                rate, 1m, multiplier);
+
+            var trade = builder.ClosedTrades[0];
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+            Assert.AreEqual(direction * expectedProfit, trade.ProfitLoss);
+            Assert.AreEqual(40000m, trade.EntryPrice);
+            Assert.AreEqual(44000m, trade.ExitPrice);
+            Assert.AreEqual(quantity, trade.Quantity);
+            Assert.AreEqual(2m, trade.TotalFees);
+            Assert.AreEqual(direction > 0, trade.IsWin);
+            Assert.IsFalse(builder.HasOpenPosition(security.Symbol));
+        }
+
+        [Test]
+        public void InverseCryptoFutureExcursions([Values(-1, 1)] int direction,
+            [Values(1.0, 0.8)] double accountRate)
+        {
+            var builder = CreateCryptoFutureTradeBuilder("BTCUSD", FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO,
+                out var security, accountCurrency: accountRate == 1.0 ? Currencies.USD : "EUR");
+            var adverse = direction > 0 ? -1222.22m : -2200m;
+            var favorable = direction > 0 ? 2200m : 1222.22m;
+            var drawdown = direction > 0 ? 3422.22m : 2222.22m;
+            var rate = (decimal)accountRate;
+            security.BaseCurrency.ConversionRate = 44000m * rate;
+            security.QuoteCurrency.ConversionRate = rate;
+            builder.ProcessFill(new OrderEvent(1, security.Symbol, _startTime, OrderStatus.Filled,
+                direction > 0 ? OrderDirection.Buy : OrderDirection.Sell, 40000m, direction * 100m, OrderFee.Zero),
+                rate, 0m, 100m);
+            builder.SetMarketPrice(security.Symbol, 50000m);
+            builder.SetMarketPrice(security.Symbol, 36000m);
+            builder.ProcessFill(new OrderEvent(2, security.Symbol, _startTime.AddHours(1), OrderStatus.Filled,
+                direction > 0 ? OrderDirection.Sell : OrderDirection.Buy, 44000m, -direction * 100m, OrderFee.Zero),
+                rate, 0m, 100m);
+
+            var trade = builder.ClosedTrades[0];
+            Assert.AreEqual(direction * 1000m * rate, trade.ProfitLoss);
+            Assert.AreEqual(Math.Round(adverse * rate, 2), trade.MAE);
+            Assert.AreEqual(Math.Round(favorable * rate, 2), trade.MFE);
+            Assert.AreEqual(Math.Round(drawdown * rate, 2), trade.EndTradeDrawdown);
+        }
+
+        [Test]
+        public void InverseCryptoFutureIgnoresZeroMarketPrice()
+        {
+            var builder = CreateCryptoFutureTradeBuilder("BTCUSD", FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, out var security);
+            builder.ProcessFill(new OrderEvent(1, security.Symbol, _startTime, OrderStatus.Filled, OrderDirection.Buy, 40000m, 100m, OrderFee.Zero),
+                1m, 0m, 100m);
+            builder.SetMarketPrice(security.Symbol, 0m);
+            builder.ProcessFill(new OrderEvent(2, security.Symbol, _startTime.AddHours(1), OrderStatus.Filled, OrderDirection.Sell, 44000m, -100m, OrderFee.Zero),
+                1m, 0m, 100m);
+
+            var trade = builder.ClosedTrades[0];
+            Assert.AreEqual(1000m, trade.ProfitLoss);
+            Assert.AreEqual(0m, trade.MAE);
+            Assert.AreEqual(0m, trade.EndTradeDrawdown);
+        }
+
+        [Test]
+        public void InverseCryptoFutureScaleInAndPartialExit([Values] FillGroupingMethod groupingMethod,
+            [Values] FillMatchingMethod matchingMethod, [Values(-1, 1)] int direction)
+        {
+            var builder = CreateCryptoFutureTradeBuilder("BTCUSD", groupingMethod, matchingMethod, out var security);
+            var prices = new[] { 40000m, 50000m, 44000m, 48000m };
+            for (var i = 0; i < prices.Length; i++)
+            {
+                var quantity = (i < 2 ? 100m : -100m) * direction;
+                builder.ProcessFill(new OrderEvent(i + 1, security.Symbol, _startTime.AddMinutes(i), OrderStatus.Filled,
+                    quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell, prices[i], quantity, OrderFee.Zero),
+                    1m, 0m, 100m);
+            }
+
+            var totalProfit = 0m;
+            foreach (var trade in builder.ClosedTrades)
+            {
+                totalProfit += trade.ProfitLoss;
+            }
+            Assert.AreEqual(direction * 633.33m, totalProfit);
+            Assert.IsFalse(builder.HasOpenPosition(security.Symbol));
+            if (groupingMethod == FillGroupingMethod.FlatToFlat)
+            {
+                Assert.AreEqual(45000m, builder.ClosedTrades[0].EntryPrice);
+                Assert.AreEqual(46000m, builder.ClosedTrades[0].ExitPrice);
+            }
+        }
+
+        private static IEnumerable<TestCaseData> CryptoFutureTradeCases
+        {
+            get
+            {
+                foreach (var grouping in Enum.GetValues<FillGroupingMethod>())
+                {
+                    foreach (var direction in new[] { -1, 1 })
+                    {
+                        yield return new TestCaseData("BTCUSD", Market.Binance, 100m, 1000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSDT", Market.Binance, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSD", Market.DYDX, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSD", Market.Bybit, 100m, 10m, grouping, direction);
+                        yield return new TestCaseData("ETHBTC", Market.Binance, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSD1", Market.Binance, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCU", Market.Binance, 1m, 4000m, grouping, direction);
+                    }
+                }
+            }
+        }
+
+        private static TradeBuilder CreateCryptoFutureTradeBuilder(string ticker, FillGroupingMethod groupingMethod,
+            FillMatchingMethod matchingMethod, out CryptoFuture security, string market = Market.Binance,
+            string accountCurrency = Currencies.USD)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetAccountCurrency(accountCurrency);
+            security = algorithm.AddCryptoFuture(ticker, market: market);
+            security.BaseCurrency.ConversionRate = 44000m;
+            security.QuoteCurrency.ConversionRate = 1m;
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(algorithm.Securities);
+            return builder;
         }
 
         [Test]

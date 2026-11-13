@@ -17,6 +17,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -154,6 +155,9 @@ namespace QuantConnect.Statistics
             Position position;
             if (!_positions.TryGetValue(symbol, out position)) return;
 
+            // inverse contracts are valued at the reciprocal of the price, which a zero price doesn't have
+            if (price == 0 && TryGetInverseCryptoFuture(symbol, out _)) return;
+
             if (price > position.MaxPrice)
                 position.MaxPrice = price;
             else if (price < position.MinPrice)
@@ -163,7 +167,8 @@ namespace QuantConnect.Statistics
             {
                 var tradeState = position.PendingTrades[i];
                 var trade = tradeState.Trade;
-                var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
+                var currentProfit = (GetProfitPrice(symbol, price) - GetProfitPrice(symbol, trade.EntryPrice))
+                    * (trade.Direction == TradeDirection.Long ? +1 : -1);
                 tradeState.UpdateDrawdown(currentProfit);
             }
         }
@@ -232,6 +237,11 @@ namespace QuantConnect.Statistics
             if (fill.FillQuantity == 0)
             {
                 return;
+            }
+
+            if (TryGetInverseCryptoFuture(fill.Symbol, out var cryptoFuture))
+            {
+                securityConversionRate = cryptoFuture.BaseCurrency.ConversionRate;
             }
 
             // If we have multiple fills per order, we assign the order fee only to its first fill
@@ -320,6 +330,10 @@ namespace QuantConnect.Statistics
                     var tradeState = position.PendingTrades[index];
                     var trade = tradeState.Trade;
                     var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
+                    var entryValue = GetProfitPrice(fill.Symbol, trade.EntryPrice);
+                    var exitValue = GetProfitPrice(fill.Symbol, fill.FillPrice);
+                    var minValue = GetProfitPrice(fill.Symbol, position.MinPrice);
+                    var maxValue = GetProfitPrice(fill.Symbol, position.MaxPrice);
 
                     if (absoluteUnexecutedQuantity >= trade.Quantity)
                     {
@@ -331,11 +345,11 @@ namespace QuantConnect.Statistics
 
                         trade.ExitTime = fill.UtcTime;
                         trade.ExitPrice = fill.FillPrice;
-                        trade.ProfitLoss = Math.Round((trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2);
+                        trade.ProfitLoss = Math.Round((exitValue - entryValue) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2);
                         // if closing multiple trades with the same order, assign order fee only once
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
-                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
-                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.EndTradeDrawdown = Math.Round(tradeState.MaxDrawdown * trade.Quantity * conversionRate * multiplier, 2);
 
                         AddNewTrade(trade, fill);
@@ -354,10 +368,10 @@ namespace QuantConnect.Statistics
                             Quantity = absoluteUnexecutedQuantity,
                             ExitTime = fill.UtcTime,
                             ExitPrice = fill.FillPrice,
-                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
+                            ProfitLoss = Math.Round((exitValue - entryValue) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             EndTradeDrawdown = Math.Round(tradeState.MaxDrawdown * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId])
                         };
@@ -442,22 +456,27 @@ namespace QuantConnect.Statistics
                     var totalExitQuantity = 0m;
                     var entryAveragePrice = 0m;
                     var exitAveragePrice = 0m;
+                    var entryAverageValue = 0m;
+                    var exitAverageValue = 0m;
                     var relatedOrderIds = new HashSet<int>();
 
                     while (position.PendingFills.Count > 0)
                     {
                         var currentFill = position.PendingFills[index];
+                        var currentValue = GetProfitPrice(fill.Symbol, currentFill.FillPrice);
                         if (Math.Sign(currentFill.FillQuantity) != Math.Sign(fill.FillQuantity))
                         {
                             // entry
                             totalEntryQuantity += currentFill.FillQuantity;
                             entryAveragePrice += (currentFill.FillPrice - entryAveragePrice) * currentFill.FillQuantity / totalEntryQuantity;
+                            entryAverageValue += (currentValue - entryAverageValue) * currentFill.FillQuantity / totalEntryQuantity;
                         }
                         else
                         {
                             // exit
                             totalExitQuantity += currentFill.FillQuantity;
                             exitAveragePrice += (currentFill.FillPrice - exitAveragePrice) * currentFill.FillQuantity / totalExitQuantity;
+                            exitAverageValue += (currentValue - exitAverageValue) * currentFill.FillQuantity / totalExitQuantity;
                         }
                         relatedOrderIds.Add(currentFill.OrderId);
                         position.PendingFills.RemoveAt(index);
@@ -475,7 +494,7 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = Math.Round((exitAveragePrice - entryAveragePrice) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
+                        ProfitLoss = Math.Round((exitAverageValue - entryAverageValue) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier, 2),
                         TotalFees = position.TotalFees,
                         OrderIds = relatedOrderIds
                         // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
@@ -543,12 +562,14 @@ namespace QuantConnect.Statistics
                 var entryTime = position.PendingFills[index].UtcTime;
                 var totalExecutedQuantity = 0m;
                 var entryPrice = 0m;
+                var entryValue = 0m;
                 position.TotalFees += orderFee;
                 var relatedOrderIds = new HashSet<int> { fill.OrderId };
 
                 while (position.PendingFills.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
                     var currentFill = position.PendingFills[index];
+                    var currentValue = GetProfitPrice(fill.Symbol, currentFill.FillPrice);
                     var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
                     if (absoluteUnexecutedQuantity >= Math.Abs(currentFill.FillQuantity))
                     {
@@ -557,6 +578,7 @@ namespace QuantConnect.Statistics
 
                         totalExecutedQuantity -= currentFill.FillQuantity;
                         entryPrice -= (currentFill.FillPrice - entryPrice) * currentFill.FillQuantity / totalExecutedQuantity;
+                        entryValue -= (currentValue - entryValue) * currentFill.FillQuantity / totalExecutedQuantity;
                         position.PendingFills.RemoveAt(index);
 
                         if (_matchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
@@ -566,6 +588,7 @@ namespace QuantConnect.Statistics
                         var executedQuantity = absoluteUnexecutedQuantity * Math.Sign(fill.FillQuantity);
                         totalExecutedQuantity += executedQuantity;
                         entryPrice += (currentFill.FillPrice - entryPrice) * executedQuantity / totalExecutedQuantity;
+                        entryValue += (currentValue - entryValue) * executedQuantity / totalExecutedQuantity;
                         currentFill.FillQuantity += executedQuantity;
                     }
                     relatedOrderIds.Add(currentFill.OrderId);
@@ -581,7 +604,7 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = fill.UtcTime,
                     ExitPrice = fill.FillPrice,
-                    ProfitLoss = Math.Round((fill.FillPrice - entryPrice) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
+                    ProfitLoss = Math.Round((GetProfitPrice(fill.Symbol, fill.FillPrice) - entryValue) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier, 2),
                     TotalFees = position.TotalFees,
                     OrderIds = relatedOrderIds
 
@@ -608,6 +631,25 @@ namespace QuantConnect.Statistics
                         position.TotalFees = 0;
                 }
             }
+        }
+
+        private decimal GetProfitPrice(Symbol symbol, decimal price)
+        {
+            // Negated reciprocal prices give inverse contracts the same profit direction as linear contracts.
+            return TryGetInverseCryptoFuture(symbol, out _) ? -1m / price : price;
+        }
+
+        private bool TryGetInverseCryptoFuture(Symbol symbol, out CryptoFuture cryptoFuture)
+        {
+            cryptoFuture = null;
+            if (symbol.SecurityType == SecurityType.CryptoFuture && symbol.ID.Market != Market.DYDX &&
+                _securities != null && _securities.TryGetValue(symbol, out var security))
+            {
+                cryptoFuture = security as CryptoFuture;
+            }
+            // coin-margined contracts have a USD face value: IsCryptoCoinFuture() also matches linear contracts
+            // quoted in other currencies, such as ETHBTC or BTCUSD1, whose profit is the linear price difference
+            return cryptoFuture != null && cryptoFuture.QuoteCurrency.Symbol == Currencies.USD;
         }
 
         /// <summary>
