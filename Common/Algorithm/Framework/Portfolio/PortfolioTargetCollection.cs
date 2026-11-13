@@ -224,7 +224,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the pair exists, false otherwise</returns>
         public bool Contains(KeyValuePair<Symbol, IPortfolioTarget> target)
         {
-            return Contains(target);
+            lock (_targets)
+            {
+                return ((ICollection<KeyValuePair<Symbol, IPortfolioTarget>>)_targets).Contains(target);
+            }
         }
 
         /// <summary>
