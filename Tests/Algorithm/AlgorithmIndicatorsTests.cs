@@ -26,6 +26,7 @@ using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Research;
 
@@ -472,6 +473,54 @@ def create(algorithm, symbols):
                 Assert.IsTrue(timeSeries.Signal.IsReady);
                 Assert.IsTrue(crossSectional.Signals.Values.All(signal => signal.IsReady));
             }
+        }
+
+        [Test]
+        public void CrossSectionalInformationCoefficientHistoryKeepsEveryPeriodAcrossExchangeTimeZones()
+        {
+            // hourly bars of New York (ES, GC, CL) and Chicago (ZN) futures, ending 15:00 to 21:00 UTC, with no ZN bar at 18:00 UTC:
+            // that period is correlated when the next starts, and must not share a time with the next period's value
+            var expiry = new DateTime(2024, 3, 15);
+            var pricesBySymbol = new Dictionary<Symbol, decimal[]>
+            {
+                { Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry), new[] { 10m, 9.62m, 9.35m, 9.47m, 9.89m, 9.97m, 9.87m } },
+                { Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, expiry), new[] { 20m, 20.95m, 20m, 20.72m, 20.28m, 19.56m, 18.81m } },
+                { Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, Market.NYMEX, expiry), new[] { 30m, 29.43m, 30.36m, 29.39m, 29.63m, 30.04m, 29.66m } },
+                { Symbol.CreateFuture(Futures.Financials.Y10TreasuryNote, Market.CBOT, expiry), new[] { 40m, 40.19m, 38.43m, 36.74m, 35.66m, 36.3m, 36.04m } },
+            };
+            var gapSymbol = pricesBySymbol.Keys.Last();
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var slices = new List<Slice>();
+            for (var i = 0; i < 7; i++)
+            {
+                var endTimeUtc = new DateTime(2024, 1, 2, 15 + i, 0, 0);
+                var bars = new List<BaseData>();
+                foreach (var (symbol, prices) in pricesBySymbol)
+                {
+                    if (i == 3 && symbol == gapSymbol)
+                    {
+                        continue;
+                    }
+                    var endTime = endTimeUtc.ConvertFromUtc(marketHours.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone);
+                    bars.Add(new TradeBar(endTime.AddHours(-1), symbol, prices[i], prices[i], prices[i], prices[i], 1000, TimeSpan.FromHours(1)));
+                }
+                slices.Add(new Slice(endTimeUtc, bars, endTimeUtc));
+            }
+            var indicator = new CrossSectionalInformationCoefficient(pricesBySymbol.Keys, _ => new RateOfChange(1));
+            var published = new List<IndicatorDataPoint>();
+            indicator.Updated += (_, point) => published.Add(point);
+
+            var rows = _algorithm.IndicatorHistory(indicator, slices).Current;
+
+            // scipy.stats.spearmanr across the assets with a bar, from index 2. Each value has its period's end in the
+            // time zone of the first asset
+            var expected = new[] { -0.8, -1.0, 0.4, -0.4, 0.8 };
+            var firstTimeZone = marketHours.GetExchangeHours(Market.CME, pricesBySymbol.Keys.First(), SecurityType.Future).TimeZone;
+            var expectedTimes = Enumerable.Range(2, 5).Select(i => new DateTime(2024, 1, 2, 15 + i, 0, 0).ConvertFromUtc(firstTimeZone)).ToList();
+            CollectionAssert.AreEqual(expected, published.Select(point => Math.Round((double)point.Value, 9)));
+            CollectionAssert.AreEqual(expectedTimes, published.Select(point => point.EndTime));
+            CollectionAssert.AreEqual(expected, rows.Select(point => Math.Round((double)point.Value, 9)));
+            CollectionAssert.AreEqual(expectedTimes, rows.Select(point => point.EndTime));
         }
 
         [TestCase("count")]

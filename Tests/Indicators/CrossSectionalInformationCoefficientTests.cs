@@ -91,6 +91,8 @@ namespace QuantConnect.Tests.Indicators
             var prices = closesUtc.Keys.Zip(PricesBySymbol.Values).ToDictionary(pair => pair.First, pair => pair.Second);
             var marketHours = MarketHoursDatabase.FromDataFolder();
             var indicator = new CrossSectionalInformationCoefficient(closesUtc.Keys, _ => new RateOfChange(1));
+            var publishedTimes = new List<DateTime>();
+            indicator.Updated += (_, point) => publishedTimes.Add(point.EndTime);
 
             for (var i = 0; i < ExpectedValues.Length; i++)
             {
@@ -106,6 +108,12 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(ExpectedValues[i].HasValue, indicator.IsReady, $"Index {i}");
                 Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
             }
+
+            // each day's latest close, 22:00 UTC, in the first asset's time zone, though ZC's bar comes first each day
+            var firstAsset = closesUtc.Keys.First();
+            var firstTimeZone = marketHours.GetExchangeHours(firstAsset.ID.Market, firstAsset, firstAsset.SecurityType).TimeZone;
+            CollectionAssert.AreEqual(Enumerable.Range(2, 5).Select(i => (StartTime.AddDays(i) + new TimeSpan(22, 0, 0)).ConvertFromUtc(firstTimeZone)),
+                publishedTimes);
         }
 
         [Test]
