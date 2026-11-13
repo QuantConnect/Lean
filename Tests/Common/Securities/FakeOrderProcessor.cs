@@ -32,6 +32,17 @@ namespace QuantConnect.Tests.Common.Securities
         public ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests { get; init; } = new ConcurrentDictionary<int, OrderRequest>();
 
         public SecurityTransactionManager TransactionManager { get; set; }
+
+        /// <summary>
+        /// The symbols whose submitted orders are rejected, with <see cref="RejectedOrderStatus"/>
+        /// </summary>
+        public HashSet<Symbol> RejectedSymbols { get; } = new HashSet<Symbol>();
+
+        /// <summary>
+        /// The status of the rejected orders, invalid by default
+        /// </summary>
+        public OrderStatus RejectedOrderStatus { get; init; } = OrderStatus.Invalid;
+
         public void AddOrder(Order order)
         {
             _orders[order.Id] = order;
@@ -90,6 +101,13 @@ namespace QuantConnect.Tests.Common.Securities
                 case OrderRequestType.Submit:
                     ticket = new OrderTicket(TransactionManager, (SubmitOrderRequest) request);
                     AddTicket(ticket);
+                    if (RejectedSymbols.Contains(ticket.Symbol))
+                    {
+                        var order = Order.CreateOrder((SubmitOrderRequest)request);
+                        order.Status = RejectedOrderStatus;
+                        AddOrder(order);
+                        ticket.SetOrder(order);
+                    }
                     return ticket;
                 case OrderRequestType.Cancel:
                     ticket = GetOrderTicket(request.OrderId);
