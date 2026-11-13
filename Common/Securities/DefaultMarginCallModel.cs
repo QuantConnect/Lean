@@ -39,6 +39,11 @@ namespace QuantConnect.Securities
         private readonly decimal _marginBuffer;
 
         /// <summary>
+        /// The submitted margin call orders that might still be open
+        /// </summary>
+        private readonly List<OrderTicket> _marginCallTickets = new();
+
+        /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
         /// </summary>
         protected SecurityPortfolioManager Portfolio { get; }
@@ -97,13 +102,19 @@ namespace QuantConnect.Securities
             // if we still have margin remaining then there's no need for a margin call
             if (marginRemaining <= 0)
             {
-                if (totalMarginUsed > totalPortfolioValue * (1 + _marginBuffer))
+                // margin call orders can stay open for a while, such as market orders waiting for the next daily bar in backtesting:
+                // the margin they will release is accounted for, and the holdings they're liquidating aren't liquidated again
+                var pendingQuantities = GetOpenMarginCallOrderQuantities();
+                var marginUsedAfterPendingOrders = totalMarginUsed - GetMarginReleased(pendingQuantities);
+
+                if (marginUsedAfterPendingOrders > totalPortfolioValue * (1 + _marginBuffer))
                 {
                     foreach (var positionGroup in Portfolio.Positions.Groups)
                     {
                         var positionMarginCallOrders = GenerateMarginCallOrders(
-                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, totalMarginUsed)).ToList();
-                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0))
+                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, marginUsedAfterPendingOrders)).ToList();
+                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0
+                            && Math.Abs(pendingQuantities.GetValueOrDefault(x.Symbol) + x.Quantity) <= Math.Abs(Portfolio[x.Symbol].Quantity)))
                         {
                             marginCallOrders.AddRange(positionMarginCallOrders);
                         }
@@ -114,6 +125,41 @@ namespace QuantConnect.Securities
             }
 
             return marginCallOrders;
+        }
+
+        /// <summary>
+        /// Gets the quantities that the open margin call orders have yet to fill, by symbol
+        /// </summary>
+        private Dictionary<Symbol, decimal> GetOpenMarginCallOrderQuantities()
+        {
+            _marginCallTickets.RemoveAll(ticket => !ticket.Status.IsOpen());
+            return _marginCallTickets
+                .GroupBy(ticket => ticket.Symbol)
+                .ToDictionary(tickets => tickets.Key, tickets => tickets.Sum(ticket => ticket.QuantityRemaining));
+        }
+
+        /// <summary>
+        /// Gets the margin that filling the specified quantities at the current prices would release, regrouping the impacted positions
+        /// </summary>
+        private decimal GetMarginReleased(Dictionary<Symbol, decimal> quantities)
+        {
+            if (quantities.Count == 0)
+            {
+                return 0;
+            }
+
+            var positions = quantities.Select(kvp => (IPosition)new Position(Portfolio.Securities[kvp.Key], kvp.Value)).ToList();
+            var impactedGroups = Portfolio.Positions.GetImpactedGroups(positions).ToList();
+            var positionsAfterFills = impactedGroups
+                .SelectMany(positionGroup => positionGroup.Positions)
+                .Concat(positions)
+                .Consolidate()
+                .Values
+                .Where(position => position.Quantity != 0);
+            var groupsAfterFills = Portfolio.Positions.ResolvePositionGroups(new PositionCollection(positionsAfterFills));
+
+            return impactedGroups.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup))
+                - groupsAfterFills.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup));
         }
 
         /// <summary>
@@ -161,14 +207,15 @@ namespace QuantConnect.Securities
             return positionGroup.Positions.Select(position =>
             {
                 var security = Portfolio.Securities[position.Symbol];
-                // Always reducing, so we take the absolute quantity times the opposite sign of the position
+                // Always reducing, so we take the absolute quantity times the opposite sign of the position.
+                // This is the leg's total quantity, which is what combo order requests expect too
                 var legQuantity = absQuantity * position.UnitQuantity * -Math.Sign(position.Quantity);
 
                 return new SubmitOrderRequest(
                     orderType,
                     security.Type,
                     security.Symbol,
-                    legQuantity.GetOrderLegGroupQuantity(groupOrderManager),
+                    legQuantity,
                     0,
                     0,
                     security.LocalTime.ConvertToUtc(security.Exchange.TimeZone),
@@ -206,7 +253,9 @@ namespace QuantConnect.Securities
                 var tickets = new List<OrderTicket>();
                 foreach (var request in requests)
                 {
-                    tickets.Add(Portfolio.Transactions.AddOrder(request));
+                    var ticket = Portfolio.Transactions.AddOrder(request);
+                    tickets.Add(ticket);
+                    _marginCallTickets.Add(ticket);
                 }
 
                 foreach (var ticket in tickets)
@@ -218,8 +267,9 @@ namespace QuantConnect.Securities
                     executedOrders.Add(ticket);
                 }
 
-                // if our margin used is back under the portfolio value then we can stop liquidating
-                if (Portfolio.MarginRemaining >= 0)
+                // if our margin used, once the margin call orders still open are filled, is back under the portfolio value
+                // then we can stop liquidating
+                if (Portfolio.MarginRemaining + GetMarginReleased(GetOpenMarginCallOrderQuantities()) >= 0)
                 {
                     break;
                 }
