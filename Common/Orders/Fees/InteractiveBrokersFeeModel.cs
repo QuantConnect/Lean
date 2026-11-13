@@ -155,12 +155,28 @@ namespace QuantConnect.Orders.Fees
                         default:
                             throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
                     }
-                    var tradeValue = Math.Abs(order.GetValue(security));
+                    // The maximum per order is a rate of the trade value in the fee currency, the security's quote currency.
+                    // Stop orders trade at the market price once triggered, which can be past their stop price
+                    var conversionRate = security.QuoteCurrency.ConversionRate;
+                    var tradeValue = order.Type == OrderType.StopMarket || order.Type == OrderType.TrailingStop
+                        ? quantity * security.Price * security.SymbolProperties.ContractMultiplier
+                        : conversionRate == 0 ? 0 : Math.Abs(order.GetValue(security)) / conversionRate;
 
-                    //Per share fees, at least the minimum per order and at most the maximum per order.
-                    //When the maximum is below the minimum, the maximum is charged
+                    //Per share fees
+                    var tradeFee = equityFee.FeePerShare * quantity;
+
+                    //Maximum Per Order: equityFee.MaximumFeeRate
+                    //Minimum per order. $equityFee.MinimumFee
                     var maximumPerOrder = equityFee.MaximumFeeRate * tradeValue;
-                    var tradeFee = Math.Min(Math.Max(equityFee.FeePerShare * quantity, equityFee.MinimumFee), maximumPerOrder);
+                    if (tradeFee < equityFee.MinimumFee)
+                    {
+                        // IBKR Pro Fixed charges the US maximum per order when it is below the minimum per order
+                        tradeFee = market == Market.USA ? Math.Min(equityFee.MinimumFee, maximumPerOrder) : equityFee.MinimumFee;
+                    }
+                    else if (tradeFee > maximumPerOrder)
+                    {
+                        tradeFee = maximumPerOrder;
+                    }
 
                     feeCurrency = equityFee.Currency;
                     //Always return a positive fee.
