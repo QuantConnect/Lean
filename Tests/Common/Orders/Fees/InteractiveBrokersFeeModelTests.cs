@@ -17,8 +17,10 @@ using System;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
@@ -29,6 +31,8 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine;
+using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
@@ -111,6 +115,39 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(1m, fee.Value.Amount);
+        }
+
+        // an ordinary crossing fills at the stop price, a gap at the open
+        [TestCase(100, 90, 110, 90, 90, 100, 1)]
+        [TestCase(50, 40, 60, 40, 60, 50, 0.5)]
+        [TestCase(50, 100, 100, 100, 100, 100, 1)]
+        public void USAEquityFeeIsCappedOnTheFillValueOfFilledStopOrders(decimal stopPrice, decimal open, decimal high, decimal low, decimal close,
+            decimal expectedFillPrice, decimal expectedFee)
+        {
+            var algorithm = new BrokerageTransactionHandlerTests.TestAlgorithm();
+            var security = algorithm.AddEquity("SPY", Resolution.Minute);
+            var orderTime = new DateTime(2013, 10, 7, 14, 0, 0);
+            algorithm.SetDateTime(orderTime.AddMinutes(1));
+            security.SetMarketPrice(new TradeBar(orderTime.ConvertFromUtc(security.Exchange.TimeZone), security.Symbol, open, high, low, close, 100, Time.OneMinute));
+
+            var transactionHandler = new BacktestingTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
+            try
+            {
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+                algorithm.Transactions.AddOrder(new SubmitOrderRequest(OrderType.StopMarket, SecurityType.Equity, security.Symbol, 1, stopPrice, 0, orderTime, ""));
+                transactionHandler.ProcessSynchronousEvents();
+            }
+            finally
+            {
+                transactionHandler.Exit();
+            }
+
+            var fill = algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Filled);
+            Assert.AreEqual(expectedFillPrice, fill.FillPrice);
+            Assert.AreEqual(Currencies.USD, fill.OrderFee.Value.Currency);
+            Assert.AreEqual(expectedFee, fill.OrderFee.Value.Amount);
         }
 
         [TestCase(1, 0.20, 6)]

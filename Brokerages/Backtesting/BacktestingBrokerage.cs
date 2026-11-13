@@ -376,7 +376,7 @@ namespace QuantConnect.Brokerages.Backtesting
                                         // It could be the case the order is a combo order, then it contains legs with different quantities and security types.
                                         // Therefore, we need to compute the fees based on the specific leg order and security
                                         var legKVP = securities.Where(x => x.Key.Id == fill.OrderId).Single();
-                                        fill.OrderFee = legKVP.Value.FeeModel.GetOrderFee(new OrderFeeParameters(legKVP.Value, legKVP.Key));
+                                        fill.OrderFee = legKVP.Value.FeeModel.GetOrderFee(new OrderFeeParameters(legKVP.Value, legKVP.Key, fill.FillPrice));
                                     }
                                 }
                             }
