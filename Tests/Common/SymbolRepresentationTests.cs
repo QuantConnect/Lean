@@ -199,6 +199,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(Futures.Metals.OneOunceGold, 2026, 1, 28, "1OZ28G26", true)] // Prior month
         [TestCase(Futures.Softs.Sugar11, 2017, 11, 20, "SB20Z17", true)] // Prior month
         [TestCase(Futures.Softs.Sugar11CME, 2017, 11, 20, "YO20Z17", true)] // Prior month
+        [TestCase(Futures.Currencies.BRL, 2019, 3, 29, "6L29J19", true)] // Prior month
         public void GenerateFutureTickerExpiringInPreviousMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
         {
             // CL Dec17 expires in Nov17

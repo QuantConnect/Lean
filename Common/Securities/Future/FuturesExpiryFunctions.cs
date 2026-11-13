@@ -1272,7 +1272,11 @@ namespace QuantConnect.Securities.Future
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
                     // Monthly contracts listed for 60 consecutive months
                     // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
-                    var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, holidays);
+                    // The Central Bank of Brazil's last PTAX of the year repeats the prior day's rate, so CME terminates January contracts on that prior day.
+                    // Counted on weekdays: a US bank holiday on December 31 does not stop the Central Bank publishing
+                    var lastPrecedingBusinessDay = time.Month == 1
+                        ? FuturesExpiryUtilityFunctions.AddBusinessDays(FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, []), -1, [])
+                        : FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1, holidays);
                     lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastPrecedingBusinessDay, -1, holidays);
 
                     return lastPrecedingBusinessDay.Add(new TimeSpan(14,15,0));

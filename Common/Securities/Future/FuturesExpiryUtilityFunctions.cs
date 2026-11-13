@@ -401,6 +401,7 @@ namespace QuantConnect.Securities.Future
 
         private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>
         {
+            { Futures.Currencies.BRL, 1 },
             { Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 1 },
             { Futures.Energy.ArgusPropaneSaudiAramco, 1 },
             { Futures.Energy.BrentCrude, 2 },
