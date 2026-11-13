@@ -104,20 +104,42 @@ namespace QuantConnect.Securities
             {
                 // margin call orders can stay open for a while, such as market orders waiting for the next daily bar in backtesting:
                 // the margin they will release is accounted for, and the holdings they're liquidating aren't liquidated again
-                var pendingQuantities = GetOpenMarginCallOrderQuantities();
-                var marginUsedAfterPendingOrders = totalMarginUsed - GetMarginReleased(pendingQuantities);
+                var liquidatingQuantities = GetOpenMarginCallOrderQuantities();
+                var marginUsedAfterLiquidations = totalMarginUsed - GetMarginReleased(liquidatingQuantities);
 
-                if (marginUsedAfterPendingOrders > totalPortfolioValue * (1 + _marginBuffer))
+                if (marginUsedAfterLiquidations > totalPortfolioValue * (1 + _marginBuffer))
                 {
-                    foreach (var positionGroup in Portfolio.Positions.Groups)
+                    // each position group, losers first as they are executed, is sized for the deficit the earlier ones leave
+                    // and from the holdings they leave, so the same deficit and the same holdings are never liquidated twice
+                    var regroupedPositionGroups = ResolvePositionGroupsAfterFills(liquidatingQuantities, out var impactedGroups);
+                    var positionGroups = Portfolio.Positions.Groups
+                        .Except(impactedGroups)
+                        .Concat(regroupedPositionGroups)
+                        .OrderBy(positionGroup => positionGroup.Positions.Sum(position => Portfolio[position.Symbol].UnrealizedProfit))
+                        .ToList();
+                    foreach (var positionGroup in positionGroups)
                     {
-                        var positionMarginCallOrders = GenerateMarginCallOrders(
-                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, marginUsedAfterPendingOrders)).ToList();
-                        if (positionMarginCallOrders.Count > 0 && positionMarginCallOrders.All(x => x.Quantity != 0
-                            && Math.Abs(pendingQuantities.GetValueOrDefault(x.Symbol) + x.Quantity) <= Math.Abs(Portfolio[x.Symbol].Quantity)))
+                        if (marginUsedAfterLiquidations <= totalPortfolioValue)
                         {
-                            marginCallOrders.AddRange(positionMarginCallOrders);
+                            break;
                         }
+
+                        var positionMarginCallOrders = GenerateMarginCallOrders(
+                            new MarginCallOrdersParameters(positionGroup, totalPortfolioValue, marginUsedAfterLiquidations)).ToList();
+                        // holdings that other liquidations sell beyond what's held aren't bought back
+                        if (positionMarginCallOrders.Count == 0 || positionMarginCallOrders.Any(x => x.Quantity == 0
+                            || Math.Sign(x.Quantity) == Math.Sign(Portfolio[x.Symbol].Quantity)
+                            || Math.Abs(liquidatingQuantities.GetValueOrDefault(x.Symbol) + x.Quantity) > Math.Abs(Portfolio[x.Symbol].Quantity)))
+                        {
+                            continue;
+                        }
+
+                        marginCallOrders.AddRange(positionMarginCallOrders);
+                        foreach (var order in positionMarginCallOrders)
+                        {
+                            liquidatingQuantities[order.Symbol] = liquidatingQuantities.GetValueOrDefault(order.Symbol) + order.Quantity;
+                        }
+                        marginUsedAfterLiquidations = totalMarginUsed - GetMarginReleased(liquidatingQuantities);
                     }
                 }
 
@@ -148,18 +170,27 @@ namespace QuantConnect.Securities
                 return 0;
             }
 
+            var groupsAfterFills = ResolvePositionGroupsAfterFills(quantities, out var impactedGroups);
+
+            return impactedGroups.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup))
+                - groupsAfterFills.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup));
+        }
+
+        /// <summary>
+        /// Resolves the position groups the impacted positions form once the specified quantities are filled
+        /// </summary>
+        private PositionGroupCollection ResolvePositionGroupsAfterFills(Dictionary<Symbol, decimal> quantities, out List<IPositionGroup> impactedGroups)
+        {
             var positions = quantities.Select(kvp => (IPosition)new Position(Portfolio.Securities[kvp.Key], kvp.Value)).ToList();
-            var impactedGroups = Portfolio.Positions.GetImpactedGroups(positions).ToList();
+            impactedGroups = Portfolio.Positions.GetImpactedGroups(positions).ToList();
             var positionsAfterFills = impactedGroups
                 .SelectMany(positionGroup => positionGroup.Positions)
                 .Concat(positions)
                 .Consolidate()
                 .Values
                 .Where(position => position.Quantity != 0);
-            var groupsAfterFills = Portfolio.Positions.ResolvePositionGroups(new PositionCollection(positionsAfterFills));
 
-            return impactedGroups.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup))
-                - groupsAfterFills.Sum(positionGroup => positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup));
+            return Portfolio.Positions.ResolvePositionGroups(new PositionCollection(positionsAfterFills));
         }
 
         /// <summary>
@@ -194,7 +225,8 @@ namespace QuantConnect.Securities
                 minimumOrderMarginPortfolioPercentage: 0
             ));
 
-            var absQuantity = Math.Abs(result.NumberOfLots);
+            // the position group can be the holdings left after other liquidations, which the model sizes from the held ones
+            var absQuantity = Math.Min(Math.Abs(result.NumberOfLots), Math.Abs(positionGroup.Quantity));
             var orderType = positionGroup.Count > 1 ? OrderType.ComboMarket : OrderType.Market;
 
             GroupOrderManager groupOrderManager = null;
