@@ -1540,7 +1540,7 @@ namespace QuantConnect.Util
         /// Helper method to determine if we should use strict end time
         /// </summary>
         /// <param name="symbol">The associated symbol</param>
-        /// <param name="increment">The datas time increment</param>
+        /// <param name="increment">The data's time increment</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool UseStrictEndTime(bool dailyStrictEndTimeEnabled, Symbol symbol, TimeSpan increment, SecurityExchangeHours exchangeHours)
         {
@@ -1589,7 +1589,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Helper method that if appropiate, will set the Time and EndTime of the given data point to it's daily strict times
+        /// Helper method that if appropriate, will set the Time and EndTime of the given data point to it's daily strict times
         /// </summary>
         /// <param name="baseData">The target data point</param>
         /// <param name="exchange">The associated exchange hours</param>

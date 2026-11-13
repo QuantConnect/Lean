@@ -135,7 +135,7 @@ namespace QuantConnect.Configuration
         /// <summary>
         /// Get the matching config setting from the file searching for this key.
         /// </summary>
-        /// <param name="key">String key value we're seaching for in the config file.</param>
+        /// <param name="key">String key value we're searching for in the config file.</param>
         /// <param name="defaultValue"></param>
         /// <returns>String value of the configuration setting or empty string if nothing found.</returns>
         public static string Get(string key, string defaultValue = "")

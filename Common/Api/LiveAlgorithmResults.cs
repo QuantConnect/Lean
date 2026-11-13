@@ -32,7 +32,7 @@ namespace QuantConnect.Api
         public string Message { get; set; }
 
         /// <summary>
-        /// Indicates the status of the algorihtm, i.e. 'Running', 'Stopped'
+        /// Indicates the status of the algorithm, i.e. 'Running', 'Stopped'
         /// </summary>
         public string Status { get; set; }
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
+        /// Server status information, including CPU/RAM usage, etc...
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> ServerStatistics { get; set; }

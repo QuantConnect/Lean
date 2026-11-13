@@ -89,7 +89,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Gets the margin currently alloted to the specified holding
+        /// Gets the margin currently allotted to the specified holding
         /// </summary>
         /// <param name="parameters">An object containing the security</param>
         /// <returns>The maintenance margin required for the provided holdings quantity/cost/value</returns>

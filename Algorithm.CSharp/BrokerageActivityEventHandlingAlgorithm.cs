@@ -19,7 +19,7 @@ using QuantConnect.Data;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example algorithm to demostrate the event handlers of Brokerage activities
+    /// Example algorithm to demonstrate the event handlers of Brokerage activities
     /// </summary>
     /// <meta name="tag" content="using quantconnect" />
     public class BrokerageActivityEventHandlingAlgorithm : QCAlgorithm

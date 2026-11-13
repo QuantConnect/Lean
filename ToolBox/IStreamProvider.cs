@@ -44,7 +44,7 @@ namespace QuantConnect.ToolBox
     public static class StreamProvider
     {
         /// <summary>
-        /// Creates a new <see cref="IStreamProvider"/> capable of reading a file with the specified extenson
+        /// Creates a new <see cref="IStreamProvider"/> capable of reading a file with the specified extension
         /// </summary>
         /// <param name="extension">The file extension</param>
         /// <returns>A new stream provider capable of reading files with the specified extension</returns>

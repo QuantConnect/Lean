@@ -58,7 +58,7 @@ namespace QuantConnect
             public static string InvalidInitialMarginRequirement = "Initial margin requirement must be between 0 and 1";
 
             /// <summary>
-            /// String messsage saying: Maintenance margin requirement must be between 0 and 1 
+            /// String message saying: Maintenance margin requirement must be between 0 and 1 
             /// </summary>
             public static string InvalidMaintenanceMarginRequirement = "Maintenance margin requirement must be between 0 and 1";
 
@@ -82,7 +82,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string mesage containing information about the order ID, the initial margin and
+            /// Returns a string message containing information about the order ID, the initial margin and
             /// the free margin
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -283,7 +283,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Parses the given CashBook into a string mesage with basic information about it
+            /// Parses the given CashBook into a string message with basic information about it
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Securities.CashBook cashBook)

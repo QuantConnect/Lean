@@ -31,7 +31,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
 
         /// <summary>
-        /// Indentity indicator for price
+        /// Identity indicator for price
         /// </summary>
         protected Identity Price { get; }
 

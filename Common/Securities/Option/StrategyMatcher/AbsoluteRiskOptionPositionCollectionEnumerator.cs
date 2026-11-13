@@ -27,7 +27,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         private readonly Func<Symbol, decimal> _marketPriceProvider;
 
         /// <summary>
-        /// Intializes a new instance of the <see cref="AbsoluteRiskOptionPositionCollectionEnumerator"/> class
+        /// Initializes a new instance of the <see cref="AbsoluteRiskOptionPositionCollectionEnumerator"/> class
         /// </summary>
         /// <param name="marketPriceProvider">Function providing the current market price for a provided symbol</param>
         public AbsoluteRiskOptionPositionCollectionEnumerator(Func<Symbol, decimal> marketPriceProvider)

@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Fundamental
         private readonly EarningReports _earningReports;
 
         /// <summary>
-        /// Get's the fundamental instance provider for the requested symbol
+        /// Gets the fundamental instance provider for the requested symbol
         /// </summary>
         /// <param name="symbol">The requested symbol</param>
         /// <returns>The unique instance provider</returns>

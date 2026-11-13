@@ -76,7 +76,7 @@ namespace QuantConnect.Data.UniverseSelection
 
         /// <summary>
         /// Creates a new universe that restricts the universe selection data to symbols that passed the
-        /// first universe's selection critera
+        /// first universe's selection criteria
         /// 
         /// NOTE: The <paramref name="second"/> universe instance provided to this method should not be manually
         /// added to the algorithm. The <paramref name="first"/> should still be manually (assuming no other changes).

@@ -44,7 +44,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Sets the property with the specified name to the value. This is a case-insensitve search.
+        /// Sets the property with the specified name to the value. This is a case-insensitive search.
         /// </summary>
         /// <param name="name">The property name to set</param>
         /// <param name="value">The new property value</param>
@@ -116,7 +116,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Gets the property's value with the specified name. This is a case-insensitve search.
+        /// Gets the property's value with the specified name. This is a case-insensitive search.
         /// </summary>
         /// <param name="name">The property name to access</param>
         /// <returns>object value of BaseData</returns>
@@ -160,7 +160,7 @@ namespace QuantConnect.Data
 
         /// <summary>
         /// Gets whether or not this dynamic data instance has a property with the specified name.
-        /// This is a case-insensitve search.
+        /// This is a case-insensitive search.
         /// </summary>
         /// <param name="name">The property name to check for</param>
         /// <returns>True if the property exists, false otherwise</returns>
@@ -173,7 +173,7 @@ namespace QuantConnect.Data
         /// Gets the storage dictionary
         /// Python algorithms need this information since DynamicMetaObject does not work
         /// </summary>
-        /// <returns>Dictionary that stores the paramenters names and values</returns>
+        /// <returns>Dictionary that stores the parameters names and values</returns>
         public IDictionary<string, object> GetStorageDictionary()
         {
             return _storage;

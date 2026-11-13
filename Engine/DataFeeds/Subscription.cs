@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IEnumerator<SubscriptionData> _enumerator;
 
         /// <summary>
-        /// The subcription requests associated with this subscription
+        /// The subscription requests associated with this subscription
         /// </summary>
         internal List<SubscriptionRequest> SubscriptionRequests { get; private set; }
 

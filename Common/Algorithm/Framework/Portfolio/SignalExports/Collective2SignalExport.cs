@@ -578,7 +578,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             public C2ExchangeSymbol ExchangeSymbol { get; set; }
 
             /// <summary>
-            /// Number of shares/contracts of the given symbol. Positive quantites are long positions
+            /// Number of shares/contracts of the given symbol. Positive quantities are long positions
             /// and negative short positions.
             /// </summary>
             [JsonProperty(PropertyName = "quantity")]

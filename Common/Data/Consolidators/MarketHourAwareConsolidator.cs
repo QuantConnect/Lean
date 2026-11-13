@@ -217,7 +217,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Perform late initialization based on the datas symbol
+        /// Perform late initialization based on the data's symbol
         /// </summary>
         protected void Initialize(IBaseData data)
         {

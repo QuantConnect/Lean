@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Algorithm demonstrating custom charting support in QuantConnect.
     /// The entire charting system of quantconnect is adaptable. You can adjust it to draw whatever you'd like.
-    /// Charts can be stacked, or overlayed on each other. Series can be candles, lines or scatter plots.
+    /// Charts can be stacked, or overlaid on each other. Series can be candles, lines or scatter plots.
     /// Even the default behaviours of QuantConnect can be overridden.
     /// </summary>
     /// <meta name="tag" content="charting" />

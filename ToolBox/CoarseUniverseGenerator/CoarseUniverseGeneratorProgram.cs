@@ -319,7 +319,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         }
 
         /// <summary>
-        /// Populates the sid contex.
+        /// Populates the sid context.
         /// </summary>
         /// <param name="mapFileResolver">The map file resolver.</param>
         /// <param name="exclusions">The exclusions.</param>

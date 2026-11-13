@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
-    ///     Selects contracts in a futures universe, sorted by open interest.  This allows the selection to identifiy current
+    ///     Selects contracts in a futures universe, sorted by open interest.  This allows the selection to identify current
     ///     active contract.
     /// </summary>
     public class OpenInterestFutureUniverseSelectionModel : FutureUniverseSelectionModel
@@ -146,7 +146,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Converts future chain symbol selector, provided as a Python lambda function, to a managed func
         /// </summary>
         /// <param name="futureChainSymbolSelector">Python lambda function that selects symbols from the provided future chain</param>
-        /// <returns>Given Python future chain symbol selector as a func objet</returns>
+        /// <returns>Given Python future chain symbol selector as a func object</returns>
         /// <exception cref="ArgumentException"></exception>
         private static Func<DateTime, IEnumerable<Symbol>> ConvertFutureChainSymbolSelectorToFunc(PyObject futureChainSymbolSelector)
         {

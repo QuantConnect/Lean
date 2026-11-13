@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         /// Determines if the exchange is open at the specified time
         /// </summary>
         /// <param name="time">The time of day to check</param>
-        /// <param name="extendedMarketHours">True to check exended market hours, false to check regular market hours</param>
+        /// <param name="extendedMarketHours">True to check extended market hours, false to check regular market hours</param>
         /// <returns>True if the exchange is considered open, false otherwise</returns>
         public bool IsOpen(TimeSpan time, bool extendedMarketHours)
         {
@@ -280,7 +280,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="start">The start time of the interval</param>
         /// <param name="end">The end time of the interval</param>
-        /// <param name="extendedMarketHours">True to check exended market hours, false to check regular market hours</param>
+        /// <param name="extendedMarketHours">True to check extended market hours, false to check regular market hours</param>
         /// <returns>True if the exchange is considered open, false otherwise</returns>
         public bool IsOpen(TimeSpan start, TimeSpan end, bool extendedMarketHours)
         {

@@ -815,7 +815,7 @@ namespace QuantConnect
         /// Normalizes the step size as a percentage of the period.
         /// </summary>
         /// <param name="period">The period to normalize against</param>
-        /// <param name="stepSize">The step size to be normaized</param>
+        /// <param name="stepSize">The step size to be normalized</param>
         /// <returns>The normalized step size as a percentage of the period</returns>
         public static double NormalizeTimeStep(TimeSpan period, TimeSpan stepSize)
         {

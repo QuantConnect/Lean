@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionDataReaderSubscriptionEnumeratorFactory _subscriptionFactory;
 
         /// <summary>
-        /// Flag indicating the hander thread is completely finished and ready to dispose.
+        /// Flag indicating the handler thread is completely finished and ready to dispose.
         /// </summary>
         public bool IsActive { get; private set; }
 

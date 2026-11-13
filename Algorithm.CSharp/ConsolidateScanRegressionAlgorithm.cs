@@ -21,7 +21,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting consolidation happing flushed due to scan calls
+    /// Regression algorithm asserting consolidation happening flushed due to scan calls
     /// </summary>
     public class ConsolidateScanRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

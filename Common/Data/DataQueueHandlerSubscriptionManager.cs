@@ -142,7 +142,7 @@ namespace QuantConnect.Data
         /// </summary>
         /// <param name="symbols">Symbols to subscribe</param>
         /// <param name="tickType">Type of tick data</param>
-        /// <returns>Returns true if subsribed; otherwise false</returns>
+        /// <returns>Returns true if subscribed; otherwise false</returns>
         protected abstract bool Subscribe(IEnumerable<Symbol> symbols, TickType tickType);
 
         /// <summary>

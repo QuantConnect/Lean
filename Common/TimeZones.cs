@@ -103,7 +103,7 @@ namespace QuantConnect
         public static readonly DateTimeZone Madrid = DateTimeZoneProviders.Tzdb["Europe/Madrid"];
 
         /// <summary>
-        /// Gets the time zone for Buenos Aires, Argentia.
+        /// Gets the time zone for Buenos Aires, Argentina.
         /// </summary>
         public static readonly DateTimeZone BuenosAires = DateTimeZoneProviders.Tzdb["America/Argentina/Buenos_Aires"];
 

@@ -29,7 +29,7 @@ namespace QuantConnect.Orders.OptionExercise
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="model">The python model to wrapp</param>
+        /// <param name="model">The python model to wrap</param>
         public OptionExerciseModelPythonWrapper(PyObject model)
             : base(model)
         {

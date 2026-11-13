@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         }
 
         /// <summary>
-        /// The period of this trade bar, (second, minute, daily, ect...)
+        /// The period of this trade bar, (second, minute, daily, etc...)
         /// </summary>
         public override TimeSpan Period => QuantConnect.Time.OneDay;
 

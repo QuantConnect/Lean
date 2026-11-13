@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
 
         /// <summary>
-        /// Flag indicating the hander thread is completely finished and ready to dispose.
+        /// Flag indicating the handler thread is completely finished and ready to dispose.
         /// this doesn't run as its own thread
         /// </summary>
         public override bool IsActive { get; protected set; }

@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Gets the option chain associated with the underlying Symbol
         /// </summary>
         /// <param name="symbol">The option or the underlying symbol to get the option chain for.
-        /// Providing the option allows targetting an option ticker different than the default e.g. SPXW</param>
+        /// Providing the option allows targeting an option ticker different than the default e.g. SPXW</param>
         /// <param name="date">The date to ask for the option contract list for</param>
         /// <returns>Option chain</returns>
         /// <exception cref="ArgumentException">Option underlying Symbol is not Future or Equity</exception>

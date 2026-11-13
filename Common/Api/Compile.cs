@@ -25,7 +25,7 @@ namespace QuantConnect.Api
     public class Compile : RestResponse
     {
         /// <summary>
-        /// Compile Id for a sucessful build
+        /// Compile Id for a successful build
         /// </summary>
         public string CompileId { get; set; }
 

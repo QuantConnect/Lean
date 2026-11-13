@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Get's the stream for a given file path
+        /// Gets the stream for a given file path
         /// </summary>
         protected virtual Stream GetStream(string key)
         {

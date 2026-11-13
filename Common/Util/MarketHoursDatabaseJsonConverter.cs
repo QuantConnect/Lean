@@ -32,10 +32,10 @@ namespace QuantConnect.Util
     public class MarketHoursDatabaseJsonConverter : TypeChangeJsonConverter<MarketHoursDatabase, MarketHoursDatabaseJsonConverter.MarketHoursDatabaseJson>
     {
         /// <summary>
-        /// Convert the input value to a value to be serialzied
+        /// Convert the input value to a value to be serialized
         /// </summary>
-        /// <param name="value">The input value to be converted before serialziation</param>
-        /// <returns>A new instance of TResult that is to be serialzied</returns>
+        /// <param name="value">The input value to be converted before serialization</param>
+        /// <returns>A new instance of TResult that is to be serialized</returns>
         protected override MarketHoursDatabaseJson Convert(MarketHoursDatabase value)
         {
             return new MarketHoursDatabaseJson(value);

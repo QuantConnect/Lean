@@ -144,7 +144,7 @@ namespace QuantConnect.Notifications
         }
 
         /// <summary>
-        /// Send a file to the FTP specified server using password authentication over unsecure FTP.
+        /// Send a file to the FTP specified server using password authentication over insecure FTP.
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
@@ -158,7 +158,7 @@ namespace QuantConnect.Notifications
         }
 
         /// <summary>
-        /// Send a file to the FTP specified server using password authentication over unsecure FTP.
+        /// Send a file to the FTP specified server using password authentication over insecure FTP.
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>

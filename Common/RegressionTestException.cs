@@ -32,7 +32,7 @@ namespace QuantConnect
         public RegressionTestException() { }
 
         /// <summary>
-        /// Creates a new isntance of a <see cref="RegressionTestException"/>
+        /// Creates a new instance of a <see cref="RegressionTestException"/>
         /// </summary>
         /// <param name="message">Message to be thrown by the exception</param>
         public RegressionTestException(string message): base(message) { }

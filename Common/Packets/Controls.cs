@@ -74,12 +74,12 @@ namespace QuantConnect.Packets
         public int RemainingLogAllowance { get; set; }
 
         /// <summary>
-        /// Maximimum number of insights we'll store and score in a single backtest
+        /// Maximum number of insights we'll store and score in a single backtest
         /// </summary>
         public int BacktestingMaxInsights { get; set; }
 
         /// <summary>
-        /// Maximimum number of orders we'll allow in a backtest.
+        /// Maximum number of orders we'll allow in a backtest.
         /// </summary>
         public int BacktestingMaxOrders { get; set; }
 

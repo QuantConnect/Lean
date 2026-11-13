@@ -651,7 +651,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Only dipose of the PyObject if it was set to something different than empty
+        /// Only dispose of the PyObject if it was set to something different than empty
         /// </summary>
         private static void DisposeIfNotEmpty(PyObject pyObject)
         {

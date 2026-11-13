@@ -313,7 +313,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The base36 string encoded as a long using alpha [0-9A-Z]</param>
         /// <param name="properties">Other data defining properties of the symbol including market,
-        /// security type, listing or expiry date, strike/call/put/style for options, ect...</param>
+        /// security type, listing or expiry date, strike/call/put/style for options, etc...</param>
         public SecurityIdentifier(string symbol, ulong properties)
         {
             if (symbol == null)
@@ -345,7 +345,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="symbol">The base36 string encoded as a long using alpha [0-9A-Z]</param>
         /// <param name="properties">Other data defining properties of the symbol including market,
-        /// security type, listing or expiry date, strike/call/put/style for options, ect...</param>
+        /// security type, listing or expiry date, strike/call/put/style for options, etc...</param>
         /// <param name="underlying">Specifies a <see cref="SecurityIdentifier"/> that represents the underlying security</param>
         public SecurityIdentifier(string symbol, ulong properties, SecurityIdentifier underlying)
             : this(symbol, properties)

@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Adds the specified target to the collection. If a target for the same symbol
-        /// already exists it wil be overwritten.
+        /// already exists it will be overwritten.
         /// </summary>
         /// <param name="target">The portfolio target to add</param>
         public void Add(IPortfolioTarget target)
@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Adds the specified target to the collection. If a target for the same symbol
-        /// already exists it wil be overwritten.
+        /// already exists it will be overwritten.
         /// </summary>
         /// <param name="target">The portfolio target to add</param>
         public void Add(KeyValuePair<Symbol, IPortfolioTarget> target)
@@ -129,7 +129,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Adds the specified target to the collection. If a target for the same symbol
-        /// already exists it wil be overwritten.
+        /// already exists it will be overwritten.
         /// </summary>
         /// <param name="symbol">The symbol key</param>
         /// <param name="target">The portfolio target to add</param>

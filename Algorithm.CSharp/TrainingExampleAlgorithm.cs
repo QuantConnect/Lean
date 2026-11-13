@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Let's assert the behavior of our traning schedule
+        /// Let's assert the behavior of our training schedule
         /// </summary>
         public override void OnEndOfAlgorithm()
         {

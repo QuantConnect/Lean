@@ -57,7 +57,7 @@ namespace QuantConnect.Data.Market
         public virtual bool IsClosed { get; protected set; }
 
         /// <summary>
-        /// Reader Method :: using set of arguements we specify read out type. Enumerate
+        /// Reader Method :: using set of arguments we specify read out type. Enumerate
         /// until the end of the data stream or file. E.g. Read CSV file line by line and convert
         /// into data types.
         /// </summary>

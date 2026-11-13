@@ -27,8 +27,8 @@ namespace QuantConnect.Util
         /// <summary>
         /// Converts as security identifier to a string
         /// </summary>
-        /// <param name="value">The input value to be converted before serialziation</param>
-        /// <returns>A new instance of TResult that is to be serialzied</returns>
+        /// <param name="value">The input value to be converted before serialization</param>
+        /// <returns>A new instance of TResult that is to be serialized</returns>
         protected override string Convert(SecurityIdentifier value)
         {
             return value.ToString();

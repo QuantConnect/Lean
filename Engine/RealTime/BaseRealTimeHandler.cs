@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Get's the timeout the scheduled task time monitor should use
+        /// Gets the timeout the scheduled task time monitor should use
         /// </summary>
         protected virtual int GetTimeMonitorTimeout()
         {

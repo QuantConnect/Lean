@@ -26,14 +26,14 @@ namespace QuantConnect.Python
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="model">The python model to wrapp</param>
+        /// <param name="model">The python model to wrap</param>
         public OptionAssignmentModelPythonWrapper(PyObject model)
             : base(model)
         {
         }
 
         /// <summary>
-        /// Get's the option assignments to generate if any
+        /// Gets the option assignments to generate if any
         /// </summary>
         /// <param name="parameters">The option assignment parameters data transfer class</param>
         /// <returns>The option assignment result</returns>

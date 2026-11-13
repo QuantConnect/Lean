@@ -484,7 +484,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <param name="algorithm">Algorithm instance</param>
         /// <param name="resultHandler">The configured result handler</param>
-        /// <param name="transactionHandler">The configurated transaction handler</param>
+        /// <param name="transactionHandler">The configured transaction handler</param>
         /// <param name="brokerage">Brokerage output instance</param>
         protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
         {

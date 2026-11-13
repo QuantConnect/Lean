@@ -18,7 +18,7 @@ using System;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Represents an error retuned from a broker's server
+    /// Represents an error returned from a broker's server
     /// </summary>
     public class BrokerageException : Exception
     {

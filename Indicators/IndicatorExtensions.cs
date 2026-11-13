@@ -328,7 +328,7 @@ namespace QuantConnect.Indicators
 
 
 
-        /// The methods overloads bellow are due to python.net not being able to correctly solve generic methods overload
+        /// The methods overloads below are due to python.net not being able to correctly solve generic methods overload
 
         /// <summary>
         /// Configures the second indicator to receive automatic updates from the first by attaching an event handler

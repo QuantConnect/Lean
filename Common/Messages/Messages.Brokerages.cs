@@ -55,7 +55,7 @@ namespace QuantConnect
             public static string OrderUpdateNotSupported = "Brokerage does not support update. You must cancel and re-create instead.";
 
             /// <summary>
-            /// Retunrns a string message saying the type of the given security is not supported by the given brokerage
+            /// Returns a string message saying the type of the given security is not supported by the given brokerage
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedSecurityType(IBrokerageModel brokerageModel, Securities.Security security)

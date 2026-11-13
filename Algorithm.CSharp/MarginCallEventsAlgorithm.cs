@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm showcases two margin related event handlers.
     /// OnMarginCallWarning: Fired when a portfolio's remaining margin dips below 5% of the total portfolio value
-    /// OnMarginCall: Fired immediately before margin call orders are execued, this gives the algorithm a change to regain margin on its own through liquidation
+    /// OnMarginCall: Fired immediately before margin call orders are executed, this gives the algorithm a change to regain margin on its own through liquidation
     /// </summary>
     /// <meta name="tag" content="securities and portfolio" />
     /// <meta name="tag" content="margin models" />

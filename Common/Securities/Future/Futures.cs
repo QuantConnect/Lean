@@ -156,7 +156,7 @@ namespace QuantConnect.Securities
             public const string RUB = "6R";
 
             /// <summary>
-            /// Brazillian Real Futures
+            /// Brazilian Real Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string BRL = "6L";

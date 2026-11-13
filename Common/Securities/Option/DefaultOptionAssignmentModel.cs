@@ -45,7 +45,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Get's the option assignments to generate if any
+        /// Gets the option assignments to generate if any
         /// </summary>
         /// <param name="parameters">The option assignment parameters data transfer class</param>
         /// <returns>The option assignment result</returns>

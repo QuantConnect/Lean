@@ -38,7 +38,7 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// Class contining basic store properties present in the REST response from QC API
+    /// Class containing basic store properties present in the REST response from QC API
     /// </summary>
     public class BasicObjectStore
     {

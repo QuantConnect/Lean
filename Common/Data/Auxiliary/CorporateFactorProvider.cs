@@ -169,7 +169,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets all of the splits and dividends represented by this factor file
         /// </summary>
-        /// <param name="symbol">The symbol to ues for the dividend and split objects</param>
+        /// <param name="symbol">The symbol to use for the dividend and split objects</param>
         /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
         /// <param name="decimalPlaces">The number of decimal places to round the dividend's distribution to, defaulting to 2</param>
         /// <returns>All splits and dividends represented by this factor file in chronological order</returns>

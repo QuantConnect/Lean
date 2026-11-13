@@ -115,11 +115,11 @@ namespace QuantConnect.Logging
         }
 
         /// <summary>
-        /// Log error. This overload is usefull when exceptions are being thrown from within an anonymous function.
+        /// Log error. This overload is useful when exceptions are being thrown from within an anonymous function.
         /// </summary>
         /// <param name="method">The method identifier to be used</param>
         /// <param name="exception">The exception to be logged</param>
-        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the message text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         private static void Error(string method, Exception exception, string message = null, bool overrideMessageFloodProtection = false)
         {
@@ -131,7 +131,7 @@ namespace QuantConnect.Logging
         /// Log error
         /// </summary>
         /// <param name="exception">The exception to be logged</param>
-        /// <param name="message">An optional message to be logged, if null/whitespace the messge text will be extracted</param>
+        /// <param name="message">An optional message to be logged, if null/whitespace the message text will be extracted</param>
         /// <param name="overrideMessageFloodProtection">Force sending a message, overriding the "do not flood" directive</param>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void Error(Exception exception, string message = null, bool overrideMessageFloodProtection = false)

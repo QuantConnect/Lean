@@ -1264,7 +1264,7 @@ namespace QuantConnect
         /// This makes the API similar for traditional and concurrent dictionaries.
         /// </summary>
         /// <typeparam name="K">Key type for dictionary</typeparam>
-        /// <typeparam name="V">Value type for dictonary</typeparam>
+        /// <typeparam name="V">Value type for dictionary</typeparam>
         /// <param name="dictionary">Dictionary object we're operating on</param>
         /// <param name="key">Key we want to add or update.</param>
         /// <param name="value">Value we want to set.</param>
@@ -1277,7 +1277,7 @@ namespace QuantConnect
         /// Extension method to automatically add/update lazy values in concurrent dictionary.
         /// </summary>
         /// <typeparam name="TKey">Key type for dictionary</typeparam>
-        /// <typeparam name="TValue">Value type for dictonary</typeparam>
+        /// <typeparam name="TValue">Value type for dictionary</typeparam>
         /// <param name="dictionary">Dictionary object we're operating on</param>
         /// <param name="key">Key we want to add or update.</param>
         /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
@@ -1676,7 +1676,7 @@ namespace QuantConnect
         /// Extension method for faster string to Int32 conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive Int32 value</param>
-        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <remarks>Method makes some assumptions - always numbers, no "signs" +,- etc.</remarks>
         /// <returns>Int32 value of the string</returns>
         public static int ToInt32(this string str)
         {
@@ -1695,7 +1695,7 @@ namespace QuantConnect
         /// Extension method for faster string to Int64 conversion.
         /// </summary>
         /// <param name="str">String to be converted to positive Int64 value</param>
-        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <remarks>Method makes some assumptions - always numbers, no "signs" +,- etc.</remarks>
         /// <returns>Int32 value of the string</returns>
         public static long ToInt64(this string str)
         {
@@ -2222,7 +2222,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Checks the specified type to see if it is a subclass of the <paramref name="possibleSuperType"/>. This method will
-        /// crawl up the inheritance heirarchy to check for equality using generic type definitions (if exists)
+        /// crawl up the inheritance hierarchy to check for equality using generic type definitions (if exists)
         /// </summary>
         /// <param name="type">The type to be checked as a subclass of <paramref name="possibleSuperType"/></param>
         /// <param name="possibleSuperType">The possible superclass of <paramref name="type"/></param>
@@ -2468,7 +2468,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get the first occurence of a string between two characters from another string
+        /// Get the first occurrence of a string between two characters from another string
         /// </summary>
         /// <param name="value">The original string</param>
         /// <param name="left">Left bound of the substring</param>

@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Get's the timeout the scheduled task time monitor should use
+        /// Gets the timeout the scheduled task time monitor should use
         /// </summary>
         protected override int GetTimeMonitorTimeout()
         {
@@ -87,7 +87,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Execute the live realtime event thread montioring.
+        /// Execute the live realtime event thread monitoring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
         private void Run()

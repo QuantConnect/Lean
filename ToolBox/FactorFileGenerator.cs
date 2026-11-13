@@ -48,7 +48,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Constructor for the FactorFileGenerator
         /// </summary>
-        /// <param name="symbol">The equity for which the factor file respresents</param>
+        /// <param name="symbol">The equity for which the factor file represents</param>
         /// <param name="pathForDailyEquityData">The path to the daily data for the specified equity</param>
         public FactorFileGenerator(Symbol symbol, string pathForDailyEquityData)
         {
@@ -198,7 +198,7 @@ namespace QuantConnect.ToolBox
         /// Applies the dividend first.
         /// </summary>
         /// <param name="intraDayDividendSplit"><see cref="IntraDayDividendSplit"/> instance that holds the intraday dividend and split information</param>
-        /// <param name="last">The last <see cref="CorporateFactorRow"/> generated recursivly</param>
+        /// <param name="last">The last <see cref="CorporateFactorRow"/> generated recursively</param>
         /// <returns><see cref="CorporateFactorRow"/> that represents an intraday dividend and split</returns>
         private CorporateFactorRow CalculateIntradayDividendSplit(IntraDayDividendSplit intraDayDividendSplit, CorporateFactorRow last)
         {

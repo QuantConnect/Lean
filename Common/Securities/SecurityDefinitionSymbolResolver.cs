@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get's the CIK value associated with the given <see cref="Symbol"/>
+        /// Gets the CIK value associated with the given <see cref="Symbol"/>
         /// </summary>
         /// <param name="symbol">The Lean <see cref="Symbol"/></param>
         /// <returns>The Central Index Key number (CIK) corresponding to the given Lean <see cref="Symbol"/> if any, else null</returns>
@@ -274,7 +274,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get's the security definitions using a lazy initialization
+        /// Gets the security definitions using a lazy initialization
         /// </summary>
         private IEnumerable<SecurityDefinition> GetSecurityDefinitions()
         {

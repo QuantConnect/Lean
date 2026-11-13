@@ -81,7 +81,7 @@ namespace QuantConnect
         /// has not already been added, this will throw a <see cref="KeyNotFoundException"/>.
         /// </summary>
         /// <param name="timeZone">The time zone to get local time for</param>
-        /// <returns>The local time in the specifed time zone</returns>
+        /// <returns>The local time in the specified time zone</returns>
         public DateTime GetTimeIn(DateTimeZone timeZone)
         {
             return GetLocalTimeKeeper(timeZone).LocalTime;

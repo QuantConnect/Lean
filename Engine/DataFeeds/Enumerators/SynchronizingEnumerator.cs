@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingEnumerator{T}"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        /// <remark>The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</remark>
+        /// <remark>The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, etc...</remark>
         protected SynchronizingEnumerator(params IEnumerator<T>[] enumerators)
             : this ((IEnumerable<IEnumerator<T>>)enumerators)
         {
@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// Initializes a new instance of the <see cref="SynchronizingEnumerator{T}"/> class
         /// </summary>
         /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        /// <remark>The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, ect...</remark>
+        /// <remark>The type of data we want, for example, <see cref="BaseData"/> or <see cref="Slice"/>, etc...</remark>
         protected SynchronizingEnumerator(IEnumerable<IEnumerator<T>> enumerators)
         {
             _enumerators = enumerators.ToArray();

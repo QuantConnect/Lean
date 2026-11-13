@@ -46,7 +46,7 @@ namespace QuantConnect.Orders.Fills
         ///     of the previous tradebar when making a sell (buy) request. Following the behaviour of
         ///     <see cref="StopLimitFill"/>, current quote information is used when determining fill parameters
         ///     (e.g., price, quantity) as the tradebar containing the incoming data is not yet consolidated.
-        ///     This conservative approach, however, can lead to trades not occuring as would be expected when
+        ///     This conservative approach, however, can lead to trades not occurring as would be expected when
         ///     compared to future consolidated data.
         /// </remarks>
         public override OrderEvent LimitIfTouchedFill(Security asset, LimitIfTouchedOrder order)
@@ -1041,7 +1041,7 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// This is required due to a limitation in PythonNet to resolved
-        /// overriden methods. <see cref="GetPrices"/>
+        /// overridden methods. <see cref="GetPrices"/>
         /// </summary>
         protected override Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {

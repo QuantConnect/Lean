@@ -844,7 +844,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol whose EMV we want</param>
         /// <param name="period">The period of the EMV</param>
-        /// <param name="scale">The length of the outputed value</param>
+        /// <param name="scale">The length of the outputted value</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The EaseOfMovementValue indicator for the given parameters</returns>
@@ -3107,7 +3107,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
+        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, etc...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
         /// <param name="type">The indicator type, for example, 'SMA(5)'</param>
@@ -3120,7 +3120,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, ect...)
+        /// Creates a new name for an indicator created with the convenience functions (SMA, EMA, etc...)
         /// </summary>
         /// <param name="symbol">The symbol this indicator is registered to</param>
         /// <param name="type">The indicator type, for example, 'SMA(5)'</param>

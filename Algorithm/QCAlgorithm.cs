@@ -1864,7 +1864,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Lock the algorithm initialization to avoid user modifiying cash and data stream subscriptions
+        /// Lock the algorithm initialization to avoid user modifying cash and data stream subscriptions
         /// </summary>
         /// <remarks>Intended for Internal QC Lean Engine use only to prevent accidental manipulation of important properties</remarks>
         [DocumentationAttribute(AlgorithmFramework)]
@@ -3276,7 +3276,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
-        /// <param name="insights">The collection of insights generaed at the current time step</param>
+        /// <param name="insights">The collection of insights generated at the current time step</param>
         [DocumentationAttribute(AlgorithmFramework)]
         private void OnInsightsGenerated(Insight[] insights)
         {

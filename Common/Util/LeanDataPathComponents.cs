@@ -57,7 +57,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Gets the file name, not inluding directory information
+        /// Gets the file name, not including directory information
         /// </summary>
         public string Filename
         {

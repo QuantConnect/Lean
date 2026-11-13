@@ -20,7 +20,7 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm assering we can disable automatic option assignment
+    /// Regression algorithm asserting we can disable automatic option assignment
     /// </summary>
     public class NullOptionAssignmentRegressionAlgorithm : OptionAssignmentRegressionAlgorithm
     {

@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="portfolioOptimizer">The python model to wrapp</param>
+        /// <param name="portfolioOptimizer">The python model to wrap</param>
         public PortfolioOptimizerPythonWrapper(PyObject portfolioOptimizer)
             : base(portfolioOptimizer)
         {

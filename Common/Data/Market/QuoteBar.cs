@@ -200,7 +200,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// The period of this quote bar, (second, minute, daily, ect...)
+        /// The period of this quote bar, (second, minute, daily, etc...)
         /// </summary>
         [ProtoMember(205)]
         [PandasIgnore]

@@ -45,7 +45,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Boolean flag indicating the result hander thread is busy.
+        /// Boolean flag indicating the result handler thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
         bool IsActive

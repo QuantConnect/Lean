@@ -62,7 +62,7 @@ namespace QuantConnect.Data
         /// <param name="tickType">The tick type</param>
         /// <param name="dataCacheProvider">The data cache provider to use</param>
         /// <param name="writePolicy">The file write policy to use</param>
-        /// <param name="mapSymbol">True if the symbol should be mapped while writting the data</param>
+        /// <param name="mapSymbol">True if the symbol should be mapped while writing the data</param>
         public LeanDataWriter(Resolution resolution, Symbol symbol, string dataDirectory, TickType tickType = TickType.Trade,
             IDataCacheProvider dataCacheProvider = null, WritePolicy? writePolicy = null, bool mapSymbol = false) : this(
             dataDirectory,

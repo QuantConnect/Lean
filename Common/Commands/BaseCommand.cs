@@ -35,7 +35,7 @@ namespace QuantConnect.Commands
         public abstract CommandResultPacket Run(IAlgorithm algorithm);
 
         /// <summary>
-        /// Creats symbol using symbol properties.
+        /// Creates symbol using symbol properties.
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
         /// <param name="securityType">The security type of the ticker. If securityType == Option, then a canonical symbol is created</param>

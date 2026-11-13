@@ -739,7 +739,7 @@ namespace QuantConnect
         Completed,
 
         /// <summary>
-        /// Runtime Error Stoped Algorithm (7)
+        /// Runtime Error Stopped Algorithm (7)
         /// </summary>
         RuntimeError,
 

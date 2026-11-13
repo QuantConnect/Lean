@@ -45,7 +45,7 @@ namespace QuantConnect
         private readonly static Func<IBaseData, decimal> _sevenBar = DataTypePropertyOrValue<IBaseDataBar>(x => (2 * x.Open + x.High + x.Low + 3 * x.Close) / 7m);
 
         /// <summary>
-        /// Gets a selector that selectes the Bid close price
+        /// Gets a selector that selects the Bid close price
         /// </summary>
         public static Func<IBaseData, decimal> BidClose
         {
@@ -53,7 +53,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Bid open price
+        /// Gets a selector that selects the Bid open price
         /// </summary>
         public static Func<IBaseData, decimal> BidOpen
         {
@@ -61,7 +61,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Bid low price
+        /// Gets a selector that selects the Bid low price
         /// </summary>
         public static Func<IBaseData, decimal> BidLow
         {
@@ -69,7 +69,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Bid high price
+        /// Gets a selector that selects the Bid high price
         /// </summary>
         public static Func<IBaseData, decimal> BidHigh
         {
@@ -77,7 +77,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Ask close price
+        /// Gets a selector that selects the Ask close price
         /// </summary>
         public static Func<IBaseData, decimal> AskClose
         {
@@ -85,7 +85,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Ask open price
+        /// Gets a selector that selects the Ask open price
         /// </summary>
         public static Func<IBaseData, decimal> AskOpen
         {
@@ -93,7 +93,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Ask low price
+        /// Gets a selector that selects the Ask low price
         /// </summary>
         public static Func<IBaseData, decimal> AskLow
         {
@@ -101,7 +101,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Ask high price
+        /// Gets a selector that selects the Ask high price
         /// </summary>
         public static Func<IBaseData, decimal> AskHigh
         {
@@ -109,7 +109,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Ask price
+        /// Gets a selector that selects the Ask price
         /// </summary>
         public static Func<IBaseData, decimal> AskPrice
         {
@@ -117,7 +117,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets a selector that selectes the Bid price
+        /// Gets a selector that selects the Bid price
         /// </summary>
         public static Func<IBaseData, decimal> BidPrice
         {

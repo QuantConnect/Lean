@@ -17,7 +17,7 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// The responsability of this model is to apply margin interest rate cash flows to the portfolio
+    /// The responsibility of this model is to apply margin interest rate cash flows to the portfolio
     /// </summary>
     public interface IMarginInterestRateModel
     {

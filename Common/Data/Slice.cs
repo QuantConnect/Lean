@@ -534,7 +534,7 @@ namespace QuantConnect.Data
         /// Gets the data associated with the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol we want data for</param>
-        /// <param name="data">The data for the specifed symbol, or null if no data was found</param>
+        /// <param name="data">The data for the specified symbol, or null if no data was found</param>
         /// <returns>True if data was found, false otherwise</returns>
         public override bool TryGetValue(Symbol symbol, out dynamic data)
         {

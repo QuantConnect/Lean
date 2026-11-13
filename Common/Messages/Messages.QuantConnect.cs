@@ -895,7 +895,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying mutiple potentially matching tickers were localized
+            /// Returns a string message saying multiple potentially matching tickers were localized
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MultipleMatchingTickersLocated(IEnumerable<string> tickers)

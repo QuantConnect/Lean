@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class AlphaStreamsPortfolioConstructionModel : IPortfolioConstructionModel
     {
         /// <summary>
-        /// Get's the weight for an alpha
+        /// Gets the weight for an alpha
         /// </summary>
         /// <param name="alphaId">The algorithm instance that experienced the change in securities</param>
         /// <returns>The alphas weight</returns>

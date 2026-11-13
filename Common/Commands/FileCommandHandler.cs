@@ -86,7 +86,7 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
-        /// Reads the commnd file on disk and populates the queue with the commands
+        /// Reads the command file on disk and populates the queue with the commands
         /// </summary>
         private void ReadCommandFile(string commandFilePath)
         {

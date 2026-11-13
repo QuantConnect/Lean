@@ -271,7 +271,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// Deletes the last submission for the current round
         /// </summary>
         /// <param name="lastSubmissionId">Last submission ID for the current round</param>
-        /// <returns>True if the last submission could be deleted sucessfully, false otherwise</returns>
+        /// <returns>True if the last submission could be deleted successfully, false otherwise</returns>
         private bool DeleteLastSubmission(int lastSubmissionId)
         {
             using HttpResponseMessage deleteSubmissionResponse = HttpClient.DeleteAsync($"https://tournament.crunchdao.com/api/v3/alpha-submissions/{lastSubmissionId}?&apiKey={_apiKey}").Result;

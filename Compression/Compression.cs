@@ -364,7 +364,7 @@ namespace QuantConnect
         /// <param name="data">The file contents in bytes to be zipped</param>
         /// <param name="mode">The archive mode</param>
         /// <param name="compressionLevel">The desired compression level</param>
-        /// <param name="leaveStreamOpen">True to leave the taget stream open</param>
+        /// <param name="leaveStreamOpen">True to leave the target stream open</param>
         /// <returns>The zipped file as a byte array</returns>
         public static async Task ZipStreamsAsync(Stream target, IEnumerable<KeyValuePair<string, Stream>> data, ZipArchiveMode? mode = null,
             CompressionLevel? compressionLevel = null, bool leaveStreamOpen = false)

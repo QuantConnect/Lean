@@ -51,7 +51,7 @@ namespace QuantConnect.Orders
     }
 
     /// <summary>
-    /// Api order and order events reponse
+    /// Api order and order events response
     /// </summary>
     [JsonConverter(typeof(ReadOrdersResponseJsonConverter))]
     public class ApiOrderResponse: StringRepresentation

@@ -19,7 +19,7 @@ using QuantConnect.Exceptions;
 namespace QuantConnect.Tests.Common.Exceptions
 {
     /// <summary>
-    /// Provids a fake implementation that can be utilized in tests
+    /// Provides a fake implementation that can be utilized in tests
     /// </summary>
     /// <remarks>
     /// Keep it internal so it doesn't get picked up when loading all exception interpreters from assemblies

@@ -553,7 +553,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Set the Algorithm instance for ths result.
+        /// Set the Algorithm instance for this result.
         /// </summary>
         /// <param name="algorithm">Algorithm we're working on.</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>

@@ -62,7 +62,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Get's the default value for the given T type
+        /// Gets the default value for the given T type
         /// </summary>
         /// <typeparam name="T">The expected T type</typeparam>
         /// <returns>The default value</returns>

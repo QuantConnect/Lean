@@ -50,14 +50,14 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
+        /// Initializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         public MarketOnCloseOrder()
         {
         }
 
         /// <summary>
-        /// Intiializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
+        /// Initializes a new instance of the <see cref="MarketOnCloseOrder"/> class.
         /// </summary>
         /// <param name="symbol">The security's symbol being ordered</param>
         /// <param name="quantity">The number of units to order</param>
