@@ -147,7 +147,7 @@ namespace QuantConnect.Orders.Fees
                     switch (market)
                     {
                         case Market.USA:
-                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            equityFee = new EquityFee(Currencies.USD, feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.01m);
                             break;
                         case Market.India:
                             equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
@@ -155,7 +155,15 @@ namespace QuantConnect.Orders.Fees
                         default:
                             throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
                     }
-                    var tradeValue = Math.Abs(order.GetValue(security));
+                    // The maximum per order is a rate of the trade value in the fee currency, the security's quote currency.
+                    // A filled order is valued at its fill price. Before it fills, only an order's own limit price bounds its fill:
+                    // the others, such as triggered stops or combo limit legs priced against the combo's net limit, trade at the market price
+                    var conversionRate = security.QuoteCurrency.ConversionRate;
+                    var tradeValue = parameters.FillPrice.HasValue
+                        ? quantity * Math.Abs(parameters.FillPrice.Value) * security.SymbolProperties.ContractMultiplier
+                        : order.Type is OrderType.Limit or OrderType.StopLimit or OrderType.LimitIfTouched or OrderType.ComboLegLimit
+                            ? conversionRate == 0 ? 0 : Math.Abs(order.GetValue(security)) / conversionRate
+                            : quantity * security.Price * security.SymbolProperties.ContractMultiplier;
 
                     //Per share fees
                     var tradeFee = equityFee.FeePerShare * quantity;
@@ -165,7 +173,8 @@ namespace QuantConnect.Orders.Fees
                     var maximumPerOrder = equityFee.MaximumFeeRate * tradeValue;
                     if (tradeFee < equityFee.MinimumFee)
                     {
-                        tradeFee = equityFee.MinimumFee;
+                        // IBKR Pro Fixed charges the US maximum per order when it is below the minimum per order
+                        tradeFee = market == Market.USA ? Math.Min(equityFee.MinimumFee, maximumPerOrder) : equityFee.MinimumFee;
                     }
                     else if (tradeFee > maximumPerOrder)
                     {

@@ -31,6 +31,11 @@ namespace QuantConnect.Orders.Fees
         public Order Order { get; }
 
         /// <summary>
+        /// Gets the price the order filled at, in the security's quote currency, or null before it fills
+        /// </summary>
+        public decimal? FillPrice { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderFeeParameters"/> class
         /// </summary>
         /// <param name="security">The security</param>
@@ -39,6 +44,18 @@ namespace QuantConnect.Orders.Fees
         {
             Security = security;
             Order = order;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrderFeeParameters"/> class for a filled order
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <param name="order">The order</param>
+        /// <param name="fillPrice">The price the order filled at, in the security's quote currency</param>
+        public OrderFeeParameters(Security security, Order order, decimal fillPrice)
+            : this(security, order)
+        {
+            FillPrice = fillPrice;
         }
     }
 }
