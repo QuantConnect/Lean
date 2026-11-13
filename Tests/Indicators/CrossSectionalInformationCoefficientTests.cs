@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
@@ -72,6 +73,39 @@ namespace QuantConnect.Tests.Indicators
 
             indicator.Update(CreateBar(PricesBySymbol.Keys.First(), 3, 100m));
             Assert.AreNotEqual(value, indicator.Current.Value);
+        }
+
+        [Test]
+        public void AlignsAssetsWhoseBarsEndAtDifferentLocalTimes()
+        {
+            // daily futures bars end at their own market's close, in their own exchange's time zone, on the same UTC date
+            var expiry = new DateTime(2024, 12, 20);
+            var closesUtc = new Dictionary<Symbol, TimeSpan>
+            {
+                { Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiry), new TimeSpan(22, 0, 0) },
+                { Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, expiry), new TimeSpan(22, 0, 0) },
+                { Symbol.CreateFuture(Futures.Energy.CrudeOilWTI, Market.NYMEX, expiry), new TimeSpan(22, 0, 0) },
+                { Symbol.CreateFuture(Futures.Financials.Y10TreasuryNote, Market.CBOT, expiry), new TimeSpan(21, 0, 0) },
+                { Symbol.CreateFuture(Futures.Grains.Corn, Market.CBOT, expiry), new TimeSpan(19, 20, 0) },
+            };
+            var prices = closesUtc.Keys.Zip(PricesBySymbol.Values).ToDictionary(pair => pair.First, pair => pair.Second);
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var indicator = new CrossSectionalInformationCoefficient(closesUtc.Keys, _ => new RateOfChange(1));
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                foreach (var (symbol, closeUtc) in closesUtc.OrderBy(pair => pair.Value))
+                {
+                    var timeZone = marketHours.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+                    var endTime = (StartTime.AddDays(i) + closeUtc).ConvertFromUtc(timeZone);
+                    indicator.Update(new TradeBar(endTime.Date, symbol, prices[symbol][i], prices[symbol][i], prices[symbol][i],
+                        prices[symbol][i], 1000, endTime - endTime.Date));
+                }
+
+                // the same values as when every bar ends at the same time, published with each day's last bar
+                Assert.AreEqual(ExpectedValues[i].HasValue, indicator.IsReady, $"Index {i}");
+                Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
+            }
         }
 
         [Test]

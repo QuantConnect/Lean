@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -29,21 +30,24 @@ namespace QuantConnect.Indicators
     /// an update. The signals can't be built from other indicators, as <see cref="TimeSeriesInformationCoefficient"/>
     /// explains. An asset's price is its input's value.
     ///
-    /// Inputs with the same end time form a period. The indicator correlates a period as soon as every asset it tracks
-    /// has an input for it. Otherwise, such as when an asset was delisted, it correlates the assets that have one when
-    /// the next period starts, and that value has the next period's first input time. A period needs at least three
-    /// assets with a signal value and a return. An asset with no input for a period pairs its last signal value with
-    /// its return since then. Use <see cref="Add"/> and <see cref="Remove"/> to follow a changing cross-section, such as
-    /// a universe's constituents.
+    /// Inputs whose end times fall in the same UTC period, at the inputs' resolution, form a period, so assets whose bars
+    /// end at different local times, such as futures of different exchanges, share their daily periods. The indicator
+    /// correlates a period as soon as every asset it tracks has an input for it. Otherwise, such as when an asset was
+    /// delisted, it correlates the assets that have one when the next period starts, and that value has the next
+    /// period's first input time. A period needs at least three assets with a signal value and a return. An asset with
+    /// no input for a period pairs its last signal value with its return since then. Use <see cref="Add"/> and
+    /// <see cref="Remove"/> to follow a changing cross-section, such as a universe's constituents.
     /// </summary>
-    public class CrossSectionalInformationCoefficient : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
+    public class CrossSectionalInformationCoefficient : MultiSymbolIndicator<IBaseData>
     {
         private readonly Func<Symbol, IIndicator> _signalFactory;
         private readonly Dictionary<Symbol, AssetData> _assets = new();
         private readonly Dictionary<Symbol, IIndicator> _signals = new();
+        private readonly HashSet<Symbol> _assetsAddedAfterFirstInput = new();
         private readonly HashSet<Symbol> _periodAssets = new();
-        private DateTime _periodEndTime;
+        private DateTime _periodEndTimeUtc;
         private bool _isPeriodCorrelated;
+        private bool _isResolutionSet;
         private bool _isReady;
         private bool _hasNewValue;
         private int _signalWarmUpPeriod = 1;
@@ -59,21 +63,16 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _isReady;
 
         /// <summary>
-        /// Required period, in data points per asset, for the indicator to be ready and fully initialized
-        /// </summary>
-        public int WarmUpPeriod => _signalWarmUpPeriod + 1;
-
-        /// <summary>
         /// Creates a new cross-sectional information coefficient indicator
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="symbols">The assets to correlate across. A period needs at least three</param>
         /// <param name="signalFactory">Creates the signal of each asset. This indicator updates them</param>
         public CrossSectionalInformationCoefficient(string name, IEnumerable<Symbol> symbols, Func<Symbol, IIndicator> signalFactory)
-            : base(name)
+            : base(name, symbols, 2)
         {
             _signalFactory = signalFactory;
-            foreach (var symbol in symbols)
+            foreach (var symbol in DataBySymbol.Keys.ToList())
             {
                 Add(symbol);
             }
@@ -102,18 +101,31 @@ namespace QuantConnect.Indicators
             }
             var signal = _signalFactory(symbol);
             _signalWarmUpPeriod = Math.Max(_signalWarmUpPeriod, TimeSeriesInformationCoefficient.ValidateOwnedSignal(signal, Name));
+            WarmUpPeriod = _signalWarmUpPeriod + 1;
             _assets[symbol] = new AssetData(signal);
             _signals[symbol] = signal;
+            if (!DataBySymbol.ContainsKey(symbol))
+            {
+                DataBySymbol[symbol] = new SymbolData(symbol, 2);
+            }
+            if (_isResolutionSet)
+            {
+                _assetsAddedAfterFirstInput.Add(symbol);
+            }
         }
 
         /// <summary>
         /// Removes an asset from the cross-section, such as one that left the universe. Its later inputs are ignored.
+        /// When every remaining asset already has an input for the current period, that period is correlated when the
+        /// next one starts.
         /// </summary>
         /// <param name="symbol">The asset to remove</param>
         public void Remove(Symbol symbol)
         {
             _assets.Remove(symbol);
             _signals.Remove(symbol);
+            DataBySymbol.Remove(symbol);
+            _assetsAddedAfterFirstInput.Remove(symbol);
             _periodAssets.Remove(symbol);
         }
 
@@ -138,40 +150,52 @@ namespace QuantConnect.Indicators
         {
             if (!_assets.TryGetValue(input.Symbol, out var asset))
             {
-                return Current.Value;
+                return IndicatorValue;
             }
 
-            var value = Current.Value;
-            if (input.EndTime > _periodEndTime)
+            // The inherited symbol data aligns the input's end time: in UTC, truncated to the inputs' resolution
+            var symbolData = DataBySymbol[input.Symbol];
+            if (!_isResolutionSet || _assetsAddedAfterFirstInput.Remove(input.Symbol))
+            {
+                SetResolution(input);
+                _isResolutionSet = true;
+            }
+            else
+            {
+                symbolData.CurrentInput = input;
+            }
+
+            var inputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
+            if (inputEndTimeUtc > _periodEndTimeUtc)
             {
                 if (!_isPeriodCorrelated)
                 {
-                    value = Correlate(value);
+                    IndicatorValue = ComputeIndicator();
                 }
-                _periodEndTime = input.EndTime;
+                _periodEndTimeUtc = inputEndTimeUtc;
                 _periodAssets.Clear();
                 _isPeriodCorrelated = false;
             }
 
             asset.Update(input, Name);
-            if (input.EndTime == _periodEndTime)
+            if (inputEndTimeUtc == _periodEndTimeUtc)
             {
                 _periodAssets.Add(input.Symbol);
                 // With at least three assets, the input that starts a period can't also complete it
                 if (_periodAssets.Count == _assets.Count)
                 {
                     _isPeriodCorrelated = true;
-                    value = Correlate(value);
+                    IndicatorValue = ComputeIndicator();
                 }
             }
-            return value;
+            return IndicatorValue;
         }
 
         /// <summary>
         /// Correlates the signal values and returns of the period's assets that have both, when at least three do
         /// </summary>
-        /// <param name="lastValue">The value to keep when the period can't be correlated</param>
-        private decimal Correlate(decimal lastValue)
+        /// <returns>The period's correlation, or else the last value</returns>
+        protected override decimal ComputeIndicator()
         {
             var signalValues = new List<double>(_periodAssets.Count);
             var returns = new List<double>(_periodAssets.Count);
@@ -187,7 +211,7 @@ namespace QuantConnect.Indicators
 
             if (signalValues.Count < 3)
             {
-                return lastValue;
+                return IndicatorValue;
             }
 
             _isReady = true;
@@ -205,9 +229,11 @@ namespace QuantConnect.Indicators
             {
                 asset.Reset();
             }
+            _assetsAddedAfterFirstInput.Clear();
             _periodAssets.Clear();
-            _periodEndTime = default;
+            _periodEndTimeUtc = default;
             _isPeriodCorrelated = false;
+            _isResolutionSet = false;
             _isReady = false;
             base.Reset();
         }
