@@ -155,6 +155,9 @@ namespace QuantConnect.Statistics
             Position position;
             if (!_positions.TryGetValue(symbol, out position)) return;
 
+            // inverse contracts are valued at the reciprocal of the price, which a zero price doesn't have
+            if (price == 0 && TryGetInverseCryptoFuture(symbol, out _)) return;
+
             if (price > position.MaxPrice)
                 position.MaxPrice = price;
             else if (price < position.MinPrice)

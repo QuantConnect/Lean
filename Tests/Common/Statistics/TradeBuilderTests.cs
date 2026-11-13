@@ -98,6 +98,22 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void InverseCryptoFutureIgnoresZeroMarketPrice()
+        {
+            var builder = CreateCryptoFutureTradeBuilder("BTCUSD", FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO, out var security);
+            builder.ProcessFill(new OrderEvent(1, security.Symbol, _startTime, OrderStatus.Filled, OrderDirection.Buy, 40000m, 100m, OrderFee.Zero),
+                1m, 0m, 100m);
+            builder.SetMarketPrice(security.Symbol, 0m);
+            builder.ProcessFill(new OrderEvent(2, security.Symbol, _startTime.AddHours(1), OrderStatus.Filled, OrderDirection.Sell, 44000m, -100m, OrderFee.Zero),
+                1m, 0m, 100m);
+
+            var trade = builder.ClosedTrades[0];
+            Assert.AreEqual(1000m, trade.ProfitLoss);
+            Assert.AreEqual(0m, trade.MAE);
+            Assert.AreEqual(0m, trade.EndTradeDrawdown);
+        }
+
+        [Test]
         public void InverseCryptoFutureScaleInAndPartialExit([Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod, [Values(-1, 1)] int direction)
         {
