@@ -153,8 +153,8 @@ namespace QuantConnect.Securities
             var positionsAfterFills = impactedGroups
                 .SelectMany(positionGroup => positionGroup.Positions)
                 .Concat(positions)
-                .GroupBy(position => position.Symbol)
-                .Select(symbolPositions => symbolPositions.Aggregate((position, other) => position.Combine(other)))
+                .Consolidate()
+                .Values
                 .Where(position => position.Quantity != 0);
             var groupsAfterFills = Portfolio.Positions.ResolvePositionGroups(new PositionCollection(positionsAfterFills));
 
