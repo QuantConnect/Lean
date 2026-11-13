@@ -732,7 +732,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// Special case for insights where we do not know whats the
+        /// Special case for insights where we do not know what's the
         /// <see cref="Period"/> or <see cref="CloseTimeUtc"/>.
         /// </summary>
         private class EndOfTimeCloseTimePeriodSpecification : IPeriodSpecification

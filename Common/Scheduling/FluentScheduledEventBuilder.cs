@@ -157,7 +157,7 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
-        /// Creates events that fire a specified numer of minutes before market close
+        /// Creates events that fire a specified number of minutes before market close
         /// </summary>
         IFluentSchedulingRunnable IFluentSchedulingTimeSpecifier.BeforeMarketClose(Symbol symbol, double minuteBeforeClose, bool extendedMarketClose)
         {
@@ -368,7 +368,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         IFluentSchedulingRunnable AfterMarketOpen(Symbol symbol, double minutesAfterOpen = 0, bool extendedMarketOpen = false);
         /// <summary>
-        /// Creates events that fire a specified numer of minutes before market close
+        /// Creates events that fire a specified number of minutes before market close
         /// </summary>
         IFluentSchedulingRunnable BeforeMarketClose(Symbol symbol, double minuteBeforeClose = 0, bool extendedMarketClose = false);
     }

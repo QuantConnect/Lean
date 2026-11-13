@@ -90,7 +90,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
+        /// This converter won't be used to read JSON. Will throw exception if manually called.
         /// </summary>
         public override bool CanRead => true;
     }
