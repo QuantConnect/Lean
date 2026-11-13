@@ -1058,6 +1058,7 @@ namespace QuantConnect.Tests.Common.Securities
                 )
             );
             var security = securities[Symbols.AAPL];
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbols.AAPL, 100, 100));
             security.SettlementModel = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             Assert.AreEqual(0, security.Holdings.Quantity);
             Assert.AreEqual(1000, portfolio.Cash);
