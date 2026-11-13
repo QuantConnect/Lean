@@ -608,14 +608,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
 
             // while the IBM order is open MSFT falls, leaving a $2700 deficit: MSFT, now the loser, is liquidated entirely,
-            // releasing $2250, and the 19 IBM shares the open order doesn't sell are liquidated for the $450 left
+            // releasing $2250, and 9 of the 19 IBM shares the open order doesn't sell are liquidated for the $450 left
             var msft = portfolio.Securities[Symbols.MSFT];
             msft.SetMarketPrice(new Tick(time, Symbols.MSFT, 45m, 45m));
             portfolio.InvalidateTotalPortfolioValue();
             marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             Assert.AreEqual(2, marginCallOrders.Count);
             Assert.AreEqual(-100, marginCallOrders.Single(request => request.Symbol == Symbols.MSFT).Quantity);
-            Assert.AreEqual(-10, marginCallOrders.Single(request => request.Symbol == Symbols.IBM).Quantity);
+            Assert.AreEqual(-9, marginCallOrders.Single(request => request.Symbol == Symbols.IBM).Quantity);
             Assert.AreEqual(2, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
         }
 
@@ -642,6 +642,49 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Symbols.SPY, marginCallOrders[0].Symbol);
             Assert.IsNull(marginCallOrders[0].GroupOrderManager);
             Assert.AreEqual(-300, marginCallOrders[0].Quantity);
+        }
+
+        [TestCase(-300)]
+        [TestCase(-150)]
+        public void LiquidatesPositionGroupsThatAreNotHeldForTheDeficit(int stockOrderQuantity)
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            // 3 covered calls (+300 SPY / -3 calls)
+            var portfolio = GetSpyPortfolio(orderProcessor, -26000, -3);
+
+            // like OnMarginCall replacing the combo order with an order per leg
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _)
+                .Select(request => new SubmitOrderRequest(OrderType.Market, request.SecurityType, request.Symbol,
+                    request.Symbol == Symbols.SPY ? stockOrderQuantity : request.Quantity, 0, 0, request.Time, "OnMarginCall"))
+                .ToList();
+            var orders = ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
+            Assert.AreEqual(2, orders.Count);
+
+            // the call buyback is canceled while the stock order is still open, and the account loses more: the holdings left
+            // regroup into naked calls, and covered calls and shares for a partial stock order, groups that aren't held
+            orders.Single(order => order.Symbol == Symbols.SPY_C_192_Feb19_2016).Status = OrderStatus.Canceled;
+            portfolio.CashBook[Currencies.USD].SetAmount(-29000);
+            portfolio.InvalidateTotalPortfolioValue();
+            marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            var calls = marginCallOrders.Where(request => request.Symbol == Symbols.SPY_C_192_Feb19_2016).ToList();
+            var shares = marginCallOrders.Where(request => request.Symbol == Symbols.SPY).ToList();
+            if (stockOrderQuantity == -300)
+            {
+                // $3300 of margin for the 3 naked calls, a $2600 deficit: all 3 are bought back, $1100 each
+                Assert.AreEqual(1, marginCallOrders.Count);
+                Assert.IsNull(calls.Single().GroupOrderManager);
+                Assert.AreEqual(3, calls.Single().Quantity);
+            }
+            else
+            {
+                // a covered call, 50 shares and 2 naked calls, a $9000 deficit: the covered call releases $5000,
+                // the naked calls $2200 and 36 of the 50 shares the $1800 left
+                Assert.AreEqual(4, marginCallOrders.Count);
+                Assert.AreEqual(1, calls.Single(request => request.GroupOrderManager != null).Quantity);
+                Assert.AreEqual(-100, shares.Single(request => request.GroupOrderManager != null).Quantity);
+                Assert.AreEqual(2, calls.Single(request => request.GroupOrderManager == null).Quantity);
+                Assert.AreEqual(-36, shares.Single(request => request.GroupOrderManager == null).Quantity);
+            }
         }
 
         [Test]

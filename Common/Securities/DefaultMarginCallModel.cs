@@ -213,20 +213,47 @@ namespace QuantConnect.Securities
 
             var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);
 
-            // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
-            var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
+            decimal absQuantity;
+            if (Portfolio.Positions.Groups.TryGetGroup(positionGroup.Key, out var heldPositionGroup) && heldPositionGroup.Quantity == positionGroup.Quantity)
+            {
+                // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
+                var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
 
-            // we want a reduction so we send the inverse side of our position
-            var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * -Math.Sign(positionGroup.Quantity);
+                // we want a reduction so we send the inverse side of our position
+                var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * -Math.Sign(positionGroup.Quantity);
 
-            var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
-                Portfolio, positionGroup, deltaBuyingPower,
-                // margin is negative, we need to reduce positions, no minimum
-                minimumOrderMarginPortfolioPercentage: 0
-            ));
+                var result = positionGroup.BuyingPowerModel.GetMaximumLotsForDeltaBuyingPower(new GetMaximumLotsForDeltaBuyingPowerParameters(
+                    Portfolio, positionGroup, deltaBuyingPower,
+                    // margin is negative, we need to reduce positions, no minimum
+                    minimumOrderMarginPortfolioPercentage: 0
+                ));
+                absQuantity = Math.Abs(result.NumberOfLots);
+            }
+            else
+            {
+                // the holdings left after other liquidations can form a group that isn't held, which the buying power model
+                // sizes from the held one: the fewest lots of this group whose margin covers the deficit are liquidated instead
+                var heldLots = Math.Abs(positionGroup.Quantity);
+                var lowerLots = 1m;
+                var upperLots = Math.Ceiling(heldLots);
+                while (lowerLots < upperLots)
+                {
+                    var lots = Math.Floor((lowerLots + upperLots) / 2);
+                    var positionGroupLeft = positionGroup.WithQuantity(Math.Sign(positionGroup.Quantity) * (heldLots - lots), Portfolio.Positions);
+                    var releasedBuyingPower = currentlyUsedBuyingPower
+                        - positionGroupLeft.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroupLeft);
+                    if (releasedBuyingPower >= deltaAccountCurrency)
+                    {
+                        upperLots = lots;
+                    }
+                    else
+                    {
+                        lowerLots = lots + 1;
+                    }
+                }
+                absQuantity = Math.Min(lowerLots, heldLots);
+            }
 
-            // the position group can be the holdings left after other liquidations, which the model sizes from the held ones
-            var absQuantity = Math.Min(Math.Abs(result.NumberOfLots), Math.Abs(positionGroup.Quantity));
             var orderType = positionGroup.Count > 1 ? OrderType.ComboMarket : OrderType.Market;
 
             GroupOrderManager groupOrderManager = null;
