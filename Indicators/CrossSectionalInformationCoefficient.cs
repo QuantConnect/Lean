@@ -33,8 +33,8 @@ namespace QuantConnect.Indicators
     /// Inputs whose end times fall in the same UTC period, at the inputs' resolution, form a period, so assets whose bars
     /// end at different local times, such as futures of different exchanges, share their daily periods. The indicator
     /// correlates a period as soon as every asset it tracks has an input for it. Otherwise, such as when an asset was
-    /// delisted, it correlates the assets that have one when the next period starts, and that value has the next
-    /// period's first input time. A period needs at least three assets with a signal value and a return. An asset with
+    /// delisted, it correlates the assets that have one when the next period starts, and that value has the time of
+    /// its own period's last input. A period needs at least three assets with a signal value and a return. An asset with
     /// no input for a period pairs its last signal value with its return since then. Use <see cref="Add"/> and
     /// <see cref="Remove"/> to follow a changing cross-section, such as a universe's constituents.
     /// </summary>
@@ -46,6 +46,7 @@ namespace QuantConnect.Indicators
         private readonly HashSet<Symbol> _assetsAddedAfterFirstInput = new();
         private readonly HashSet<Symbol> _periodAssets = new();
         private DateTime _periodEndTimeUtc;
+        private IBaseData _periodLastInput;
         private bool _isPeriodCorrelated;
         private bool _isResolutionSet;
         private bool _isReady;
@@ -168,12 +169,13 @@ namespace QuantConnect.Indicators
             var inputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
             if (inputEndTimeUtc > _periodEndTimeUtc)
             {
-                if (!_isPeriodCorrelated)
+                if (!_isPeriodCorrelated && _periodLastInput != null)
                 {
-                    IndicatorValue = ComputeIndicator();
+                    PublishIncompletePeriod();
                 }
                 _periodEndTimeUtc = inputEndTimeUtc;
                 _periodAssets.Clear();
+                _periodLastInput = null;
                 _isPeriodCorrelated = false;
             }
 
@@ -181,14 +183,31 @@ namespace QuantConnect.Indicators
             if (inputEndTimeUtc == _periodEndTimeUtc)
             {
                 _periodAssets.Add(input.Symbol);
-                // With at least three assets, the input that starts a period can't also complete it
-                if (_periodAssets.Count == _assets.Count)
+                _periodLastInput = input;
+                // An asset added after its period was correlated doesn't correlate that period again
+                if (!_isPeriodCorrelated && _periodAssets.Count == _assets.Count)
                 {
                     _isPeriodCorrelated = true;
                     IndicatorValue = ComputeIndicator();
                 }
             }
             return IndicatorValue;
+        }
+
+        /// <summary>
+        /// Correlates the period that ended without every asset, and publishes it with its own last input's time, so that
+        /// it stays distinct from the next period's value, such as in the indicator's history
+        /// </summary>
+        private void PublishIncompletePeriod()
+        {
+            IndicatorValue = ComputeIndicator();
+            if (!_hasNewValue)
+            {
+                return;
+            }
+            _hasNewValue = false;
+            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastInput.EndTime, IndicatorValue);
+            OnUpdated(Current);
         }
 
         /// <summary>
@@ -232,6 +251,7 @@ namespace QuantConnect.Indicators
             _assetsAddedAfterFirstInput.Clear();
             _periodAssets.Clear();
             _periodEndTimeUtc = default;
+            _periodLastInput = null;
             _isPeriodCorrelated = false;
             _isResolutionSet = false;
             _isReady = false;

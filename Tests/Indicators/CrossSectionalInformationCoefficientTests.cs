@@ -113,7 +113,12 @@ namespace QuantConnect.Tests.Indicators
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
             var published = new List<decimal>();
-            indicator.Updated += (_, point) => published.Add(point.Value);
+            var publishedTimes = new List<DateTime>();
+            indicator.Updated += (_, point) =>
+            {
+                published.Add(point.Value);
+                publishedTimes.Add(point.EndTime);
+            };
 
             for (var i = 0; i < ExpectedValues.Length; i++)
             {
@@ -134,6 +139,8 @@ namespace QuantConnect.Tests.Indicators
             // scipy.stats.spearmanr: index 3 correlates the other four assets, and at index 4 AAPL pairs its signal at
             // index 2 with its return since index 2, its last bar
             AssertPublished(new[] { -0.7, -0.4, 0.1, -0.2, 0.9 }, published);
+            // each value has its own period's time, so none is lost where values are keyed by time, such as the indicator history
+            AssertPeriodTimes(new[] { 2, 3, 4, 5, 6 }, publishedTimes);
         }
 
         [Test]
@@ -180,6 +187,76 @@ namespace QuantConnect.Tests.Indicators
             }
 
             AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0, 1.0 }, published);
+        }
+
+        [Test]
+        public void CorrelatesAPeriodAnAssetHasNoDataForAndIsThenRemovedFrom()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            var published = new List<decimal>();
+            var publishedTimes = new List<DateTime>();
+            indicator.Updated += (_, point) =>
+            {
+                published.Add(point.Value);
+                publishedTimes.Add(point.EndTime);
+            };
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                foreach (var (symbol, prices) in PricesBySymbol)
+                {
+                    if (i < 3 || symbol != Symbols.AAPL)
+                    {
+                        indicator.Update(CreateBar(symbol, i, prices[i]));
+                    }
+                }
+                if (i == 3)
+                {
+                    indicator.Remove(Symbols.AAPL);
+                }
+            }
+
+            // scipy.stats.spearmanr across the other four assets from index 3
+            AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0, 1.0 }, published);
+            AssertPeriodTimes(new[] { 2, 3, 4, 5, 6 }, publishedTimes);
+        }
+
+        [Test]
+        public void DoesNotCorrelateAPeriodAgainWhenAnAssetIsAddedAfterIt()
+        {
+            var assets = new[] { Symbols.AAPL, Symbols.IBM, Symbols.GOOG };
+            var indicator = new CrossSectionalInformationCoefficient(assets, _ => new RateOfChange(1));
+            var average = new SimpleMovingAverage(3).Of(indicator);
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                foreach (var symbol in assets)
+                {
+                    indicator.Update(CreateBar(symbol, i, PricesBySymbol[symbol][i]));
+                }
+                if (i == 2)
+                {
+                    // the period is already correlated: MSFT's bar for it, which ends later on the same day, joins it silently
+                    indicator.Add(Symbols.MSFT);
+                    var bar = CreateBar(Symbols.MSFT, i, PricesBySymbol[Symbols.MSFT][i]);
+                    bar.Time = bar.Time.AddHours(1);
+                    bar.EndTime = bar.EndTime.AddHours(1);
+                    indicator.Update(bar);
+                    Assert.AreEqual(1, published.Count);
+                }
+                else if (i > 2)
+                {
+                    indicator.Update(CreateBar(Symbols.MSFT, i, PricesBySymbol[Symbols.MSFT][i]));
+                }
+            }
+
+            // scipy.stats.spearmanr across AAPL, IBM and GOOG, and MSFT from index 4, its first return after a signal value
+            var expected = new[] { -0.5, -1.0, 0.4, -0.4, 0.8 };
+            AssertPublished(expected, published);
+            Assert.AreEqual(expected.Length, average.Samples);
+            Assert.AreEqual(expected.TakeLast(3).Average(), (double)average.Current.Value, 1e-9);
         }
 
         [Test]
@@ -392,6 +469,11 @@ def create(symbols):
         private static void AssertPublished(IEnumerable<double> expected, List<decimal> published)
         {
             CollectionAssert.AreEqual(expected.Select(value => Math.Round(value, 9)), published.Select(value => Math.Round((double)value, 9)));
+        }
+
+        private static void AssertPeriodTimes(IEnumerable<int> indices, List<DateTime> publishedTimes)
+        {
+            CollectionAssert.AreEqual(indices.Select(index => CreateBar(Symbols.AAPL, index, 1m).EndTime), publishedTimes);
         }
 
         private static void UpdateAll(CrossSectionalInformationCoefficient indicator, int index)
