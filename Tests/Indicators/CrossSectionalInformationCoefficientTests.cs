@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void UpdatesOnlyWhenEveryAssetHasDataForTheSameTime()
+        public void CorrelatesAPeriodAsSoonAsEveryAssetHasData()
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
             for (var i = 0; i < 3; i++)
@@ -75,14 +75,13 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void SpansTheTimeAnAssetHasNoData()
+        public void CorrelatesAPeriodAnAssetHasNoDataForWhenTheNextOneStarts()
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
-            // scipy.stats.spearmanr when AAPL has no bar at index 3: index 4 correlates the signals at index 2 with the returns
-            // since index 2, and AAPL's signal at index 4 is its rate of change since index 2
-            var expectedValues = new double?[] { null, null, -0.7, -0.7, -0.1, -0.2, 0.9 };
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
 
-            for (var i = 0; i < expectedValues.Length; i++)
+            for (var i = 0; i < ExpectedValues.Length; i++)
             {
                 foreach (var (symbol, prices) in PricesBySymbol)
                 {
@@ -91,31 +90,101 @@ namespace QuantConnect.Tests.Indicators
                         indicator.Update(CreateBar(symbol, i, prices[i]));
                     }
                 }
+                if (i == 3)
+                {
+                    // the period without AAPL is correlated when the next one starts
+                    Assert.AreEqual(1, published.Count);
+                }
+            }
 
-                Assert.AreEqual(expectedValues[i].HasValue, indicator.IsReady, $"Index {i}");
-                Assert.AreEqual(expectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
+            // scipy.stats.spearmanr: index 3 correlates the other four assets, and at index 4 AAPL pairs its signal at
+            // index 2 with its return since index 2, its last bar
+            AssertPublished(new[] { -0.7, -0.4, 0.1, -0.2, 0.9 }, published);
+        }
+
+        [Test]
+        public void KeepsCorrelatingTheOtherAssetsWhenOneStopsGettingData()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                foreach (var (symbol, prices) in PricesBySymbol)
+                {
+                    // AAPL has no data after index 3, such as after a delisting
+                    if (i <= 3 || symbol != Symbols.AAPL)
+                    {
+                        indicator.Update(CreateBar(symbol, i, prices[i]));
+                    }
+                }
+            }
+            // scipy.stats.spearmanr across the other four assets from index 4. Index 6 is correlated when the next period starts
+            AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0 }, published);
+
+            indicator.Update(CreateBar(Symbols.IBM, ExpectedValues.Length, 100m));
+            AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0, 1.0 }, published);
+        }
+
+        [Test]
+        public void CorrelatesAPeriodAtOnceAfterAnAssetIsRemoved()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                if (i == 4)
+                {
+                    indicator.Remove(Symbols.AAPL);
+                    Assert.IsFalse(indicator.Signals.ContainsKey(Symbols.AAPL));
+                }
+                // the removed asset's inputs are ignored
+                UpdateAll(indicator, i);
+            }
+
+            AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0, 1.0 }, published);
+        }
+
+        [Test]
+        public void AddsAssets()
+        {
+            var indicator = new CrossSectionalInformationCoefficient(new[] { Symbols.IBM, Symbols.GOOG }, _ => new RateOfChange(1));
+            var ibmSignal = indicator.Signals[Symbols.IBM];
+
+            foreach (var symbol in PricesBySymbol.Keys)
+            {
+                indicator.Add(symbol);
+            }
+
+            Assert.AreEqual(PricesBySymbol.Count, indicator.Signals.Count);
+            Assert.AreSame(ibmSignal, indicator.Signals[Symbols.IBM]);
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                UpdateAll(indicator, i);
+                Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
             }
         }
 
         [Test]
-        public void KeepsItsValueWhenAnAssetsPreviousPriceIsZero()
+        public void SkipsTheReturnOfAnAssetWhosePreviousPriceIsZero()
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
-            for (var i = 0; i < 3; i++)
-            {
-                UpdateAll(indicator, i);
-            }
-            foreach (var (symbol, prices) in PricesBySymbol)
-            {
-                indicator.Update(CreateBar(symbol, 3, symbol == Symbols.AAPL ? 0m : prices[3]));
-            }
-            var value = indicator.Current.Value;
+            var published = new List<decimal>();
+            indicator.Updated += (_, point) => published.Add(point.Value);
 
-            UpdateAll(indicator, 4);
-            Assert.AreEqual(value, indicator.Current.Value);
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                foreach (var (symbol, prices) in PricesBySymbol)
+                {
+                    indicator.Update(CreateBar(symbol, i, i == 3 && symbol == Symbols.AAPL ? 0m : prices[i]));
+                }
+            }
 
-            UpdateAll(indicator, 5);
-            Assert.AreNotEqual(value, indicator.Current.Value);
+            // scipy.stats.spearmanr with AAPL's price 0 at index 3: index 4 correlates the other four assets
+            AssertPublished(new[] { -0.7, -0.2, 0.2, -0.1, 0.9 }, published);
         }
 
         [Test]
@@ -185,7 +254,7 @@ namespace QuantConnect.Tests.Indicators
                 UpdateAll(indicator, i);
             }
 
-            CollectionAssert.AreEqual(ExpectedValues.Select(value => (decimal)(value ?? 0)), published.Select(value => Math.Round(value, 9)));
+            AssertPublished(ExpectedValues.Where(value => value.HasValue).Select(value => value.Value), published);
             // Of waits for the coefficient to be ready, so the average gets exactly the ready coefficients
             Assert.AreEqual(ExpectedValues.Count(value => value.HasValue), average.Samples);
             Assert.AreEqual(ExpectedValues.TakeLast(3).Average(value => value.Value), (double)average.Current.Value, 1e-9);
@@ -211,7 +280,7 @@ namespace QuantConnect.Tests.Indicators
 
             Assert.IsTrue(indicator.IsReady);
             Assert.AreEqual(1m, Math.Round(indicator.Current.Value, 9));
-            Assert.AreEqual(4, published);
+            Assert.AreEqual(2, published);
         }
 
         [Test]
@@ -236,19 +305,32 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ThrowsWithFewerThanThreeSymbols()
+        public void WaitsForThreeAssets()
         {
-            Assert.Throws<ArgumentException>(() =>
-                new CrossSectionalInformationCoefficient(new[] { Symbols.AAPL, Symbols.IBM }, _ => new RateOfChange(1)));
+            var indicator = new CrossSectionalInformationCoefficient(new[] { Symbols.AAPL, Symbols.IBM }, _ => new RateOfChange(1));
+            var published = 0;
+            indicator.Updated += (_, _) => published++;
+
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                indicator.Update(CreateBar(Symbols.AAPL, i, PricesBySymbol[Symbols.AAPL][i]));
+                indicator.Update(CreateBar(Symbols.IBM, i, PricesBySymbol[Symbols.IBM][i]));
+            }
+
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(0, published);
         }
 
         [Test]
-        public void ThrowsForAnUnknownSymbol()
+        public void IgnoresInputsOfAssetsItDoesNotTrack()
         {
             var indicator = new CrossSectionalInformationCoefficient(PricesBySymbol.Keys, _ => new RateOfChange(1));
-            UpdateAll(indicator, 0);
-
-            Assert.Throws<ArgumentException>(() => indicator.Update(CreateBar(Symbols.BTCUSD, 1, 100m)));
+            for (var i = 0; i < ExpectedValues.Length; i++)
+            {
+                indicator.Update(CreateBar(Symbols.BTCUSD, i, 100m + i));
+                UpdateAll(indicator, i);
+                Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
+            }
         }
 
         [Test]
@@ -271,6 +353,11 @@ def create(symbols):
                     Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
                 }
             }
+        }
+
+        private static void AssertPublished(IEnumerable<double> expected, List<decimal> published)
+        {
+            CollectionAssert.AreEqual(expected.Select(value => Math.Round(value, 9)), published.Select(value => Math.Round((double)value, 9)));
         }
 
         private static void UpdateAll(CrossSectionalInformationCoefficient indicator, int index)

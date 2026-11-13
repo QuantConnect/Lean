@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -28,20 +27,31 @@ namespace QuantConnect.Indicators
     /// The indicator owns one signal per asset: each input updates its asset's signal first, so the signals must not be
     /// updated elsewhere, such as by an algorithm helper that registered them. The indicator throws when it detects such
     /// an update. The signals can't be built from other indicators, as <see cref="TimeSeriesInformationCoefficient"/>
-    /// explains. An asset's price is its input's value. The indicator updates when every asset has an input
-    /// for the same time.
+    /// explains. An asset's price is its input's value.
+    ///
+    /// Inputs with the same end time form a period. The indicator correlates a period as soon as every asset it tracks
+    /// has an input for it. Otherwise, such as when an asset was delisted, it correlates the assets that have one when
+    /// the next period starts, and that value has the next period's first input time. A period needs at least three
+    /// assets with a signal value and a return. An asset with no input for a period pairs its last signal value with
+    /// its return since then. Use <see cref="Add"/> and <see cref="Remove"/> to follow a changing cross-section, such as
+    /// a universe's constituents.
     /// </summary>
-    public class CrossSectionalInformationCoefficient : MultiSymbolIndicator<IBaseData>
+    public class CrossSectionalInformationCoefficient : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
-        private readonly Dictionary<Symbol, decimal> _previousSignalValues = new();
-        private readonly Dictionary<Symbol, long> _signalSamples;
+        private readonly Func<Symbol, IIndicator> _signalFactory;
+        private readonly Dictionary<Symbol, AssetData> _assets = new();
+        private readonly Dictionary<Symbol, IIndicator> _signals = new();
+        private readonly HashSet<Symbol> _periodAssets = new();
+        private DateTime _periodEndTime;
+        private bool _isPeriodCorrelated;
         private bool _isReady;
         private bool _hasNewValue;
+        private int _signalWarmUpPeriod = 1;
 
         /// <summary>
         /// The signal of each asset whose information coefficient this indicator measures
         /// </summary>
-        public IReadOnlyDictionary<Symbol, IIndicator> Signals { get; }
+        public IReadOnlyDictionary<Symbol, IIndicator> Signals => _signals;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -49,28 +59,30 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _isReady;
 
         /// <summary>
+        /// Required period, in data points per asset, for the indicator to be ready and fully initialized
+        /// </summary>
+        public int WarmUpPeriod => _signalWarmUpPeriod + 1;
+
+        /// <summary>
         /// Creates a new cross-sectional information coefficient indicator
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="symbols">The assets to correlate across. At least three are needed</param>
+        /// <param name="symbols">The assets to correlate across. A period needs at least three</param>
         /// <param name="signalFactory">Creates the signal of each asset. This indicator updates them</param>
         public CrossSectionalInformationCoefficient(string name, IEnumerable<Symbol> symbols, Func<Symbol, IIndicator> signalFactory)
-            : base(name, symbols, 2)
+            : base(name)
         {
-            if (DataBySymbol.Count < 3)
+            _signalFactory = signalFactory;
+            foreach (var symbol in symbols)
             {
-                throw new ArgumentException($"CrossSectionalInformationCoefficient indicator needs at least 3 symbols but got {DataBySymbol.Count}");
+                Add(symbol);
             }
-            Signals = DataBySymbol.Keys.ToDictionary(symbol => symbol, signalFactory);
-            _signalSamples = Signals.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Samples);
-            var signalWarmUpPeriod = Signals.Values.Max(signal => TimeSeriesInformationCoefficient.ValidateOwnedSignal(signal, name));
-            WarmUpPeriod += signalWarmUpPeriod - 1;
         }
 
         /// <summary>
         /// Creates a new cross-sectional information coefficient indicator
         /// </summary>
-        /// <param name="symbols">The assets to correlate across. At least three are needed</param>
+        /// <param name="symbols">The assets to correlate across. A period needs at least three</param>
         /// <param name="signalFactory">Creates the signal of each asset. This indicator updates them</param>
         public CrossSectionalInformationCoefficient(IEnumerable<Symbol> symbols, Func<Symbol, IIndicator> signalFactory)
             : this("CSIC", symbols, signalFactory)
@@ -78,11 +90,38 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Publishes a value only when the input completes a cross-section, instead of repeating the last one for every
-        /// asset's input, so indicators chained to this one get one value per period
+        /// Adds an asset to the cross-section, with a new signal from the signal factory. The indicator only gets the
+        /// asset's data it is given: for an indicator an algorithm helper created, also register it for the asset.
+        /// </summary>
+        /// <param name="symbol">The asset to add</param>
+        public void Add(Symbol symbol)
+        {
+            if (_assets.ContainsKey(symbol))
+            {
+                return;
+            }
+            var signal = _signalFactory(symbol);
+            _signalWarmUpPeriod = Math.Max(_signalWarmUpPeriod, TimeSeriesInformationCoefficient.ValidateOwnedSignal(signal, Name));
+            _assets[symbol] = new AssetData(signal);
+            _signals[symbol] = signal;
+        }
+
+        /// <summary>
+        /// Removes an asset from the cross-section, such as one that left the universe. Its later inputs are ignored.
+        /// </summary>
+        /// <param name="symbol">The asset to remove</param>
+        public void Remove(Symbol symbol)
+        {
+            _assets.Remove(symbol);
+            _signals.Remove(symbol);
+            _periodAssets.Remove(symbol);
+        }
+
+        /// <summary>
+        /// Publishes a value only when a period is correlated, so indicators chained to this one get one value per period
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>The result of the cross-section the input completes, if any</returns>
+        /// <returns>The correlation of the period the input completes or ends, if any</returns>
         protected override IndicatorResult ValidateAndComputeNextValue(IBaseData input)
         {
             _hasNewValue = false;
@@ -91,50 +130,64 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Updates the signal of the input's asset before aligning the input with the other assets' inputs
+        /// Updates the input's asset, and correlates the period the input completes or ends
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
-        /// <returns>The most recently computed value of the indicator</returns>
+        /// <returns>The correlation of the period the input completes or ends, or else the last one</returns>
         protected override decimal ComputeNextValue(IBaseData input)
         {
-            if (Signals.TryGetValue(input.Symbol, out var signal))
+            if (!_assets.TryGetValue(input.Symbol, out var asset))
             {
-                _signalSamples[input.Symbol] = TimeSeriesInformationCoefficient.UpdateOwnedSignal(signal, input, _signalSamples[input.Symbol], Name);
+                return Current.Value;
             }
-            return base.ComputeNextValue(input);
+
+            var value = Current.Value;
+            if (input.EndTime > _periodEndTime)
+            {
+                if (!_isPeriodCorrelated)
+                {
+                    value = Correlate(value);
+                }
+                _periodEndTime = input.EndTime;
+                _periodAssets.Clear();
+                _isPeriodCorrelated = false;
+            }
+
+            asset.Update(input, Name);
+            if (input.EndTime == _periodEndTime)
+            {
+                _periodAssets.Add(input.Symbol);
+                // With at least three assets, the input that starts a period can't also complete it
+                if (_periodAssets.Count == _assets.Count)
+                {
+                    _isPeriodCorrelated = true;
+                    value = Correlate(value);
+                }
+            }
+            return value;
         }
 
         /// <summary>
-        /// Correlates the assets' previous signal values with their returns since then, once every asset has them
+        /// Correlates the signal values and returns of the period's assets that have both, when at least three do
         /// </summary>
-        protected override decimal ComputeIndicator()
+        /// <param name="lastValue">The value to keep when the period can't be correlated</param>
+        private decimal Correlate(decimal lastValue)
         {
-            var hasEveryPreviousSignalValue = _previousSignalValues.Count == DataBySymbol.Count;
-            var signalValues = new List<double>(DataBySymbol.Count);
-            var returns = new List<double>(DataBySymbol.Count);
-            foreach (var (symbol, data) in DataBySymbol)
+            var signalValues = new List<double>(_periodAssets.Count);
+            var returns = new List<double>(_periodAssets.Count);
+            foreach (var symbol in _periodAssets)
             {
-                if (hasEveryPreviousSignalValue && data.DataPoints.IsReady && data.DataPoints[1].Value != 0)
+                var asset = _assets[symbol];
+                if (asset.Return.HasValue)
                 {
-                    signalValues.Add((double)_previousSignalValues[symbol]);
-                    returns.Add((double)(data.DataPoints[0].Value / data.DataPoints[1].Value - 1));
-                }
-
-                var signal = Signals[symbol];
-                if (signal.IsReady)
-                {
-                    _previousSignalValues[symbol] = signal.Current.Value;
-                }
-                else
-                {
-                    _previousSignalValues.Remove(symbol);
+                    signalValues.Add((double)asset.PreviousSignalValue.Value);
+                    returns.Add((double)asset.Return.Value);
                 }
             }
 
-            if (signalValues.Count < DataBySymbol.Count)
+            if (signalValues.Count < 3)
             {
-                _hasNewValue = !_isReady;
-                return IndicatorValue;
+                return lastValue;
             }
 
             _isReady = true;
@@ -144,18 +197,70 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Resets this indicator and its signals to their initial state
+        /// Resets this indicator and its signals to their initial state. It keeps tracking the same assets
         /// </summary>
         public override void Reset()
         {
-            foreach (var (symbol, signal) in Signals)
+            foreach (var asset in _assets.Values)
             {
-                signal.Reset();
-                _signalSamples[symbol] = 0;
+                asset.Reset();
             }
-            _previousSignalValues.Clear();
+            _periodAssets.Clear();
+            _periodEndTime = default;
+            _isPeriodCorrelated = false;
             _isReady = false;
             base.Reset();
+        }
+
+        private class AssetData
+        {
+            private readonly IIndicator _signal;
+            private long _signalSamples;
+            private DateTime _endTime;
+            private decimal _price;
+            private decimal? _signalValue;
+            private decimal _previousPrice;
+
+            /// <summary>
+            /// The signal value at the asset's input before its last one
+            /// </summary>
+            public decimal? PreviousSignalValue { get; private set; }
+
+            /// <summary>
+            /// The asset's return since the input before its last one, when it has a previous signal value and price
+            /// </summary>
+            public decimal? Return => PreviousSignalValue.HasValue && _previousPrice != 0 ? _price / _previousPrice - 1 : null;
+
+            public AssetData(IIndicator signal)
+            {
+                _signal = signal;
+                _signalSamples = signal.Samples;
+            }
+
+            public void Update(IBaseData input, string ownerName)
+            {
+                // A second input for the same time replaces the first one, so its return is still since the previous time
+                if (input.EndTime != _endTime)
+                {
+                    PreviousSignalValue = _signalValue;
+                    _previousPrice = _price;
+                    _endTime = input.EndTime;
+                }
+                _signalSamples = TimeSeriesInformationCoefficient.UpdateOwnedSignal(_signal, input, _signalSamples, ownerName);
+                _price = input.Value;
+                _signalValue = _signal.IsReady ? _signal.Current.Value : null;
+            }
+
+            public void Reset()
+            {
+                _signal.Reset();
+                _signalSamples = 0;
+                _endTime = default;
+                _price = 0;
+                _signalValue = null;
+                _previousPrice = 0;
+                PreviousSignalValue = null;
+            }
         }
     }
 }

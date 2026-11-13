@@ -605,7 +605,7 @@ namespace QuantConnect.Algorithm
         /// Creates a new Cross-Sectional Information Coefficient (CSIC) indicator for a Python signal factory, which may create
         /// custom indicators. The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="symbols">The assets to correlate across. At least three are needed</param>
+        /// <param name="symbols">The assets to correlate across. A period needs at least three. The indicator's Add and Remove methods change them</param>
         /// <param name="signalFactory">Creates the signal of each asset from its symbol. The indicator updates them, so they must not be updated elsewhere</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator and its signals, if null defaults to the BaseData itself</param>

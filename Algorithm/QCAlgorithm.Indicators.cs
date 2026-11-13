@@ -655,7 +655,7 @@ namespace QuantConnect.Algorithm
         /// the assets between their signal values at the end of the previous period and their returns over this period.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
-        /// <param name="symbols">The assets to correlate across. At least three are needed</param>
+        /// <param name="symbols">The assets to correlate across. A period needs at least three. The indicator's Add and Remove methods change them</param>
         /// <param name="signalFactory">Creates the signal of each asset. The indicator updates them, so they must not be updated elsewhere</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator and its signals, if null defaults to the BaseData itself</param>
