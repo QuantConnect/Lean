@@ -71,11 +71,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(5m, fee.Value.Amount);
         }
 
-        [TestCase(10, 0.20, 0.02)]
-        [TestCase(1000, 0.80, 5)]
-        public void USAEquityFeeIsCappedAtOnePercentOfTradeValue(int quantity, decimal price, decimal expectedFee)
+        [TestCase(10, 0.20, 1, 0.02)]
+        [TestCase(1000, 0.80, 1, 5)]
+        [TestCase(10, 0.20, 0.9, 0.02)]
+        [TestCase(1, 100, 0.9, 1)]
+        public void USAEquityFeeIsCappedAtOnePercentOfTradeValue(int quantity, decimal price, decimal conversionRate, decimal expectedFee)
         {
             var security = SecurityTests.GetSecurity();
+            security.QuoteCurrency.ConversionRate = conversionRate;
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
 
             var fee = _feeModel.GetOrderFee(
@@ -86,6 +89,48 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
+        [TestCase(OrderType.StopMarket)]
+        [TestCase(OrderType.TrailingStop)]
+        public void USAEquityStopFeeIsCappedAtOnePercentOfMarketValue(OrderType orderType)
+        {
+            var security = SecurityTests.GetSecurity();
+            // the market gapped past the stop price, so the triggered stop trades at $100
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+            Order order = orderType == OrderType.StopMarket
+                ? new StopMarketOrder(security.Symbol, 1, 50, DateTime.UtcNow)
+                : new TrailingStopOrder(security.Symbol, 1, 50, 1, false, DateTime.UtcNow);
+
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+        }
+
+        [TestCase(1, 0.20, 6)]
+        [TestCase(1000, 100, 10)]
+        public void IndiaEquityFeeInINR(int quantity, decimal price, decimal expectedFee)
+        {
+            var security = new QuantConnect.Securities.Equity.Equity(
+                Symbols.SBIN,
+                MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.India, Symbols.SBIN, SecurityType.Equity),
+                new Cash(Currencies.INR, 0, 1),
+                SymbolProperties.GetDefault(Currencies.INR),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.INR, fee.Value.Currency);
             Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
 
