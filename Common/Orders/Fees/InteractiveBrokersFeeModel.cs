@@ -156,11 +156,12 @@ namespace QuantConnect.Orders.Fees
                             throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
                     }
                     // The maximum per order is a rate of the trade value in the fee currency, the security's quote currency.
-                    // Stop orders trade at the market price once triggered, which can be past their stop price
+                    // Only an order's own limit price bounds its fill: the others, such as triggered stops or combo limit legs
+                    // priced against the combo's net limit, trade at the market price
                     var conversionRate = security.QuoteCurrency.ConversionRate;
-                    var tradeValue = order.Type == OrderType.StopMarket || order.Type == OrderType.TrailingStop
-                        ? quantity * security.Price * security.SymbolProperties.ContractMultiplier
-                        : conversionRate == 0 ? 0 : Math.Abs(order.GetValue(security)) / conversionRate;
+                    var tradeValue = order.Type is OrderType.Limit or OrderType.StopLimit or OrderType.LimitIfTouched or OrderType.ComboLegLimit
+                        ? conversionRate == 0 ? 0 : Math.Abs(order.GetValue(security)) / conversionRate
+                        : quantity * security.Price * security.SymbolProperties.ContractMultiplier;
 
                     //Per share fees
                     var tradeFee = equityFee.FeePerShare * quantity;
