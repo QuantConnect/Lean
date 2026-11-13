@@ -152,6 +152,10 @@ namespace QuantConnect.Tests.Common.Statistics
                         yield return new TestCaseData("BTCUSD", Market.Binance, 100m, 1000m, grouping, direction);
                         yield return new TestCaseData("BTCUSDT", Market.Binance, 1m, 4000m, grouping, direction);
                         yield return new TestCaseData("BTCUSD", Market.DYDX, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSD", Market.Bybit, 100m, 10m, grouping, direction);
+                        yield return new TestCaseData("ETHBTC", Market.Binance, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCUSD1", Market.Binance, 1m, 4000m, grouping, direction);
+                        yield return new TestCaseData("BTCU", Market.Binance, 1m, 4000m, grouping, direction);
                     }
                 }
             }

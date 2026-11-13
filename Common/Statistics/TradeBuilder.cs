@@ -647,7 +647,9 @@ namespace QuantConnect.Statistics
             {
                 cryptoFuture = security as CryptoFuture;
             }
-            return cryptoFuture != null && cryptoFuture.IsCryptoCoinFuture();
+            // coin-margined contracts have a USD face value: IsCryptoCoinFuture() also matches linear contracts
+            // quoted in other currencies, such as ETHBTC or BTCUSD1, whose profit is the linear price difference
+            return cryptoFuture != null && cryptoFuture.QuoteCurrency.Symbol == Currencies.USD;
         }
 
         /// <summary>
