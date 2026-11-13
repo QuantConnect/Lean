@@ -87,6 +87,28 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
         }
 
+        [TestCase(OrderStatus.Filled, 100, OrderDirection.Sell)]
+        [TestCase(OrderStatus.PartiallyFilled, 100, OrderDirection.Sell)]
+        [TestCase(OrderStatus.Filled, -100, OrderDirection.Buy)]
+        [TestCase(OrderStatus.PartiallyFilled, -100, OrderDirection.Buy)]
+        public void FillWithoutQuantityDoesNotAddTransactionRecord(OrderStatus status, int holdingsQuantity, OrderDirection orderDirection)
+        {
+            var reference = new DateTime(2016, 02, 16, 11, 53, 30);
+            var security = InitializeTest(reference, out var portfolio);
+
+            security.Holdings.SetHoldings(50m, holdingsQuantity);
+
+            // the brokerage closes the order short of its quantity after its last fill was reported
+            var fill = new OrderEvent(1, security.Symbol, reference, status, orderDirection, 0, 0, OrderFee.Zero);
+            portfolio.ProcessFills(new List<OrderEvent> { fill });
+
+            Assert.AreEqual(0, portfolio.Transactions.WinCount);
+            Assert.AreEqual(0, portfolio.Transactions.LossCount);
+            Assert.AreEqual(0, portfolio.Transactions.TransactionRecord.Count);
+            Assert.AreEqual(holdingsQuantity, security.Holdings.Quantity);
+            Assert.AreEqual(50m, security.Holdings.AveragePrice);
+        }
+
         [Test]
         public void LastTradeProfit_LongToFlat()
         {
