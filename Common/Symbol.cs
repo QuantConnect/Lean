@@ -173,7 +173,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="underlying">The underlying ticker</param>
         /// <param name="market">The market the underlying resides in</param>
-        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="style">The option style (American, European, etc..)</param>
         /// <param name="right">The option right (Put/Call)</param>
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
@@ -194,12 +194,12 @@ namespace QuantConnect
         /// </summary>
         /// <param name="underlyingSymbol">The underlying security symbol</param>
         /// <param name="market">The market the underlying resides in</param>
-        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="style">The option style (American, European, etc..)</param>
         /// <param name="right">The option right (Put/Call)</param>
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
-        /// adding the same security from diferent markets</param>
+        /// adding the same security from different markets</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(Symbol underlyingSymbol, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
@@ -212,12 +212,12 @@ namespace QuantConnect
         /// <param name="underlyingSymbol">The underlying security symbol</param>
         /// <param name="targetOption">The target option ticker. This is useful when the option ticker does not match the underlying, e.g. SPX index and the SPXW weekly option. If null is provided will use underlying</param>
         /// <param name="market">The market the underlying resides in</param>
-        /// <param name="style">The option style (American, European, ect..)</param>
+        /// <param name="style">The option style (American, European, etc..)</param>
         /// <param name="right">The option right (Put/Call)</param>
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
-        /// adding the same security from diferent markets</param>
+        /// adding the same security from different markets</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(Symbol underlyingSymbol, string targetOption, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null)
         {
@@ -328,7 +328,7 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Get's the canonical representation of this symbol
+        /// Gets the canonical representation of this symbol
         /// </summary>
         /// <remarks>This is useful for access and performance</remarks>
         public Symbol Canonical

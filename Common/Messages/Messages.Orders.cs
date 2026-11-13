@@ -305,7 +305,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying it was impossible to udpate the order with the id
+            /// Returns a string message saying it was impossible to update the order with the id
             /// from the given request because it already had the status of the given order
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -354,7 +354,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
         /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be applied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">The Python function filter used to find the required order tickets</param>
@@ -437,7 +437,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the remaining quantity to be filled from open orders, i.e. order size minus quantity filled
         /// However, this method can be confused with the override that takes a Symbol as parameter. For this reason
-        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be aplied it
+        /// it first checks if it can convert the parameter into a symbol. If that conversion cannot be applied it
         /// assumes the parameter is a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Filters the order tickets to be included in the aggregate quantity remaining to be filled</param>
@@ -529,7 +529,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets open orders matching the specified filter. However, this method can be confused with the
         /// override that takes a Symbol as parameter. For this reason it first checks if it can convert
-        /// the parameter into a symbol. If that conversion cannot be aplied it assumes the parameter is
+        /// the parameter into a symbol. If that conversion cannot be applied it assumes the parameter is
         /// a Python function object and not a Python representation of a Symbol.
         /// </summary>
         /// <param name="filter">Python function object used to filter the orders</param>

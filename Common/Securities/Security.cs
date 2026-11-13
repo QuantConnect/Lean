@@ -987,7 +987,7 @@ namespace QuantConnect.Securities
         /// <param name="key">The property key</param>
         /// <param name="value">The property value</param>
         /// <returns>True if the property is found.</returns>
-        /// <exception cref="InvalidCastException">If the property is found but its value cannot be casted to the speficied type</exception>
+        /// <exception cref="InvalidCastException">If the property is found but its value cannot be casted to the specified type</exception>
         public bool TryGet<T>(string key, out T value)
         {
             if (Cache.Properties.TryGetValue(key, out var obj))

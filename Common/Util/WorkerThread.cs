@@ -21,7 +21,7 @@ using QuantConnect.Logging;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// This worker tread is required to guarantee all python operations are
+    /// This worker thread is required to guarantee all python operations are
     /// executed by the same thread, to enable complete debugging functionality.
     /// We don't use the main thread, to avoid any chance of blocking the process
     /// </summary>

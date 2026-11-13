@@ -239,7 +239,7 @@ namespace QuantConnect.Api
 
     /// <summary>
     /// NodeTypes enum for all possible options of target environments
-    /// Used in conjuction with SKU class as a NodeType is a required parameter for SKU
+    /// Used in conjunction with SKU class as a NodeType is a required parameter for SKU
     /// </summary>
     public enum NodeType
     {

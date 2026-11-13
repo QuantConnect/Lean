@@ -113,7 +113,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// The period of this trade bar, (second, minute, daily, ect...)
+        /// The period of this trade bar, (second, minute, daily, etc...)
         /// </summary>
         [ProtoMember(106)]
         [PandasIgnore]

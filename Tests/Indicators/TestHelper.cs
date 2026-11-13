@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Indicators
 
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Indicators
 
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         /// <summary>
-        /// Compare the specified indicator against external data using the specificied comma delimited text file.
+        /// Compare the specified indicator against external data using the specified comma delimited text file.
         /// The 'Close' column will be fed to the indicator as input
         /// </summary>
         /// <param name="indicator">The indicator under test</param>

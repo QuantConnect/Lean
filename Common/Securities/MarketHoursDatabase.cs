@@ -88,7 +88,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Convenience method for retrieving exchange hours from market hours database using a subscription config
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <returns>The exchange hours for the specified security</returns>
@@ -101,7 +101,7 @@ namespace QuantConnect.Securities
         /// Performs a lookup using the specified information and returns the data's time zone if found,
         /// if an entry is not found, an exception is thrown
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <returns>The raw data time zone for the specified security</returns>
@@ -148,7 +148,7 @@ namespace QuantConnect.Securities
         /// entries in market-hours-database.csv. At run time, the algorithm can update the market hours
         /// database via calls to AddData.
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="exchangeHours">The exchange hours for the specified symbol</param>
@@ -172,7 +172,7 @@ namespace QuantConnect.Securities
         /// Sets the entry for the specified symbol using SecurityExchangeHours.AlwaysOpen(timeZone)
         /// This sets the data time zone equal to the exchange time zone as well.
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="timeZone">The time zone of the symbol's exchange and raw data</param>
@@ -185,7 +185,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the entry for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>
@@ -222,7 +222,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Tries to get the entry for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="entry">The entry found if any</param>
@@ -235,7 +235,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Tries to get the entry for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="entry">The entry found if any</param>
@@ -267,7 +267,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the entry for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <returns>The entry matching the specified market/symbol/security-type</returns>

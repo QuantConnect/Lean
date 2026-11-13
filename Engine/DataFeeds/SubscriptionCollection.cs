@@ -93,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Attempts to remove the subscription with the specified configuraton from the collection.
+        /// Attempts to remove the subscription with the specified configuration from the collection.
         /// </summary>
         /// <param name="configuration">The configuration of the subscription to remove</param>
         /// <param name="subscription">The removed subscription, null if not found.</param>
@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Gets and updates the fill forward resolution by checking specified subscription configurations and
-        /// selecting the smallest resoluton not equal to tick
+        /// selecting the smallest resolution not equal to tick
         /// </summary>
         public Ref<TimeSpan> UpdateAndGetFillForwardResolution(SubscriptionDataConfig configuration = null)
         {
@@ -167,7 +167,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
         /// <summary>
         /// Gets and updates the fill forward resolution by checking specified subscription configurations and
-        /// selecting the smallest resoluton not equal to tick
+        /// selecting the smallest resolution not equal to tick
         /// </summary>
         private void UpdateFillForwardResolution(FillForwardResolutionOperation operation, SubscriptionDataConfig configuration)
         {

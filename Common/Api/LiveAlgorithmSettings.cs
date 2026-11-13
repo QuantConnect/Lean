@@ -42,7 +42,7 @@ namespace QuantConnect.Api
         /// <param name="dataProviders">Dictionary with data providers credentials. Each data provider requires certain credentials
         ///                         in order to retrieve data from their API. Each key in this dictionary describes a data provider name
         ///                         and its corresponding value is another dictionary with the required key-value pairs of credential
-        ///                         names and values. For example: "dataProviders: {InteractiveBrokersBrokerage : { "id": 12345, "environement" : "paper",
+        ///                         names and values. For example: "dataProviders: {InteractiveBrokersBrokerage : { "id": 12345, "environment" : "paper",
         ///                         "username": "testUsername", "password": "testPassword"}}"</param>
         /// <param name="parameters">Dictionary to specify the parameters for the live algorithm</param>
         /// <param name="notification">Dictionary with the lists of events and targets</param>

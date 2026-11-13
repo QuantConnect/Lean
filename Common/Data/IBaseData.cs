@@ -71,7 +71,7 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Reader Method :: using set of arguements we specify read out type. Enumerate
+        /// Reader Method :: using set of arguments we specify read out type. Enumerate
         /// until the end of the data stream or file. E.g. Read CSV file line by line and convert
         /// into data types.
         /// </summary>
@@ -106,7 +106,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
-        /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
+        /// <param name="datafeed">Type of datafeed we're requesting - backtest or live</param>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
         /// <returns>String URL of source file.</returns>

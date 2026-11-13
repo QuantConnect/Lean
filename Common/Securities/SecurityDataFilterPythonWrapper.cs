@@ -28,7 +28,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Creates a new instance
         /// </summary>
-        /// <param name="dataFilter">The Python class to wrapp</param>
+        /// <param name="dataFilter">The Python class to wrap</param>
         public SecurityDataFilterPythonWrapper(PyObject dataFilter)
             : base(dataFilter)
         {

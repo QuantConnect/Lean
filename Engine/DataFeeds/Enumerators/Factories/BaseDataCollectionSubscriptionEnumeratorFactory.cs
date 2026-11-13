@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private IObjectStore _objectStore;
 
         /// <summary>
-        /// Instanciates a new <see cref="BaseDataCollectionSubscriptionEnumeratorFactory"/>
+        /// Instantiates a new <see cref="BaseDataCollectionSubscriptionEnumeratorFactory"/>
         /// </summary>
         /// <param name="objectStore">The object store to use</param>
         public BaseDataCollectionSubscriptionEnumeratorFactory(IObjectStore objectStore)

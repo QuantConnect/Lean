@@ -156,7 +156,7 @@ namespace QuantConnect.Packets
         /// <param name="results">Results class for the Backtest job</param>
         /// <param name="endDate">The algorithms backtest end date</param>
         /// <param name="startDate">The algorithms backtest start date</param>
-        /// <param name="progress">Progress of the packet. For the packet we assume progess of 100%.</param>
+        /// <param name="progress">Progress of the packet. For the packet we assume progress of 100%.</param>
         public BacktestResultPacket(BacktestNodePacket job, BacktestResult results, DateTime endDate, DateTime startDate, decimal progress = 1m)
             : this()
         {

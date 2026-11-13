@@ -62,7 +62,7 @@ namespace QuantConnect.Packets
         public IDictionary<string, string> State { get; set; }
 
         /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
+        /// Server status information, including CPU/RAM usage, etc...
         /// </summary>
         public IDictionary<string, string> ServerStatistics { get; set; }
 

@@ -38,7 +38,7 @@ namespace QuantConnect.Securities.Positions
         private IPositionGroupResolver _resolver;
 
         /// <summary>
-        /// Get's the single security position group buying power model to use
+        /// Gets the single security position group buying power model to use
         /// </summary>
         protected virtual IPositionGroupBuyingPowerModel PositionGroupBuyingPowerModel { get; } = new SecurityPositionGroupBuyingPowerModel();
 

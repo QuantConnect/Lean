@@ -134,7 +134,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message warnning the user that no trade information was available, so the order was filled
+            /// Returns a string message warning the user that no trade information was available, so the order was filled
             /// using quote data
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

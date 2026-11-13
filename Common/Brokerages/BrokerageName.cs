@@ -18,7 +18,7 @@ using System;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Specifices what transaction model and submit/execution rules to use
+    /// Specifies what transaction model and submit/execution rules to use
     /// </summary>
     public enum BrokerageName
     {

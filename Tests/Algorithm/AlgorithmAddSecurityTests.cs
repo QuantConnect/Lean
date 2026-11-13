@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Algorithm
         private NullDataFeed _dataFeed;
 
         /// <summary>
-        /// Instatiate a new algorithm before each test.
+        /// Instantiate a new algorithm before each test.
         /// Clear the <see cref="SymbolCache"/> so that no symbols and associated brokerage models are cached between test
         /// </summary>
         [SetUp]

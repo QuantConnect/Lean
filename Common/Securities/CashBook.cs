@@ -286,7 +286,7 @@ namespace QuantConnect.Securities
         /// Try to get the value.
         /// </summary>
         /// <remarks>To be added.</remarks>
-        /// <returns><c>true</c>, if get value was tryed, <c>false</c> otherwise.</returns>
+        /// <returns><c>true</c>, if get value was tried, <c>false</c> otherwise.</returns>
         /// <param name="symbol">The symbol.</param>
         /// <param name="value">Value.</param>
         public override bool TryGetValue(string symbol, out Cash value)

@@ -58,7 +58,7 @@ namespace QuantConnect
             public static string NotPermittedExpectedSubstring = "are not permitted;";
 
             /// <summary>
-            /// Returns a string message saying: Tring to include an invalid token/character in any statement throws s SyntaxError
+            /// Returns a string message saying: Trying to include an invalid token/character in any statement throws s SyntaxError
             /// exception. It also contains an advice to prevent that exception
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -52,7 +52,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Json reader implementation which handles backwards compatiblity for old equity chart points
+        /// Json reader implementation which handles backwards compatibility for old equity chart points
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
@@ -90,7 +90,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// This converter wont be used to read JSON. Will throw exception if manually called.
+        /// This converter won't be used to read JSON. Will throw exception if manually called.
         /// </summary>
         public override bool CanRead => true;
     }

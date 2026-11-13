@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Base regression algorithm exercising different style options with option price models that might
-    /// or might not support them. Also, if the option style is supported, greeks are asserted to be accesible and have valid values.
+    /// or might not support them. Also, if the option style is supported, greeks are asserted to be accessible and have valid values.
     /// </summary>
     public abstract class OptionPriceModelForOptionStylesBaseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

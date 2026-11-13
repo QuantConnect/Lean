@@ -21,7 +21,7 @@ using System.Text;
 namespace QuantConnect.Data.Custom.Intrinio
 {
     /// <summary>
-    ///     TRanformation available for the Economic data.
+    ///     Transformation available for the Economic data.
     /// </summary>
     public enum IntrinioDataTransformation
     {

@@ -224,7 +224,7 @@ namespace QuantConnect.Optimizer
         protected abstract string RunLean(ParameterSet parameterSet, string backtestName);
 
         /// <summary>
-        /// Get's a new backtest name
+        /// Gets a new backtest name
         /// </summary>
         protected virtual string GetBacktestName(ParameterSet parameterSet)
         {

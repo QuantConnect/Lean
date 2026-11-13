@@ -168,7 +168,7 @@ namespace QuantConnect.Data
         public DateTimeZone ExchangeTimeZone { get; }
 
         /// <summary>
-        /// Consolidators that are registred with this subscription
+        /// Consolidators that are registered with this subscription
         /// </summary>
         public ISet<IDataConsolidator> Consolidators { get; }
 

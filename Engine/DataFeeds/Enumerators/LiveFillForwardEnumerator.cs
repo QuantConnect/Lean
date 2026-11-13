@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// a reference to the fill forward resolution, useful if the fill forward resolution is dynamic
         /// and changing as the enumeration progresses
         /// </summary>
-        /// <param name="timeProvider">The source of time used to gauage when this enumerator should emit extra bars when
+        /// <param name="timeProvider">The source of time used to gauge when this enumerator should emit extra bars when
         /// null data is returned from the source enumerator</param>
         /// <param name="enumerator">The source enumerator to be filled forward</param>
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>

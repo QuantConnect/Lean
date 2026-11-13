@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// EMA cross with SP500 E-mini futures
-    /// In this example, we demostrate how to trade futures contracts using
+    /// In this example, we demonstrate how to trade futures contracts using
     /// a equity to generate the trading signals
     /// It also shows how you can prefilter contracts easily based on expirations.
     /// It also shows how you can inspect the futures chain to pick a specific contract to trade.

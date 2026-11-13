@@ -535,7 +535,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// computs the insight closing time from the given generated time and period
+        /// computes the insight closing time from the given generated time and period
         /// </summary>
         /// <param name="exchangeHours">The exchange hours of the insight's security</param>
         /// <param name="generatedTimeUtc">The insight's generated time in utc</param>
@@ -606,7 +606,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         /// <summary>
         /// Distinguishes between the different ways an insight's period/close times can be specified
-        /// This was really only required since we can't properly acces certain data from within a static
+        /// This was really only required since we can't properly access certain data from within a static
         /// context (such as Insight.Price) or from within a constructor w/out requiring the users to properly
         /// fetch the required data and supply it as an argument.
         /// </summary>
@@ -732,7 +732,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// Special case for insights where we do not know whats the
+        /// Special case for insights where we do not know what's the
         /// <see cref="Period"/> or <see cref="CloseTimeUtc"/>.
         /// </summary>
         private class EndOfTimeCloseTimePeriodSpecification : IPeriodSpecification

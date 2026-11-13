@@ -49,8 +49,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         protected IAlgorithm Algorithm { get; private set; }
 
         /// <summary>
-        /// This is required due to a limitation in PythonNet to resolved overriden methods.
-        /// When Python calls a C# method that calls a method that's overriden in python it won't
+        /// This is required due to a limitation in PythonNet to resolved overridden methods.
+        /// When Python calls a C# method that calls a method that's overridden in python it won't
         /// run the python implementation unless the call is performed through python too.
         /// </summary>
         protected PortfolioConstructionModelPythonWrapper PythonWrapper { get; set; }

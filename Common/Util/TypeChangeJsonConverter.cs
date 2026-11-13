@@ -99,8 +99,8 @@ namespace QuantConnect.Util
         /// <summary>
         /// Convert the input value to a value to be serialized
         /// </summary>
-        /// <param name="value">The input value to be converted before serialziation</param>
-        /// <returns>A new instance of TResult that is to be serialzied</returns>
+        /// <param name="value">The input value to be converted before serialization</param>
+        /// <returns>A new instance of TResult that is to be serialized</returns>
         protected abstract TResult Convert(T value);
 
         /// <summary>

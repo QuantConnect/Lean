@@ -162,7 +162,7 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
+        /// Server status information, including CPU/RAM usage, etc...
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, string> ServerStatistics { get; set; }

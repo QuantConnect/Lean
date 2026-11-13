@@ -21,7 +21,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Test algorithm to verify the corret working of <see cref="HistoryProviderManager"/>
+    /// Test algorithm to verify the correct working of <see cref="HistoryProviderManager"/>
     /// </summary>
     public class HistoryProviderManagerRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

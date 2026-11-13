@@ -23,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm testing GH feature 3790, using SetHoldings with a collection of targets
     /// which will be ordered by margin impact before being executed, with the objective of avoiding any
     /// margin errors
-    /// Asserts that liquidateExistingHoldings equal false does not close positions inadvertedly (GH 7008) 
+    /// Asserts that liquidateExistingHoldings equal false does not close positions inadvertently (GH 7008) 
     /// </summary>
     public class SetHoldingsLiquidateExistingHoldingsMultipleTargetsRegressionAlgorithm : SetHoldingsMultipleTargetsRegressionAlgorithm
     {

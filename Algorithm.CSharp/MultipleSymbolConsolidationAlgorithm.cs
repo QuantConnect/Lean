@@ -200,7 +200,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             /// <summary>
-            /// Returns true if all the data in this instance is ready (indicators, rolling windows, ect...)
+            /// Returns true if all the data in this instance is ready (indicators, rolling windows, etc...)
             /// </summary>
             public bool IsReady
             {

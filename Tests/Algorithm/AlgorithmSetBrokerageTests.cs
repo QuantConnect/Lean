@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Algorithm
         private const string Sym = "SPY";
 
         /// <summary>
-        /// Instatiate a new algorithm before each test.
+        /// Instantiate a new algorithm before each test.
         /// Clear the <see cref="SymbolCache"/> so that no symbols and associated brokerage models are cached between test
         /// </summary>
         [SetUp]
@@ -162,7 +162,7 @@ class Test(AlphaStreamsBrokerageModel):
         }
 
         /// <summary>
-        /// The method <see cref="QCAlgorithm.AddSecurity(SecurityType, string, Resolution, bool, bool)"/> should use the default brokerage for the sepcific security.
+        /// The method <see cref="QCAlgorithm.AddSecurity(SecurityType, string, Resolution, bool, bool)"/> should use the default brokerage for the specific security.
         /// Setting the brokerage with <see cref="QCAlgorithm.SetBrokerageModel(IBrokerageModel)"/> will affect the market of securities added with  <see cref="QCAlgorithm.AddSecurity(SecurityType, string, Resolution, bool, bool)"/>
         /// </summary>
         [Test]

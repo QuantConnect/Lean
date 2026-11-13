@@ -391,7 +391,7 @@ namespace QuantConnect.Data
         /// <remarks>OBSOLETE:: This implementation is added for backward/forward compatibility purposes. This function is no longer called by the LEAN engine.</remarks>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
-        /// <param name="datafeed">Type of datafeed we're reqesting - backtest or live</param>
+        /// <param name="datafeed">Type of datafeed we're requesting - backtest or live</param>
         /// <returns>String URL of source file.</returns>
         [Obsolete("GetSource(SubscriptionDataConfig, DateTime, DataFeedEndpoint) method has been made obsolete, use GetSource(SubscriptionDataConfig, DateTime, bool) instead.")]
         [StubsIgnore]

@@ -143,7 +143,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Check whether an entry exists for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded</param>
         /// <param name="securityType">The security type of the symbol</param>
         public bool ContainsKey(string market, string symbol, SecurityType securityType)
@@ -154,7 +154,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Check whether an entry exists for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
         public bool ContainsKey(string market, Symbol symbol, SecurityType securityType)

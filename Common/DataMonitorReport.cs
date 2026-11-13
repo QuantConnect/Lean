@@ -115,9 +115,9 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
-        /// <param name="succeededDataRequestsCount">Number of data paths that were requested and successfuly served</param>
+        /// <param name="succeededDataRequestsCount">Number of data paths that were requested and successfully served</param>
         /// <param name="failedDataRequestsCount">Number of data paths that were requested but could not be served</param>
-        /// <param name="succeededUniverseDataRequestsCount">Number of universe data paths that were requested and successfuly served</param>
+        /// <param name="succeededUniverseDataRequestsCount">Number of universe data paths that were requested and successfully served</param>
         /// <param name="failedUniverseDataRequestsCount">Number of universe data paths that were requested but could not be served</param>
         /// <param name="dataRequestRates">Rates at which data requests were made per second</param>
         /// <param name="succeededDataRequestsFile">Name of the file listing the succeeded data requests, if stored</param>

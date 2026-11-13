@@ -247,7 +247,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
-        /// Compress the queue buffers directly to a zip file. Lightening fast as streaming ram-> compressed zip.
+        /// Compress the queue buffers directly to a zip file. Lightning fast as streaming ram-> compressed zip.
         /// </summary>
         public void Package(DateTime date)
         {

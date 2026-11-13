@@ -82,7 +82,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the symbol properties for the specified market/symbol/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <param name="defaultQuoteCurrency">Specifies the quote currency to be used when returning a default instance of an entry is not found in the database</param>
@@ -123,7 +123,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets a list of symbol properties for the specified market/security-type
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <param name="securityType">The security type of the symbol</param>
         /// <returns>An IEnumerable of symbol properties matching the specified market/security-type</returns>
         public IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetSymbolPropertiesList(string market, SecurityType securityType)
@@ -143,7 +143,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets a list of symbol properties for the specified market
         /// </summary>
-        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', etc...</param>
         /// <returns>An IEnumerable of symbol properties matching the specified market</returns>
         public IEnumerable<KeyValuePair<SecurityDatabaseKey, SymbolProperties>> GetSymbolPropertiesList(string market)
         {

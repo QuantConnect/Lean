@@ -294,7 +294,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// BBoolean flag indicating we have a net negative holding of the security.
+        /// Boolean flag indicating we have a net negative holding of the security.
         /// </summary>
         /// <seealso cref="IsLong"/>
         public virtual bool IsShort

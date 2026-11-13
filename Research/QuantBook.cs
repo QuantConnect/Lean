@@ -868,7 +868,7 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
-        /// Get's the universe data for the specified date
+        /// Gets the universe data for the specified date
         /// </summary>
         private IReadOnlyList<T> GetChainHistory<T>(Symbol canonicalSymbol, DateTime date, out BaseData underlyingData)
             where T : BaseChainUniverseData

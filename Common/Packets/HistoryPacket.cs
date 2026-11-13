@@ -174,7 +174,7 @@ namespace QuantConnect.Packets
     }
 
     /// <summary>
-    /// Specfies an error message in a history result
+    /// Specifies an error message in a history result
     /// </summary>
     public class ErrorHistoryResult : HistoryResult
     {

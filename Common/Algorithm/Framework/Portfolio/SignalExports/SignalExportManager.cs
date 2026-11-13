@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         private bool _isLiveWarningModeLog;
 
         /// <summary>
-        /// Gets the maximim time span elapsed to export signals after an order event 
+        /// Gets the maximum time span elapsed to export signals after an order event 
         /// If null, disable automatic export.
         /// </summary>
         public TimeSpan? AutomaticExportTimeSpan { get; set; } = TimeSpan.FromSeconds(5);

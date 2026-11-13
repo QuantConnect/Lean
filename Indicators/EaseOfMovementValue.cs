@@ -43,10 +43,10 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod => _sma.WarmUpPeriod;
 
         /// <summary>
-        /// Initializeds a new instance of the EaseOfMovement class using the specufued period
+        /// Initializes a new instance of the EaseOfMovement class using the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
-        /// <param name="scale">The size of the number outputed by EMV</param>
+        /// <param name="scale">The size of the number outputted by EMV</param>
         public EaseOfMovementValue(int period = 1, int scale = 10000)
             : this($"EMV({period}, {scale})", period, scale)
         {
@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period over which to perform to computation</param>
-        /// <param name="scale">The size of the number outputed by EMV</param>
+        /// <param name="scale">The size of the number outputted by EMV</param>
         public EaseOfMovementValue(string name, int period, int scale)
             : base(name)
         {

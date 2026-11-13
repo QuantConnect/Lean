@@ -25,7 +25,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {
     /// <summary>
-    /// Represents a stream reader capabable of downloading a remote file and then
+    /// Represents a stream reader capable of downloading a remote file and then
     /// reading it from disk
     /// </summary>
     public class RemoteFileSubscriptionStreamReader : IStreamReader

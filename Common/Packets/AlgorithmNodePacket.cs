@@ -117,7 +117,7 @@ namespace QuantConnect.Packets
         public byte[] Algorithm { get; set; } = Array.Empty<byte>();
 
         /// <summary>
-        /// Request source - Web IDE or API - for controling result handler behaviour
+        /// Request source - Web IDE or API - for controlling result handler behaviour
         /// </summary>
         public string RequestSource { get; set; } = "WebIDE";
 

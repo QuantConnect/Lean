@@ -552,7 +552,7 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         /// <summary>
-        /// Get's a file path for a given path.
+        /// Gets a file path for a given path.
         /// Internal use only because it does not guarantee the existence of the file.
         /// </summary>
         protected string PathForKey(string path)

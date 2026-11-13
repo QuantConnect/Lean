@@ -50,7 +50,7 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
-        /// Sets the property with the specified name to the value. This is a case-insensitve search.
+        /// Sets the property with the specified name to the value. This is a case-insensitive search.
         /// </summary>
         /// <param name="name">The property name to set</param>
         /// <param name="value">The new property value</param>
@@ -72,7 +72,7 @@ namespace QuantConnect.Commands
         }
 
         /// <summary>
-        /// Gets the property's value with the specified name. This is a case-insensitve search.
+        /// Gets the property's value with the specified name. This is a case-insensitive search.
         /// </summary>
         /// <param name="name">The property name to access</param>
         /// <returns>object value of BaseData</returns>

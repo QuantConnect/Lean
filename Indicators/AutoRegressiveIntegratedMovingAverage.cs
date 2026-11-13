@@ -23,7 +23,7 @@ using MathNet.Numerics.LinearRegression;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// An Autoregressive Intergrated Moving Average (ARIMA) is a time series model which can be used to describe a set of data.
+    /// An Autoregressive Integrated Moving Average (ARIMA) is a time series model which can be used to describe a set of data.
     /// In particular,with Xₜ representing the series, the model assumes the data are of form
     /// (after differencing <see cref="_diffOrder" /> times):
     /// <para>

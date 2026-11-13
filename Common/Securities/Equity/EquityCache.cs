@@ -18,7 +18,7 @@ namespace QuantConnect.Securities.Equity
     /// <summary>
     /// Equity cache override.
     /// </summary>
-    /// <remarks>Scheduled for obsolesence</remarks>
+    /// <remarks>Scheduled for obsolescence</remarks>
     /// <seealso cref="SecurityCache"/>
     public class EquityCache : SecurityCache
     {

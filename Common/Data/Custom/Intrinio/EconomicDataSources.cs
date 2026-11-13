@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <summary>
             ///     This data represents the effective yield of the BofA Merrill Lynch US Corporate BBB Index, a subset of the BofA
             ///     Merrill Lynch US Corporate Master Index tracking the performance of US dollar denominated investment grade rated
-            ///     corporate debt publically issued in the US domestic market.
+            ///     corporate debt publicly issued in the US domestic market.
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAMLC0A4CBBBEY
@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <summary>
             ///     This data represents the Option-Adjusted Spread (OAS) of the BofA Merrill Lynch US Corporate BBB Index, a subset of
             ///     the BofA Merrill Lynch US Corporate Master Index tracking the performance of US dollar denominated investment grade
-            ///     rated corporate debt publically issued in the US domestic market.
+            ///     rated corporate debt publicly issued in the US domestic market.
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAMLC0A4CBBB
@@ -58,7 +58,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <summary>
             ///     This data represents the Option-Adjusted Spread (OAS) of the BofA Merrill Lynch US Corporate BB Index, a subset of
             ///     the BofA Merrill Lynch US High Yield Master II Index tracking the performance of US dollar denominated below
-            ///     investment grade rated corporate debt publically issued in the US domestic market.
+            ///     investment grade rated corporate debt publicly issued in the US domestic market.
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAMLH0A1HYBB
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <summary>
             ///     This data represents the Option-Adjusted Spread (OAS) of the BofA Merrill Lynch US Corporate B Index, a subset of
             ///     the BofA Merrill Lynch US High Yield Master II Index tracking the performance of US dollar denominated below
-            ///     investment grade rated corporate debt publically issued in the US domestic market. This subset includes all
+            ///     investment grade rated corporate debt publicly issued in the US domestic market. This subset includes all
             ///     securities with a given investment grade rating B.
             /// </summary>
             /// <remarks>
@@ -79,7 +79,7 @@ namespace QuantConnect.Data.Custom.Intrinio
             /// <summary>
             ///     This data represents the Option-Adjusted Spread (OAS) of the BofA Merrill Lynch US Corporate C Index, a subset of
             ///     the BofA Merrill Lynch US High Yield Master II Index tracking the performance of US dollar denominated below
-            ///     investment grade rated corporate debt publically issued in the US domestic market.
+            ///     investment grade rated corporate debt publicly issued in the US domestic market.
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAMLH0A3HYC
@@ -88,7 +88,7 @@ namespace QuantConnect.Data.Custom.Intrinio
 
             /// <summary>
             ///     This data represents the effective yield of the BofA Merrill Lynch US High Yield Master II Index, which tracks the
-            ///     performance of US dollar denominated below investment grade rated corporate debt publically issued in the US
+            ///     performance of US dollar denominated below investment grade rated corporate debt publicly issued in the US
             ///     domestic market.
             ///     Source: https://fred.stlouisfed.org/series/BAMLH0A0HYM2EY
             /// </summary>
@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Custom.Intrinio
 
             /// <summary>
             ///     This data represents the BofA Merrill Lynch US High Yield Master II Index value, which tracks the performance of US
-            ///     dollar denominated below investment grade rated corporate debt publically issued in the US domestic market.
+            ///     dollar denominated below investment grade rated corporate debt publicly issued in the US domestic market.
             /// </summary>
             /// <remarks>
             ///     Source: https://fred.stlouisfed.org/series/BAMLHYH0A0HYM2TRIV

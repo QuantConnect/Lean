@@ -62,7 +62,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// Returns a read-only version of this instance
         /// </summary>
-        /// <returns>A new instance with read-only semantics/gaurantees</returns>
+        /// <returns>A new instance with read-only semantics/guarantees</returns>
         public IReadOnlyRef<T> AsReadOnly()
         {
             return new Ref<T>(_getter, value =>

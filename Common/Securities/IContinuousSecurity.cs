@@ -16,7 +16,7 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// A continuous security that get's mapped during his life
+    /// A continuous security that gets mapped during his life
     /// </summary>
     public interface IContinuousSecurity
     {
