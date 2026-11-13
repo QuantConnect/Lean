@@ -123,12 +123,12 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiry.Date.AddHours(15), settlement);
         }
 
-        [TestCase("SPXW", 2025, 7, 3)]
-        [TestCase("SPXW", 2025, 11, 28)]
-        [TestCase("SPXW", 2025, 12, 24)]
-        [TestCase("RUTW", 2025, 7, 3)]
-        [TestCase("NDXP", 2025, 11, 28)]
-        public void ZeroDTEPMSettledIndexOptionsExpireAtEarlyClose(string ticker, int year, int month, int day)
+        [TestCase("SPXW", 2025, 7, 3, 12)]
+        [TestCase("SPXW", 2025, 11, 28, 12)]
+        [TestCase("SPXW", 2025, 12, 24, 12)]
+        [TestCase("RUTW", 2025, 7, 3, 12)]
+        [TestCase("NDXP", 2025, 11, 28, 13)]
+        public void ZeroDTEPMSettledIndexOptionsExpireAtEarlyClose(string ticker, int year, int month, int day, int earlyCloseHour)
         {
             var expiry = new DateTime(year, month, day);
             var underlying = Symbol.Create(IndexOptionSymbol.MapToUnderlying(ticker), SecurityType.Index, Market.USA);
@@ -137,7 +137,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var settlement = OptionSymbol.GetSettlementDateTime(option);
 
-            Assert.AreEqual(expiry.Date.AddHours(12), settlement);
+            Assert.AreEqual(expiry.Date.AddHours(earlyCloseHour), settlement);
             Assert.AreEqual(exchangeHours.GetLastDailyMarketClose(expiry, false), settlement);
         }
 

@@ -19,6 +19,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Securities;
@@ -478,6 +479,80 @@ namespace QuantConnect.Tests.Common.Securities
             var underlyingEntry = provider.GetEntry(Market.USA, underlying, underlying.SecurityType);
             var optionEntry = provider.GetEntry(Market.USA, option, option.SecurityType);
             Assert.AreEqual(underlyingEntry.ExchangeHours.EarlyCloses, optionEntry.ExchangeHours.EarlyCloses);
+        }
+
+        [TestCase("NDX", SecurityType.Index, "America/New_York", 13)]
+        [TestCase("NDX", SecurityType.IndexOption, "America/New_York", 13)]
+        [TestCase("NDXP", SecurityType.IndexOption, "America/New_York", 13)]
+        [TestCase("NQX", SecurityType.IndexOption, "America/New_York", 13)]
+        [TestCase("SPX", SecurityType.Index, "America/Chicago", 12)]
+        [TestCase("SPX", SecurityType.IndexOption, "America/Chicago", 12)]
+        [TestCase("SPXW", SecurityType.IndexOption, "America/Chicago", 12)]
+        public void USIndexInheritedEarlyClosesKeepTheirInstant(string ticker, SecurityType securityType, string timeZone, int earlyCloseHour)
+        {
+            var date = new DateTime(2025, 11, 28);
+            var symbol = Symbol.Create(OptionSymbol.MapToUnderlying(ticker, securityType), SecurityType.Index, Market.USA);
+            if (securityType == SecurityType.IndexOption)
+            {
+                symbol = Symbol.CreateOption(symbol, ticker, Market.USA, OptionStyle.European, OptionRight.Call, 200m, date);
+            }
+
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, symbol, securityType);
+
+            Assert.AreEqual(timeZone, exchangeHours.TimeZone.Id);
+            Assert.AreEqual(new TimeSpan(earlyCloseHour, 0, 0), exchangeHours.EarlyCloses[date]);
+            Assert.AreEqual(date.AddHours(earlyCloseHour), exchangeHours.GetLastDailyMarketClose(date, false));
+        }
+
+        [Test]
+        public void InheritedEarlyClosesAndLateOpensAreConvertedToTheExchangeTimeZone()
+        {
+            var json = @"{
+  ""entries"": {
+    ""Index-usa-[*]"": {
+      ""dataTimeZone"": ""America/Chicago"", ""exchangeTimeZone"": ""America/Chicago"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [],
+      ""earlyCloses"": { ""11/28/2025"": ""12:00:00"", ""12/24/2025"": ""23:30:00"" },
+      ""lateOpens"": { ""11/28/2025"": ""09:30:00"" }
+    },
+    ""Index-usa-NDX"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": []
+    },
+    ""Index-usa-TESTCHI"": {
+      ""dataTimeZone"": ""America/Chicago"", ""exchangeTimeZone"": ""America/Chicago"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": []
+    },
+    ""IndexOption-usa-NDXP"": {
+      ""dataTimeZone"": ""America/Los_Angeles"", ""exchangeTimeZone"": ""America/Los_Angeles"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": []
+    }
+  }
+}";
+            var database = JsonConvert.DeserializeObject<MarketHoursDatabase>(json);
+
+            var newYork = database.GetExchangeHours(Market.USA, Symbol.Create("NDX", SecurityType.Index, Market.USA), SecurityType.Index);
+            Assert.AreEqual(new TimeSpan(13, 0, 0), newYork.EarlyCloses[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(10, 30, 0), newYork.LateOpens[new DateTime(2025, 11, 28)]);
+            // 23:30 Chicago is 00:30 of the next day in New York
+            Assert.IsFalse(newYork.EarlyCloses.ContainsKey(new DateTime(2025, 12, 24)));
+            Assert.AreEqual(new TimeSpan(0, 30, 0), newYork.EarlyCloses[new DateTime(2025, 12, 25)]);
+
+            var chicago = database.GetExchangeHours(Market.USA, Symbol.Create("TESTCHI", SecurityType.Index, Market.USA), SecurityType.Index);
+            Assert.AreEqual(new TimeSpan(12, 0, 0), chicago.EarlyCloses[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(9, 30, 0), chicago.LateOpens[new DateTime(2025, 11, 28)]);
+
+            // the option inherits its New York underlying's calendar, already converted from the Chicago one
+            var underlying = Symbol.Create("NDX", SecurityType.Index, Market.USA);
+            var option = Symbol.CreateOption(underlying, "NDXP", Market.USA, OptionStyle.European, OptionRight.Call, 200m, new DateTime(2025, 11, 28));
+            var losAngeles = database.GetExchangeHours(Market.USA, option, SecurityType.IndexOption);
+            Assert.AreEqual(new TimeSpan(10, 0, 0), losAngeles.EarlyCloses[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(7, 30, 0), losAngeles.LateOpens[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(21, 30, 0), losAngeles.EarlyCloses[new DateTime(2025, 12, 24)]);
         }
 
         [TestCase("GC", Market.COMEX, "OG")]
