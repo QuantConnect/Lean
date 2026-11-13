@@ -34,9 +34,14 @@ namespace QuantConnect.Tests.Common.Securities
         public SecurityTransactionManager TransactionManager { get; set; }
 
         /// <summary>
-        /// The symbols whose submitted orders are rejected, as invalid
+        /// The symbols whose submitted orders are rejected, with <see cref="RejectedOrderStatus"/>
         /// </summary>
         public HashSet<Symbol> RejectedSymbols { get; } = new HashSet<Symbol>();
+
+        /// <summary>
+        /// The status of the rejected orders, invalid by default
+        /// </summary>
+        public OrderStatus RejectedOrderStatus { get; init; } = OrderStatus.Invalid;
 
         public void AddOrder(Order order)
         {
@@ -99,7 +104,7 @@ namespace QuantConnect.Tests.Common.Securities
                     if (RejectedSymbols.Contains(ticket.Symbol))
                     {
                         var order = Order.CreateOrder((SubmitOrderRequest)request);
-                        order.Status = OrderStatus.Invalid;
+                        order.Status = RejectedOrderStatus;
                         AddOrder(order);
                         ticket.SetOrder(order);
                     }

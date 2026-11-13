@@ -653,17 +653,16 @@ namespace QuantConnect.Tests.Common.Securities
             // 3 covered calls (+300 SPY / -3 calls)
             var portfolio = GetSpyPortfolio(orderProcessor, -26000, -3);
 
-            // like OnMarginCall replacing the combo order with an order per leg
+            // like OnMarginCall replacing the combo order with a stock order only
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _)
-                .Select(request => new SubmitOrderRequest(OrderType.Market, request.SecurityType, request.Symbol,
-                    request.Symbol == Symbols.SPY ? stockOrderQuantity : request.Quantity, 0, 0, request.Time, "OnMarginCall"))
+                .Where(request => request.Symbol == Symbols.SPY)
+                .Select(request => new SubmitOrderRequest(OrderType.Market, request.SecurityType, request.Symbol, stockOrderQuantity, 0, 0,
+                    request.Time, "OnMarginCall"))
                 .ToList();
-            var orders = ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
-            Assert.AreEqual(2, orders.Count);
+            Assert.AreEqual(1, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
 
-            // the call buyback is canceled while the stock order is still open, and the account loses more: the holdings left
-            // regroup into naked calls, and covered calls and shares for a partial stock order, groups that aren't held
-            orders.Single(order => order.Symbol == Symbols.SPY_C_192_Feb19_2016).Status = OrderStatus.Canceled;
+            // the stock order is still open and the account loses more: the holdings left regroup into naked calls,
+            // and covered calls and shares for a partial stock order, groups that aren't held
             portfolio.CashBook[Currencies.USD].SetAmount(-29000);
             portfolio.InvalidateTotalPortfolioValue();
             marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
@@ -693,26 +692,12 @@ namespace QuantConnect.Tests.Common.Securities
         public void LiquidatesOtherPositionGroupsOnTheNextScanWhenAMarginCallOrderIsRejected(bool msftExchangeOpen)
         {
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, 0);
-            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
-            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
-
-            // IBM, bought at $120, is the loser, so it's liquidated first
-            var time = DateTime.Now;
             var closedExchangeHours = new SecurityExchangeHours(TimeZones.NewYork, Enumerable.Empty<DateTime>(),
                 Enum.GetValues<DayOfWeek>().Select(LocalMarketHours.ClosedAllDay).ToDictionary(x => x.DayOfWeek),
                 new Dictionary<DateTime, TimeSpan>(), new Dictionary<DateTime, TimeSpan>());
-            foreach (var (symbol, averagePrice) in new[] { (Symbols.IBM, 120m), (Symbols.MSFT, 100m) })
-            {
-                var security = GetSecurity(symbol, portfolio.CashBook,
-                    symbol == Symbols.MSFT && !msftExchangeOpen ? closedExchangeHours : null);
-                portfolio.Securities.Add(security);
-                security.SetLeverage(2);
-                security.SetMarketPrice(new Tick(time, symbol, 100m, 100m));
-                security.Holdings.SetHoldings(averagePrice, 100);
-            }
-            portfolio.CashBook[Currencies.USD].SetAmount(-14000);
-            portfolio.InvalidateTotalPortfolioValue();
+            // IBM, bought at $120, is the loser, so it's liquidated first
+            var portfolio = GetStocksPortfolio(orderProcessor, -14000, (Symbols.IBM, 120m, null),
+                (Symbols.MSFT, 100m, msftExchangeOpen ? null : closedExchangeHours));
 
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             Assert.AreEqual(1, marginCallOrders.Count);
@@ -733,14 +718,45 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(msftExchangeOpen, portfolio.Securities[Symbols.MSFT].Exchange.ExchangeOpen);
             if (!msftExchangeOpen)
             {
-                // not executed: IBM is tried again on the following scan
-                Assert.AreEqual(Symbols.IBM, portfolio.MarginCallModel.GetMarginCallOrders(out _).Single().Symbol);
+                // not executed: MSFT is still the one to liquidate on the following scan
+                Assert.AreEqual(Symbols.MSFT, portfolio.MarginCallModel.GetMarginCallOrders(out _).Single().Symbol);
                 return;
             }
 
             // the MSFT order stays open and covers the deficit: nothing more is liquidated
             Assert.AreEqual(1, ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders).Count);
             Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
+        }
+
+        [TestCase(OrderStatus.Invalid)]
+        [TestCase(OrderStatus.Canceled)]
+        public void LiquidatesEachPositionGroupInTurnUntilAMarginCallOrderDoesNotFail(OrderStatus failedOrderStatus)
+        {
+            var orderProcessor = new FakeOrderProcessor { RejectedOrderStatus = failedOrderStatus };
+            // each position can cover the $4000 deficit on its own, losers first: IBM, MSFT and then SPY
+            var portfolio = GetStocksPortfolio(orderProcessor, -19000, (Symbols.IBM, 120m, null), (Symbols.MSFT, 110m, null),
+                (Symbols.SPY, 100m, null));
+
+            // the brokerage fails IBM's and MSFT's orders, each one on a scan of its own
+            orderProcessor.RejectedSymbols.Add(Symbols.IBM);
+            orderProcessor.RejectedSymbols.Add(Symbols.MSFT);
+            foreach (var symbol in new[] { Symbols.IBM, Symbols.MSFT })
+            {
+                var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+                Assert.AreEqual(symbol, marginCallOrders.Single().Symbol);
+                Assert.AreEqual(failedOrderStatus, portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders).Single().Status);
+            }
+
+            // SPY is liquidated next, and its order covers the deficit
+            var spyOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(Symbols.SPY, spyOrders.Single().Symbol);
+            Assert.AreEqual(-81, spyOrders.Single().Quantity);
+            var spyOrder = ExecuteMarginCall(portfolio, orderProcessor, spyOrders).Single();
+            Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
+
+            // once SPY's order fails too there's no other position group left: they're all tried again, losers first
+            spyOrder.Status = failedOrderStatus;
+            Assert.AreEqual(Symbols.IBM, portfolio.MarginCallModel.GetMarginCallOrders(out _).Single().Symbol);
         }
 
         [Test]
@@ -854,6 +870,28 @@ namespace QuantConnect.Tests.Common.Securities
 
             var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
             portfolio.SetCash(cash);
+
+            return portfolio;
+        }
+
+        private SecurityPortfolioManager GetStocksPortfolio(IOrderProcessor orderProcessor, decimal cash,
+            params (Symbol Symbol, decimal AveragePrice, SecurityExchangeHours ExchangeHours)[] stocks)
+        {
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
+            // 100 shares of each stock, all at $100
+            foreach (var (symbol, averagePrice, exchangeHours) in stocks)
+            {
+                var security = GetSecurity(symbol, portfolio.CashBook, exchangeHours);
+                portfolio.Securities.Add(security);
+                security.SetLeverage(2);
+                security.SetMarketPrice(new Tick(DateTime.Now, symbol, 100m, 100m));
+                security.Holdings.SetHoldings(averagePrice, 100);
+            }
+            portfolio.CashBook[Currencies.USD].SetAmount(cash);
+            portfolio.InvalidateTotalPortfolioValue();
 
             return portfolio;
         }

@@ -44,6 +44,12 @@ namespace QuantConnect.Securities
         private readonly List<OrderTicket> _marginCallTickets = new();
 
         /// <summary>
+        /// The symbols of the margin call orders that closed without filling, whose position groups aren't liquidated
+        /// while there are others to liquidate
+        /// </summary>
+        private readonly HashSet<Symbol> _failedLiquidationSymbols = new();
+
+        /// <summary>
         /// Gets the portfolio that margin calls will be transacted against
         /// </summary>
         protected SecurityPortfolioManager Portfolio { get; }
@@ -77,18 +83,19 @@ namespace QuantConnect.Securities
         /// <returns>True for a margin call on the holdings.</returns>
         public List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning)
         {
-            // each margin call order is sized for the deficit the earlier ones leave, so one the brokerage rejected since the last scan
-            // left part of it uncovered: the other position groups are liquidated for it this time, if there are any
-            var rejectedLiquidationSymbols = _marginCallTickets
-                .Where(ticket => ticket.Status == OrderStatus.Invalid)
-                .Select(ticket => ticket.Symbol)
-                .ToHashSet();
+            // each margin call order is sized for the deficit the earlier ones leave, so one that closed without filling, such as one
+            // the brokerage rejected or canceled, left part of it uncovered: the position groups of the failed ones are left out,
+            // so the others are liquidated, until there are no others to liquidate and they're all tried again
+            _failedLiquidationSymbols.UnionWith(_marginCallTickets
+                .Where(ticket => ticket.Status.IsClosed() && ticket.Status != OrderStatus.Filled)
+                .Select(ticket => ticket.Symbol));
             _marginCallTickets.RemoveAll(ticket => ticket.Status.IsClosed());
 
-            var marginCallOrders = GetMarginCallOrders(out issueMarginCallWarning, rejectedLiquidationSymbols);
-            if (marginCallOrders.Count == 0 && rejectedLiquidationSymbols.Count > 0)
+            var marginCallOrders = GetMarginCallOrders(out issueMarginCallWarning, _failedLiquidationSymbols);
+            if (marginCallOrders.Count == 0 && _failedLiquidationSymbols.Count > 0)
             {
-                return GetMarginCallOrders(out issueMarginCallWarning, new HashSet<Symbol>());
+                _failedLiquidationSymbols.Clear();
+                return GetMarginCallOrders(out issueMarginCallWarning, _failedLiquidationSymbols);
             }
             return marginCallOrders;
         }
