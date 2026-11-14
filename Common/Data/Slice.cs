@@ -582,7 +582,7 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    // Should keep this._rawDataList last so that selected data points are not overriden
+                    // Should keep this._rawDataList last so that selected data points are not overridden
                     // while creating _data
                     othersDataList.AddRange(ourDataList);
                     AllData = othersDataList;

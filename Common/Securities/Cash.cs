@@ -82,7 +82,7 @@ namespace QuantConnect.Securities
                 {
                     if (lastConversionRate != 0m)
                     {
-                        // If a user adds cash with an initial conversion rate and then this is overriden to a SecurityCurrencyConversion,
+                        // If a user adds cash with an initial conversion rate and then this is overridden to a SecurityCurrencyConversion,
                         // we want to keep the previous rate until the new one is updated.
                         _currencyConversion.ConversionRate = lastConversionRate;
                     }
