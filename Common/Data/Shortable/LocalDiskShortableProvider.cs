@@ -138,7 +138,6 @@ namespace QuantConnect.Data.Shortable
                 // 20201221,2000,5.0700,0.2500
                 var csv = line.Split(',');
                 var date = Parse.DateTimeExact(csv[0], "yyyyMMdd");
-                var lenght = csv.Length;
                 var shortableQuantity = csv[1].IfNotNullOrEmpty(s => long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
                 var rebateRate = csv.Length > 2 ? csv[2].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
                 var feeRate = csv.Length > 3 ? csv[3].IfNotNullOrEmpty(s => decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture)) : 0;
