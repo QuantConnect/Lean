@@ -252,6 +252,47 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(entry.Value.Count, 3);
         }
 
+        [TestCase(WritePolicy.Merge)]
+        [TestCase(WritePolicy.Overwrite)]
+        [Explicit("Writes over a gigabyte of data, using up to 8 GB of memory")]
+        public void LeanDataWriter_CanWriteFileLongerThanMaxStringLength(WritePolicy writePolicy)
+        {
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, _crypto, _date, Resolution.Tick, TickType.Quote);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            // an existing entry to merge with
+            new LeanDataWriter(Resolution.Tick, _crypto, _dataDirectory, TickType.Quote).Write(GetTicks(_crypto).Take(1));
+
+            // lines of about 60 characters: the file is longer than the 1,073,741,791 characters a string can hold
+            const int tickCount = 18_500_000;
+            var price = 123456.123456789m;
+            var ticks = Enumerable.Range(1, tickCount).Select(i =>
+                new Tick(_date.Date.AddTicks(i * 40L), _crypto, 100000m, price, 100000m, price));
+
+            new LeanDataWriter(Resolution.Tick, _crypto, _dataDirectory, TickType.Quote, writePolicy: writePolicy).Write(ticks);
+
+            var lineCount = 0L;
+            var characterCount = 0L;
+            string firstLine = null;
+            using (var reader = QuantConnect.Compression.Unzip(filePath, out var zip))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    lineCount++;
+                    characterCount += line.Length + 1;
+                    firstLine ??= line;
+                }
+                zip.DisposeSafely();
+            }
+
+            Assert.Greater(characterCount, 1_073_741_791);
+            Assert.AreEqual(writePolicy == WritePolicy.Merge ? tickCount + 1 : tickCount, lineCount);
+            Assert.AreEqual(LeanData.GenerateLine(ticks.First(), SecurityType.Crypto, Resolution.Tick), firstLine);
+        }
+
         [TestCase("CON")]
         [TestCase("PRN")]
         [TestCase("AUX")]
