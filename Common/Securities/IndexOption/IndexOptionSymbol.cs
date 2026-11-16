@@ -50,6 +50,12 @@ namespace QuantConnect.Securities.IndexOption
         };
 
         /// <summary>
+        /// Known AM-settled index option tickers, which settle on the morning of their last trading day whichever day it is
+        /// </summary>
+        /// <remarks>VIX weeklies settle like the monthlies, on the Special Opening Quotation of their expiration morning</remarks>
+        internal static readonly HashSet<string> KnownAMSettledIndexOptionTickers = new() { "SPX", "NDX", "RUT", "VIX", "VIXW" };
+
+        /// <summary>
         /// Supported index option tickers
         /// </summary>
         public static readonly HashSet<string> SupportedIndexOptionTickers = new string[] { "SPX", "NDX", "VIX", "RUT" }
@@ -90,8 +96,7 @@ namespace QuantConnect.Securities.IndexOption
         public static bool IsAMSettled(Symbol symbol)
         {
             var ticker = symbol.ID.Symbol.LazyToUpper();
-            // VIX weeklies settle like the monthlies, on the Special Opening Quotation of their expiration morning
-            return ticker == "VIXW" || !_nonStandardIndexOptionTickers.Contains(ticker);
+            return KnownAMSettledIndexOptionTickers.Contains(ticker) || !_nonStandardIndexOptionTickers.Contains(ticker);
         }
 
         /// <summary>

@@ -113,6 +113,17 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var spxLegacySaturday = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2014, 06, 21));
             yield return new TestCaseData(spxLegacySaturday, new DateTime(2014, 06, 20, 8, 30, 0));
+
+            // Tickers not known to be AM-settled, such as XSP, keep the previous result: market open only on the 3rd Friday.
+            // XSP is actually PM-settled; supporting it is #7769
+            var xsp = Symbol.Create("XSP", SecurityType.Index, Market.USA);
+            var xspWednesday = Symbol.CreateOption(xsp, "XSP", Market.USA, OptionStyle.European,
+                OptionRight.Call, 500m, new DateTime(2024, 02, 14));
+            yield return new TestCaseData(xspWednesday, new DateTime(2024, 02, 14, 15, 20, 0));
+
+            var xspThirdFriday = Symbol.CreateOption(xsp, "XSP", Market.USA, OptionStyle.European,
+                OptionRight.Call, 500m, new DateTime(2024, 02, 16));
+            yield return new TestCaseData(xspThirdFriday, new DateTime(2024, 02, 16, 8, 30, 0));
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
