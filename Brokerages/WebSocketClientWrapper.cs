@@ -122,6 +122,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Close()
         {
+            ClientWebSocket client;
             lock (_locker)
             {
                 try
@@ -147,9 +148,11 @@ namespace QuantConnect.Brokerages
                 }
 
                 _cts = null;
+                client = _client;
             }
 
-            if (_client != null)
+            // a concurrent Connect() can replace '_client' once '_locker' is released, so check the client this call closed
+            if (client != null)
             {
                 OnClose(new WebSocketCloseData(0, string.Empty, true));
             }
@@ -212,7 +215,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnClose(WebSocketCloseData e)
         {
-            Log.Trace($"WebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client.State}): {_url}");
+            Log.Trace($"WebSocketClientWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_client?.State}): {_url}");
             Closed?.Invoke(this, e);
         }
 

@@ -17,6 +17,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -72,6 +73,33 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsFalse(webSocketClient.IsOpen);
             Assert.IsTrue(serverConnectionEnded.Wait(TimeSpan.FromSeconds(5)), "The connection is still open on the server after Close()");
+        }
+
+        [Test]
+        public void CloseRaisesClosedWhenAConcurrentConnectResetsTheClient()
+        {
+            var webSocketClient = new ConnectOnCloseWebSocketClientWrapper();
+            // nothing listens on port 1, the connection loop keeps retrying until Close()
+            webSocketClient.Initialize("ws://127.0.0.1:1/");
+            var closedCount = 0;
+            webSocketClient.Closed += (_, _) => closedCount++;
+
+            webSocketClient.Connect();
+
+            Assert.DoesNotThrow(webSocketClient.Close);
+            Assert.AreEqual(1, closedCount);
+        }
+
+        private class ConnectOnCloseWebSocketClientWrapper : WebSocketClientWrapper
+        {
+            private static readonly FieldInfo ClientField = typeof(WebSocketClientWrapper).GetField("_client", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            protected override void OnClose(WebSocketCloseData e)
+            {
+                // a Connect() on another thread resets the client before it starts the new connection
+                ClientField.SetValue(this, null);
+                base.OnClose(e);
+            }
         }
     }
 }
