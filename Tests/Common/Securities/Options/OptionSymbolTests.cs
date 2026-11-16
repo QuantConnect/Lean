@@ -104,6 +104,11 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 OptionRight.Call, 200m, new DateTime(2016, 02, 17));
             yield return new TestCaseData(vixWednesday, new DateTime(2016, 02, 17, 8, 30, 0));
 
+            // VIX weekly options are AM-settled too
+            var vixwWednesday = Symbol.CreateOption(Symbol.Create("VIX", SecurityType.Index, Market.USA), "VIXW", Market.USA, OptionStyle.European,
+                OptionRight.Call, 20m, new DateTime(2016, 02, 10));
+            yield return new TestCaseData(vixwWednesday, new DateTime(2016, 02, 10, 8, 30, 0));
+
             // Before Feb 2015 SPX monthly options expired on the Saturday after the 3rd Friday, settling on the Friday open
             var spxLegacySaturday = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2014, 06, 21));
@@ -119,7 +124,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
         [TestCase("SPXW", 2024, 1, 5, 15)]
         [TestCase("RUTW", 2024, 1, 5, 15)]
-        [TestCase("VIXW", 2024, 1, 5, 15)]
         [TestCase("NDXP", 2024, 1, 5, 16)]
         [TestCase("NQX", 2024, 1, 5, 16)]
         [TestCase("SPXW", 2025, 7, 7, 15)]
@@ -156,15 +160,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(exchangeHours.GetLastDailyMarketClose(expiry, false), settlement);
         }
 
-        // AM-settled: SPX, NDX, RUT, VIX -> settle at market open on expiry day
-        // PM-settled: SPXW, RUTW, VIXW, NDXP, NQX -> always settle at market close
+        // AM-settled: SPX, NDX, RUT, VIX, VIXW -> settle at market open on expiry day
+        // PM-settled: SPXW, RUTW, NDXP, NQX -> always settle at market close
         [TestCase("SPX", true)]
         [TestCase("NDX", true)]
         [TestCase("RUT", true)]
         [TestCase("VIX", true)]
         [TestCase("SPXW", false)]
         [TestCase("RUTW", false)]
-        [TestCase("VIXW", false)]
+        [TestCase("VIXW", true)]
         [TestCase("NDXP", false)]
         [TestCase("NQX", false)]
         public void IsAMSettledClassifiesAllIndexOptionTickers(string ticker, bool expectedAMSettled)

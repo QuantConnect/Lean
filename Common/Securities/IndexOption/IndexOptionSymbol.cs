@@ -89,7 +89,9 @@ namespace QuantConnect.Securities.IndexOption
         /// </summary>
         public static bool IsAMSettled(Symbol symbol)
         {
-            return !_nonStandardIndexOptionTickers.Contains(symbol.ID.Symbol.LazyToUpper());
+            var ticker = symbol.ID.Symbol.LazyToUpper();
+            // VIX weeklies settle like the monthlies, on the Special Opening Quotation of their expiration morning
+            return ticker == "VIXW" || !_nonStandardIndexOptionTickers.Contains(ticker);
         }
 
         /// <summary>
