@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Common.Notifications
 
             Assert.AreEqual(_liveMode && accepted, notify.Sms("phone-number", new string('a', length)));
             Assert.AreEqual(_liveMode && accepted ? 1 : 0, notify.Messages.Count);
-            Assert.AreEqual(_liveMode && !accepted ? 1 : 0, errors.Count);
+            Assert.AreEqual(_liveMode && !accepted ? new[] { Messages.NotificationManager.SmsMessageTooLong(length, 1600) } : Array.Empty<string>(), errors);
         }
 
         [Test]
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(_liveMode ? 1 : 0, algorithm.ErrorMessages.Count);
             if (_liveMode)
             {
-                StringAssert.Contains("1601 characters", algorithm.ErrorMessages.Single());
+                StringAssert.EndsWith(Messages.NotificationManager.SmsMessageTooLong(1601, 1600), algorithm.ErrorMessages.Single());
             }
         }
 

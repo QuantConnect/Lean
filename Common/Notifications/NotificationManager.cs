@@ -103,7 +103,7 @@ namespace QuantConnect.Notifications
 
             if (message?.Length > SmsMaximumLength)
             {
-                _error($"NotificationManager.Sms(): The SMS message has {message.Length} characters, more than the {SmsMaximumLength} allowed. It will not be sent.");
+                _error(QuantConnect.Messages.NotificationManager.SmsMessageTooLong(message.Length, SmsMaximumLength));
                 return false;
             }
 

@@ -56,6 +56,21 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Notifications.NotificationManager"/> class and its consumers or related classes
+        /// </summary>
+        public static class NotificationManager
+        {
+            /// <summary>
+            /// Returns a string message saying the SMS message is longer than allowed and will not be sent
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string SmsMessageTooLong(int length, int maximumLength)
+            {
+                return $"NotificationManager.Sms(): The SMS message has {length} characters, more than the {maximumLength} allowed. It will not be sent.";
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Notifications.NotificationJsonConverter"/> class and its consumers or related classes
         /// </summary>
         public static class NotificationJsonConverter
