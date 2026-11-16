@@ -329,7 +329,7 @@ namespace QuantConnect.Data
 
                 // Handle merging of files
                 // Only merge on files with hour/daily resolution, that exist, and can be loaded
-                string finalData = null;
+                byte[] finalData = null;
                 if (_writePolicy == WritePolicy.Append)
                 {
                     var streamWriter = new ZipStreamWriter(filePath, entryName);
@@ -348,18 +348,17 @@ namespace QuantConnect.Data
                     }
 
                     // Final merged data product
-                    finalData = string.Join("\n", rows.Values);
+                    finalData = JoinLines(rows.Values);
                 }
                 else
                 {
                     // Otherwise just extract the data from the given list.
-                    finalData = string.Join("\n", data.Select(x => x.Line));
+                    finalData = JoinLines(data.Select(x => x.Line));
                 }
 
                 if (finalData != null)
                 {
-                    var bytes = Encoding.UTF8.GetBytes(finalData);
-                    _dataCacheProvider.Store($"{filePath}#{entryName}", bytes);
+                    _dataCacheProvider.Store($"{filePath}#{entryName}", finalData);
                 }
 
                 if (Log.DebuggingEnabled)
@@ -369,6 +368,31 @@ namespace QuantConnect.Data
                     Log.Debug($"LeanDataWriter.Write({symbol.ID}): Appended: {filePath} @ {entryName} {from}->{to}");
                 }
             });
+        }
+
+        /// <summary>
+        /// Encodes the lines as UTF8, separated by a new line, straight into a byte array: a day of ticks
+        /// can exceed the maximum length of a string, which joining them first would need
+        /// </summary>
+        private static byte[] JoinLines(IEnumerable<string> lines)
+        {
+            var byteCount = 0L;
+            foreach (var line in lines)
+            {
+                byteCount += Encoding.UTF8.GetByteCount(line) + 1;
+            }
+
+            var bytes = new byte[Math.Max(byteCount - 1, 0)];
+            var offset = 0;
+            foreach (var line in lines)
+            {
+                if (offset > 0)
+                {
+                    bytes[offset - 1] = (byte)'\n';
+                }
+                offset += Encoding.UTF8.GetBytes(line, 0, line.Length, bytes, offset) + 1;
+            }
+            return bytes;
         }
 
         /// <summary>
