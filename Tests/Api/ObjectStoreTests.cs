@@ -68,7 +68,8 @@ namespace QuantConnect.Tests.API
             var result = ApiClient.GetObjectStore(TestOrganization, keys, path);
             if (isSuccessExpected)
             {
-                // Under load the download url can take longer than the client polls for it, a new request can get it sooner
+                // Under load the download url can take longer than the client polls for it, a new request can get it sooner.
+                // Each call waits up to 5 minutes for its url, so a case can take up to 11: the workflow's hang timeout allows 12
                 while (!result && DateTime.UtcNow < finish)
                 {
                     Thread.Sleep(5000);
@@ -109,45 +110,59 @@ namespace QuantConnect.Tests.API
         public void SetObjectStoreWorksAsExpected()
         {
             var key = $"{_temporaryKeysFolder}/{Guid.NewGuid():N}";
-            var result = ApiClient.DeleteObjectStore(TestOrganization, key);
-            Assert.IsFalse(result.Success);
+            try
+            {
+                var result = ApiClient.DeleteObjectStore(TestOrganization, key);
+                Assert.IsFalse(result.Success);
 
-            result = ApiClient.SetObjectStore(TestOrganization, key, _data);
-            Assert.IsTrue(result.Success);
+                result = ApiClient.SetObjectStore(TestOrganization, key, _data);
+                Assert.IsTrue(result.Success);
 
-            result = ApiClient.DeleteObjectStore(TestOrganization, key);
-            Assert.IsTrue(result.Success);
+                result = ApiClient.DeleteObjectStore(TestOrganization, key);
+                Assert.IsTrue(result.Success);
+            }
+            finally
+            {
+                ApiClient.DeleteObjectStore(TestOrganization, key);
+            }
         }
 
         [Test]
         public void DeleteObjectStoreWorksAsExpected()
         {
             var key = $"{_temporaryKeysFolder}/{Guid.NewGuid():N}";
-            var result = ApiClient.SetObjectStore(TestOrganization, key + "/test1.txt", _data);
-            var result2 = ApiClient.SetObjectStore(TestOrganization, key + "/test2.txt", _data);
-            Assert.IsTrue(result.Success);
-            var objectsBefore = ApiClient.ListObjectStore(TestOrganization, key);
-            var stringRepresentation = objectsBefore.ToString();
-            Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
-            var numberOfObjectsBefore = objectsBefore.Objects.Count;
-            var totalSizeBefore = objectsBefore.Objects.Select(o => o.Size).Sum();
-
-            result = ApiClient.DeleteObjectStore(TestOrganization, key + "/test1.txt");
-            Assert.IsTrue(result.Success);
-
-            ListObjectStoreResponse objectsAfter;
-            var time = DateTime.UtcNow;
-            do
+            try
             {
-                Thread.Sleep(1000);
-                objectsAfter = ApiClient.ListObjectStore(TestOrganization, key);
-            } while (objectsAfter.Objects.Count == numberOfObjectsBefore && DateTime.UtcNow < time.AddMinutes(10));
+                var result = ApiClient.SetObjectStore(TestOrganization, key + "/test1.txt", _data);
+                var result2 = ApiClient.SetObjectStore(TestOrganization, key + "/test2.txt", _data);
+                Assert.IsTrue(result.Success);
+                var objectsBefore = ApiClient.ListObjectStore(TestOrganization, key);
+                var stringRepresentation = objectsBefore.ToString();
+                Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
+                var numberOfObjectsBefore = objectsBefore.Objects.Count;
+                var totalSizeBefore = objectsBefore.Objects.Select(o => o.Size).Sum();
 
-            var totalSizeAfter = objectsAfter.Objects.Select(o => o.Size).Sum();
-            Assert.IsTrue(totalSizeAfter < totalSizeBefore);
+                result = ApiClient.DeleteObjectStore(TestOrganization, key + "/test1.txt");
+                Assert.IsTrue(result.Success);
 
-            result = ApiClient.DeleteObjectStore(TestOrganization, key);
-            Assert.IsTrue(result.Success);
+                ListObjectStoreResponse objectsAfter;
+                var time = DateTime.UtcNow;
+                do
+                {
+                    Thread.Sleep(1000);
+                    objectsAfter = ApiClient.ListObjectStore(TestOrganization, key);
+                } while (objectsAfter.Objects.Count == numberOfObjectsBefore && DateTime.UtcNow < time.AddMinutes(10));
+
+                var totalSizeAfter = objectsAfter.Objects.Select(o => o.Size).Sum();
+                Assert.IsTrue(totalSizeAfter < totalSizeBefore);
+
+                result = ApiClient.DeleteObjectStore(TestOrganization, key);
+                Assert.IsTrue(result.Success);
+            }
+            finally
+            {
+                ApiClient.DeleteObjectStore(TestOrganization, key);
+            }
         }
 
         [Test]
