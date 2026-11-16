@@ -447,6 +447,41 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void NotificationSendFailureIsReportedAsAlgorithmError()
+        {
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new(new LiveNodePacket(), messaging, null, new BacktestingTransactionHandler(), null));
+
+            try
+            {
+                var algorithm = new AlgorithmStub();
+                result.SetAlgorithm(algorithm, 10);
+                algorithm.Notify.Messages.Enqueue(new FailingNotification());
+
+                result.ProcessSynchronousEvents(true);
+
+                Assert.IsEmpty(algorithm.Notify.Messages);
+                Assert.IsEmpty(algorithm.DebugMessages);
+                Assert.That(algorithm.ErrorMessages.Single(), Does.EndWith(FailingNotification.Error));
+            }
+            finally
+            {
+                result.Exit();
+            }
+        }
+
+        private class FailingNotification : Notifications.Notification
+        {
+            public const string Error = "The notification was rejected";
+
+            public override void Send()
+            {
+                throw new InvalidOperationException(Error);
+            }
+        }
+
+        [Test]
         public void RuntimeStatisticRejectionWarnsOnce()
         {
             using var messaging = new QuantConnect.Messaging.Messaging();

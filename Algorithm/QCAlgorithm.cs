@@ -1895,7 +1895,7 @@ namespace QuantConnect.Algorithm
             if (!_locked)
             {
                 _liveMode = live;
-                Notify = new NotificationManager(live);
+                Notify = new NotificationManager(live, Error);
                 TradeBuilder.SetLiveMode(live);
                 Securities.SetLiveMode(live);
                 Transactions.SetLiveMode(live);

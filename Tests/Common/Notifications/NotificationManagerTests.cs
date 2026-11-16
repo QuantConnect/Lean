@@ -16,6 +16,8 @@
 using System;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
+using QuantConnect.Tests.Engine.DataFeeds;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Notifications;
@@ -59,6 +61,35 @@ namespace QuantConnect.Tests.Common.Notifications
             if (_liveMode)
             {
                 Assert.IsInstanceOf<NotificationSms>(_notify.Messages.Single());
+            }
+        }
+
+        [TestCase(1, true)]
+        [TestCase(1600, true)]
+        [TestCase(1601, false)]
+        [TestCase(5000, false)]
+        public void Sms_RejectsMessagesLongerThanTheSmsLimit(int length, bool accepted)
+        {
+            var errors = new List<string>();
+            var notify = new NotificationManager(_liveMode, errors.Add);
+
+            Assert.AreEqual(_liveMode && accepted, notify.Sms("phone-number", new string('a', length)));
+            Assert.AreEqual(_liveMode && accepted ? 1 : 0, notify.Messages.Count);
+            Assert.AreEqual(_liveMode && !accepted ? new[] { Messages.NotificationManager.SmsMessageTooLong(length, 1600) } : Array.Empty<string>(), errors);
+        }
+
+        [Test]
+        public void Sms_ReportsRejectedMessagesAsAlgorithmErrors()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetLiveMode(_liveMode);
+
+            Assert.IsFalse(algorithm.Notify.Sms("phone-number", new string('a', 1601)));
+            Assert.IsEmpty(algorithm.Notify.Messages);
+            Assert.AreEqual(_liveMode ? 1 : 0, algorithm.ErrorMessages.Count);
+            if (_liveMode)
+            {
+                StringAssert.EndsWith(Messages.NotificationManager.SmsMessageTooLong(1601, 1600), algorithm.ErrorMessages.Single());
             }
         }
 

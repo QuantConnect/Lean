@@ -1183,7 +1183,7 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     catch (Exception err)
                     {
-                        Algorithm.Debug(err.Message);
+                        Algorithm.Error(err.Message);
                         Log.Error(err, "Sending notification: " + message.GetType().FullName);
                     }
                 }

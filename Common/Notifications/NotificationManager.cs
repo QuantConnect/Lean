@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using Python.Runtime;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
@@ -24,7 +26,10 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationManager
     {
+        private const int SmsMaximumLength = 1600;
+
         private readonly bool _liveMode;
+        private readonly Action<string> _error;
 
         /// <summary>
         /// Public access to the messages
@@ -34,9 +39,19 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Initialize the messaging system
         /// </summary>
-        public NotificationManager(bool liveMode)
+        public NotificationManager(bool liveMode) : this(liveMode, null)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the messaging system
+        /// </summary>
+        /// <param name="liveMode">True if the algorithm is running live, notifications are only sent then</param>
+        /// <param name="error">Reports a notification that is rejected, the log's error by default</param>
+        internal NotificationManager(bool liveMode, Action<string> error)
         {
             _liveMode = liveMode;
+            _error = error ?? (message => Log.Error(message));
             Messages = new ConcurrentQueue<Notification>();
         }
 
@@ -78,11 +93,17 @@ namespace QuantConnect.Notifications
         /// Send an SMS to the phone number specified
         /// </summary>
         /// <param name="phoneNumber">Phone number to send to</param>
-        /// <param name="message">Message to send</param>
+        /// <param name="message">Message to send, up to 1600 characters</param>
         public bool Sms(string phoneNumber, string message)
         {
             if (!_liveMode)
             {
+                return false;
+            }
+
+            if (message?.Length > SmsMaximumLength)
+            {
+                _error(QuantConnect.Messages.NotificationManager.SmsMessageTooLong(message.Length, SmsMaximumLength));
                 return false;
             }
 
