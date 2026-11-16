@@ -107,20 +107,25 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expectedSettlementDateTime, settlementDateTime);
         }
 
-        [TestCase("SPXW")]
-        [TestCase("RUTW")]
-        [TestCase("VIXW")]
-        [TestCase("NDXP")]
-        [TestCase("NQX")]
-        public void ZeroDTEPMSettledIndexOptionsExpireAt4PM(string ticker)
+        [TestCase("SPXW", 2024, 1, 5, 15)]
+        [TestCase("RUTW", 2024, 1, 5, 15)]
+        [TestCase("VIXW", 2024, 1, 5, 15)]
+        [TestCase("NDXP", 2024, 1, 5, 16)]
+        [TestCase("NQX", 2024, 1, 5, 16)]
+        [TestCase("SPXW", 2025, 7, 7, 15)]
+        [TestCase("NDXP", 2025, 7, 7, 16)]
+        [TestCase("NQX", 2025, 7, 7, 16)]
+        public void ZeroDTEPMSettledIndexOptionsExpireAt4PMEastern(string ticker, int year, int month, int day, int exchangeLocalHour)
         {
-            var expiry = new DateTime(2024, 1, 5); // regular Friday
+            var expiry = new DateTime(year, month, day);
             var underlying = Symbol.Create(IndexOptionSymbol.MapToUnderlying(ticker), SecurityType.Index, Market.USA);
             var option = Symbol.CreateOption(underlying, ticker, Market.USA, OptionStyle.European, OptionRight.Call, 200m, expiry);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, option, SecurityType.IndexOption);
 
             var settlement = OptionSymbol.GetSettlementDateTime(option);
 
-            Assert.AreEqual(expiry.Date.AddHours(15), settlement);
+            Assert.AreEqual(expiry.Date.AddHours(exchangeLocalHour), settlement);
+            Assert.AreEqual(expiry.Date.AddHours(16), settlement.ConvertTo(exchangeHours.TimeZone, TimeZones.NewYork));
         }
 
         [TestCase("SPXW", 2025, 7, 3, 12)]
