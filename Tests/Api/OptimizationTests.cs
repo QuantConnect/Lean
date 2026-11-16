@@ -257,7 +257,7 @@ namespace QuantConnect.Tests.API
                 },
                 estimatedCost: 0.06m,
                 nodeType: OptimizationNodes.O2_8,
-                parallelNodes: 12
+                parallelNodes: 6
             );
 
             return optimization;

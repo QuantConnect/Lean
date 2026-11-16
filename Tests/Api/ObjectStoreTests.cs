@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Api;
 
 namespace QuantConnect.Tests.API
@@ -26,7 +27,8 @@ namespace QuantConnect.Tests.API
     public class ObjectStoreTests : ApiTestBase
     {
         private const string _ciTestFolder = "/CI_TEST";
-        private const string _key = _ciTestFolder + "/Ricardo";
+        // Concurrent runs share the organization's object store, so each test writes under a key of its own
+        private const string _temporaryKeysFolder = "/CI_TEST_TEMPORARY";
         private readonly byte[] _data = new byte[3] { 1, 2, 3 };
 
         private static readonly string[] _keysToSetUp = new[]
@@ -62,9 +64,16 @@ namespace QuantConnect.Tests.API
         public void GetObjectStoreWorksAsExpected(string testName, List<string> keys, bool isSuccessExpected)
         {
             var path = Directory.GetCurrentDirectory() + "/StoreObjectFolder/";
+            var finish = DateTime.UtcNow.AddMinutes(6);
             var result = ApiClient.GetObjectStore(TestOrganization, keys, path);
             if (isSuccessExpected)
             {
+                // Under load the download url can take longer than the client polls for it, a new request can get it sooner
+                while (!result && DateTime.UtcNow < finish)
+                {
+                    Thread.Sleep(5000);
+                    result = ApiClient.GetObjectStore(TestOrganization, keys, path);
+                }
                 Assert.IsTrue(result);
                 DirectoryAssert.Exists(path);
                 Assert.IsTrue(keys.Where(x => File.Exists(path + x) || Directory.Exists(path + x)).Any()); // For some test cases, just one of the keys is present in the Object Store.
@@ -99,42 +108,45 @@ namespace QuantConnect.Tests.API
         [Test]
         public void SetObjectStoreWorksAsExpected()
         {
-            var result = ApiClient.DeleteObjectStore(TestOrganization, _key);
+            var key = $"{_temporaryKeysFolder}/{Guid.NewGuid():N}";
+            var result = ApiClient.DeleteObjectStore(TestOrganization, key);
             Assert.IsFalse(result.Success);
 
-            result = ApiClient.SetObjectStore(TestOrganization, _key, _data);
+            result = ApiClient.SetObjectStore(TestOrganization, key, _data);
             Assert.IsTrue(result.Success);
 
-            result = ApiClient.DeleteObjectStore(TestOrganization, _key);
+            result = ApiClient.DeleteObjectStore(TestOrganization, key);
             Assert.IsTrue(result.Success);
         }
 
         [Test]
         public void DeleteObjectStoreWorksAsExpected()
         {
-            var result = ApiClient.SetObjectStore(TestOrganization, _key + "/test1.txt", _data);
-            var result2 = ApiClient.SetObjectStore(TestOrganization, _key + "/test2.txt", _data);
+            var key = $"{_temporaryKeysFolder}/{Guid.NewGuid():N}";
+            var result = ApiClient.SetObjectStore(TestOrganization, key + "/test1.txt", _data);
+            var result2 = ApiClient.SetObjectStore(TestOrganization, key + "/test2.txt", _data);
             Assert.IsTrue(result.Success);
-            var objectsBefore = ApiClient.ListObjectStore(TestOrganization, _key);
+            var objectsBefore = ApiClient.ListObjectStore(TestOrganization, key);
             var stringRepresentation = objectsBefore.ToString();
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
             var numberOfObjectsBefore = objectsBefore.Objects.Count;
             var totalSizeBefore = objectsBefore.Objects.Select(o => o.Size).Sum();
 
-            result = ApiClient.DeleteObjectStore(TestOrganization, _key + "/test1.txt");
+            result = ApiClient.DeleteObjectStore(TestOrganization, key + "/test1.txt");
             Assert.IsTrue(result.Success);
 
             ListObjectStoreResponse objectsAfter;
             var time = DateTime.UtcNow;
             do
             {
-                objectsAfter = ApiClient.ListObjectStore(TestOrganization, _key);
+                Thread.Sleep(1000);
+                objectsAfter = ApiClient.ListObjectStore(TestOrganization, key);
             } while (objectsAfter.Objects.Count == numberOfObjectsBefore && DateTime.UtcNow < time.AddMinutes(10));
 
             var totalSizeAfter = objectsAfter.Objects.Select(o => o.Size).Sum();
             Assert.IsTrue(totalSizeAfter < totalSizeBefore);
 
-            result = ApiClient.DeleteObjectStore(TestOrganization, _key);
+            result = ApiClient.DeleteObjectStore(TestOrganization, key);
             Assert.IsTrue(result.Success);
         }
 
