@@ -98,6 +98,16 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var spxwThirdFriday = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 19));
             yield return new TestCaseData(spxwThirdFriday, new DateTime(2016, 02, 19, 15, 0, 0));
+
+            // VIX monthly options are AM-settled and expire on a Wednesday
+            var vixWednesday = Symbol.CreateOption(Symbol.Create("VIX", SecurityType.Index, Market.USA), "VIX", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2016, 02, 17));
+            yield return new TestCaseData(vixWednesday, new DateTime(2016, 02, 17, 8, 30, 0));
+
+            // Before Feb 2015 SPX monthly options expired on the Saturday after the 3rd Friday, settling on the Friday open
+            var spxLegacySaturday = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2014, 06, 21));
+            yield return new TestCaseData(spxLegacySaturday, new DateTime(2014, 06, 20, 8, 30, 0));
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
