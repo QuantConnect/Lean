@@ -188,14 +188,21 @@ namespace QuantConnect.Data
                 {
                     subscription.Consolidators.Add(consolidator);
 
-                    var wrapper = _consolidators[consolidator] =
-                        new ConsolidatorWrapper(symbol, consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
-
                     if (!_consolidatorsBySymbol.TryGetValue(symbol, out var symbolConsolidators))
                     {
                         _consolidatorsBySymbol[symbol] = symbolConsolidators = new();
                     }
                     symbolConsolidators.Add(consolidator);
+
+                    if (_consolidators.ContainsKey(consolidator))
+                    {
+                        // already scheduled for scans, e.g. a consolidator shared by several indicators: a second wrapper would
+                        // outlive its removal, since only the last one is tracked and disposed
+                        return;
+                    }
+
+                    var wrapper = _consolidators[consolidator] =
+                        new ConsolidatorWrapper(symbol, consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
 
                     lock (_threadSafeCollectionLock)
                     {
