@@ -32,9 +32,11 @@ using System.Threading;
 namespace QuantConnect.Tests.API
 {
     /// <summary>
-    /// API Project endpoints, includes some Backtest endpoints testing as well
+    /// API Project endpoints, includes some Backtest endpoints testing as well.
+    /// Its tests run in parallel, but those that change the shared test project or backtest are non parallelizable,
+    /// so no test reads them while they change
     /// </summary>
-    [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
+    [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.All)]
     public class ProjectTests : ApiTestBase
     {
         /// <summary>
@@ -164,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Test updating the files associated with a project
         /// </summary>
-        [Test]
+        [Test, NonParallelizable]
         public void CRUD_ProjectFiles_Successfully()
         {
             var fakeFile = new ProjectFile
@@ -229,7 +231,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Test updating the nodes associated with a project
         /// </summary>
-        [Test]
+        [Test, NonParallelizable]
         public void RU_ProjectNodes_Successfully()
         {
             // Read the nodes
@@ -349,8 +351,14 @@ namespace QuantConnect.Algorithm.CSharp
             var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId, secondsTimeout: 600, returnFailedBacktest: true);
             Assert.IsTrue(backtestRead.Success);
 
-            // Backtest completed, let's wait a second to allow status update
+            // Backtest completed, the api can report its final statistics before its final status
+            var finish = DateTime.UtcNow.AddMinutes(1);
             backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtestRead.BacktestId);
+            while (backtestRead.Status != expectedStatus && DateTime.UtcNow < finish)
+            {
+                Thread.Sleep(1000);
+                backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtestRead.BacktestId);
+            }
             Assert.AreEqual(expectedStatus, backtestRead.Status);
 
             if (expectedStatus == "Runtime Error")
@@ -647,7 +655,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 
-            var readBacktestReport = ApiClient.ReadBacktestReport(project.ProjectId, backtest.BacktestId);
+            var readBacktestReport = WaitForBacktestReport(project.ProjectId, backtest.BacktestId);
             stringRepresentation = readBacktestReport.ToString();
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
             Assert.IsTrue(readBacktestReport.Success);
@@ -673,7 +681,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(deleteProject.Success);
         }
 
-        [Test]
+        [Test, NonParallelizable]
         public void UpdateBacktestName()
         {
             // We will be using the existing TestBacktest for this test
@@ -714,17 +722,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             GetProjectAndCompileIdToReadInsights(out var projectId, out var compileId);
 
-            // Get a live node to launch the algorithm on
-            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
-            Assert.IsTrue(nodesResponse.Success);
-            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
-            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
-
             try
             {
                 // Create live default algorithm
-                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
-                Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
+                var createLiveAlgorithm = CreateLiveAlgorithmOnAFreeNode(projectId, compileId, dataProviders);
 
                 // Let the algorithm run for a while, then stop it so the server can send its insights
                 RunThenStopLiveAlgorithm(projectId);
@@ -735,12 +736,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // A second deployment of the same project tells the one asked for by algorithmId apart from the whole project
                 WaitForLiveAlgorithmToStop(ApiClient, projectId);
-                nodesResponse = ApiClient.ReadProjectNodes(projectId);
-                Assert.IsTrue(nodesResponse.Success);
-                freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
-                Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
-                var secondLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
-                Assert.IsTrue(secondLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", secondLiveAlgorithm.Errors)}");
+                var secondLiveAlgorithm = CreateLiveAlgorithmOnAFreeNode(projectId, compileId, dataProviders);
                 Assert.AreNotEqual(createLiveAlgorithm.DeployId, secondLiveAlgorithm.DeployId);
                 RunThenStopLiveAlgorithm(projectId);
 
@@ -779,7 +775,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(deleteProject.Success);
         }
 
-        [Test]
+        [Test, NonParallelizable]
         public void UpdatesBacktestTags()
         {
             // We will be using the existing TestBacktest for this test
@@ -888,19 +884,12 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(compileCheck.Success);
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
-            // Get a live node to launch the algorithm on
-            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
-            Assert.IsTrue(nodesResponse.Success);
-            var freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
-            Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
-
             try
             {
                 // Create live default algorithm
-                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                var createLiveAlgorithm = CreateLiveAlgorithmOnAFreeNode(projectId, compile.CompileId, dataProviders);
                 stringRepresentation = createLiveAlgorithm.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
-                Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
                 // Read live algorithm
                 var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId);
@@ -1005,7 +994,7 @@ namespace QuantConnect.Algorithm.CSharp
                 },
                 estimatedCost: 0.06m,
                 nodeType: OptimizationNodes.O2_8,
-                parallelNodes: 12
+                parallelNodes: 6
             );
             var stringRepresentation = optimization.ToString();
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
@@ -1040,7 +1029,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// The documented start and end paging of projects/read is sent and narrows the response
         /// </summary>
-        [Test]
+        [Test, NonParallelizable]
         public void ListProjectsPagesTheAccountProjects()
         {
             var firstPage = ApiClient.ListProjects(0, 1);
@@ -1069,7 +1058,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// projects/update posts only the properties it was given, so a rename leaves the description alone
         /// </summary>
-        [Test]
+        [Test, NonParallelizable]
         public void UpdateProjectNameAndDescription()
         {
             var originalName = TestProject.Name;
@@ -1085,11 +1074,13 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.AreEqual(newName, project.Name);
                 Assert.AreEqual(description, project.Description);
 
-                var rename = ApiClient.UpdateProject(TestProject.ProjectId, name: originalName);
+                // The api can keep refusing a project's earlier name for a while, so rename to a second new name
+                var secondName = $"{newName}-Again";
+                var rename = ApiClient.UpdateProject(TestProject.ProjectId, name: secondName);
                 Assert.IsTrue(rename.Success, $"Error updating the project: {string.Join(", ", rename.Errors)}");
 
                 project = ApiClient.ReadProject(TestProject.ProjectId).Projects.Single();
-                Assert.AreEqual(originalName, project.Name);
+                Assert.AreEqual(secondName, project.Name);
                 Assert.AreEqual(description, project.Description, "A name only update must not clear the description");
             }
             finally
@@ -1159,7 +1150,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// The interface default matches the class, so updating only the note through IApi keeps the name
         /// </summary>
-        [Test]
+        [Test, NonParallelizable]
         public void UpdateBacktestThroughTheInterfaceKeepsTheName()
         {
             IApi api = ApiClient;
@@ -1181,7 +1172,7 @@ namespace QuantConnect.Algorithm.CSharp
         [Test]
         public void ReadBacktestReportWaitsUntilTheReportIsGenerated()
         {
-            var report = ApiClient.ReadBacktestReport(TestProject.ProjectId, TestBacktest.BacktestId);
+            var report = WaitForBacktestReport(TestProject.ProjectId, TestBacktest.BacktestId);
             Assert.IsTrue(report.Success, $"Error reading the backtest report: {string.Join(", ", report.Errors)}");
             Assert.IsFalse(report.Generating, "The polling must not hand back a report that is still being generated");
             Assert.IsNotEmpty(report.Report);
@@ -1237,6 +1228,54 @@ namespace QuantConnect.Algorithm.CSharp
         private static bool IsLoading(string status)
         {
             return string.Equals(status, "loading", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Reads the backtest report until it is generated: the client polls for a minute each read, and under load
+        /// the report can take longer
+        /// </summary>
+        private BacktestReport WaitForBacktestReport(int projectId, string backtestId)
+        {
+            BacktestReport report;
+            var finish = DateTime.UtcNow.AddMinutes(5);
+            do
+            {
+                report = ApiClient.ReadBacktestReport(projectId, backtestId);
+            }
+            while ((!report.Success || report.Generating) && DateTime.UtcNow < finish);
+
+            return report;
+        }
+
+        /// <summary>
+        /// Deploys the project on a free live node, waiting for one: tests and concurrent runs share the account's live nodes,
+        /// and another can take the node between reading it free and deploying on it
+        /// </summary>
+        private CreateLiveAlgorithmResponse CreateLiveAlgorithmOnAFreeNode(int projectId, string compileId, Dictionary<string, object> dataProviders)
+        {
+            var finish = DateTime.UtcNow.AddMinutes(5);
+            var errors = "No free Live Nodes found";
+            while (true)
+            {
+                var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+                Assert.IsTrue(nodesResponse.Success, $"ApiClient.ReadProjectNodes(): Error: {string.Join(",", nodesResponse.Errors)}");
+                var freeNode = nodesResponse.Nodes.LiveNodes.FirstOrDefault(x => !x.Busy);
+                if (freeNode != null)
+                {
+                    var liveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.Id, _defaultSettings, dataProviders: dataProviders);
+                    if (liveAlgorithm.Success)
+                    {
+                        return liveAlgorithm;
+                    }
+                    errors = $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", liveAlgorithm.Errors)}";
+                }
+
+                if (DateTime.UtcNow >= finish)
+                {
+                    Assert.Fail(errors);
+                }
+                Thread.Sleep(5000);
+            }
         }
 
         private static string GetTimestamp()

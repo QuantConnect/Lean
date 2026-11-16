@@ -30,6 +30,8 @@ namespace QuantConnect.Tests.API
     /// </summary>
     public class ApiTestBase
     {
+        private static readonly object _configurationLock = new();
+
         internal int TestAccount;
         internal string TestToken;
         internal string TestOrganization;
@@ -151,7 +153,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Id of the project</param>
         /// <param name="compileId">Id of the compilation of the project</param>
         /// <returns></returns>
-        public static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 60)
+        public static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 300)
         {
             var compile = new Compile();
             var finish = DateTime.UtcNow.AddSeconds(seconds);
@@ -189,7 +191,7 @@ namespace QuantConnect.Tests.API
         /// <param name="projectId">Project id to scan</param>
         /// <param name="backtestId">Backtest id previously started</param>
         /// <returns>Completed backtest object</returns>
-        public static Backtest WaitForBacktestCompletion(Api.Api apiClient, int projectId, string backtestId, int secondsTimeout = 60, bool returnFailedBacktest = false)
+        public static Backtest WaitForBacktestCompletion(Api.Api apiClient, int projectId, string backtestId, int secondsTimeout = 300, bool returnFailedBacktest = false)
         {
             Backtest backtest;
             var finish = DateTime.UtcNow.AddSeconds(secondsTimeout);
@@ -226,29 +228,33 @@ namespace QuantConnect.Tests.API
         /// </summary>
         internal static void ReloadConfiguration()
         {
-            // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
-            var dir = TestContext.CurrentContext.TestDirectory;
-            Environment.CurrentDirectory = dir;
-            Directory.SetCurrentDirectory(dir);
-            // reload config from current path
-            Config.Reset();
-
-            var environment = Environment.GetEnvironmentVariables();
-            foreach (DictionaryEntry entry in environment)
+            // fixtures running in parallel set up at once, and the configuration they reload is shared
+            lock (_configurationLock)
             {
-                var envKey = entry.Key.ToString();
-                var value = entry.Value.ToString();
+                // nunit 3 sets the current folder to a temp folder we need it to be the test bin output folder
+                var dir = TestContext.CurrentContext.TestDirectory;
+                Environment.CurrentDirectory = dir;
+                Directory.SetCurrentDirectory(dir);
+                // reload config from current path
+                Config.Reset();
 
-                if (envKey.StartsWith("QC_", StringComparison.InvariantCulture))
+                var environment = Environment.GetEnvironmentVariables();
+                foreach (DictionaryEntry entry in environment)
                 {
-                    var key = envKey.Substring(3).Replace("_", "-", StringComparison.InvariantCulture).ToLowerInvariant();
-                    Log.Trace($"TestSetup(): Updating config setting '{key}' from environment var '{envKey}'");
-                    Config.Set(key, value);
-                }
-            }
+                    var envKey = entry.Key.ToString();
+                    var value = entry.Value.ToString();
 
-            // resets the version among other things
-            Globals.Reset();
+                    if (envKey.StartsWith("QC_", StringComparison.InvariantCulture))
+                    {
+                        var key = envKey.Substring(3).Replace("_", "-", StringComparison.InvariantCulture).ToLowerInvariant();
+                        Log.Trace($"TestSetup(): Updating config setting '{key}' from environment var '{envKey}'");
+                        Config.Set(key, value);
+                    }
+                }
+
+                // resets the version among other things
+                Globals.Reset();
+            }
         }
     }
 }
