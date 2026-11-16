@@ -27,7 +27,7 @@ namespace QuantConnect.Securities.Option
     public static class OptionSymbol
     {
         private static readonly Dictionary<string, byte> _optionExpirationErrorLog = new();
-        private static readonly TimeSpan _pmSettledIndexOptionsExpiryTime = TimeSpan.FromHours(15);
+        private static readonly TimeSpan _pmSettledIndexOptionsEasternExpiryTime = TimeSpan.FromHours(16);
 
         /// <summary>
         /// Returns true if the option is a standard contract that expires 3rd Friday of the month
@@ -157,10 +157,14 @@ namespace QuantConnect.Securities.Option
             // unless the session closes earlier, as on an early close
             else if (expiryTime.Date == symbol.ID.Date.Date
                 && symbol.SecurityType == SecurityType.IndexOption
-                && !IndexOptionSymbol.IsAMSettled(symbol)
-                && expiryTime.TimeOfDay > _pmSettledIndexOptionsExpiryTime)
+                && !IndexOptionSymbol.IsAMSettled(symbol))
             {
-                expiryTime = expiryTime.Date.Add(_pmSettledIndexOptionsExpiryTime);
+                var pmSettlementTime = expiryTime.Date.Add(_pmSettledIndexOptionsEasternExpiryTime)
+                    .ConvertTo(TimeZones.NewYork, exchangeHours.TimeZone);
+                if (expiryTime > pmSettlementTime)
+                {
+                    expiryTime = pmSettlementTime;
+                }
             }
 
             return expiryTime;
