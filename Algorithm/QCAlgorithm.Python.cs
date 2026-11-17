@@ -637,7 +637,9 @@ namespace QuantConnect.Algorithm
 
             try
             {
-                dataConsolidator = new DataConsolidatorPythonWrapper(pyObject);
+                // reuse the wrapper of an earlier registration, a new one would never be disposed on removal
+                dataConsolidator = SubscriptionManager.FindPythonConsolidator(symbol, pyObject)
+                    ?? new DataConsolidatorPythonWrapper(pyObject);
             }
             catch
             {

@@ -3394,8 +3394,20 @@ namespace QuantConnect.Algorithm
         {
             foreach (var consolidator in indicator.Consolidators)
             {
+                // detach it from the other indicators sharing it, so they don't remove it again once disposed
+                if (_indicatorsByConsolidator.TryGetValue(consolidator, out var indicators))
+                {
+                    foreach (var other in indicators)
+                    {
+                        if (!ReferenceEquals(other, indicator))
+                        {
+                            other.Consolidators.Remove(consolidator);
+                        }
+                    }
+                    _indicatorsByConsolidator.Remove(consolidator);
+                }
+
                 SubscriptionManager.RemoveConsolidator(null, consolidator);
-                _indicatorsByConsolidator.Remove(consolidator);
             }
 
             indicator.Consolidators.Clear();
