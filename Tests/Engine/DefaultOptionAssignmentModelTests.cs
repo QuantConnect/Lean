@@ -162,6 +162,43 @@ namespace QuantConnect.Tests.Engine
             Assert.AreEqual(expectedQuantity, result.Quantity);
         }
 
+        [Test]
+        public void EstimatesTheFeeOfClosingTheCounterPartyPositionAsASale()
+        {
+            var expiration = new DateTime(2016, 02, 19);
+            var today = expiration.AddDays(-3);
+            var securities = new SecurityManager(TimeKeeper);
+            var underlying = new Security(
+                SecurityExchangeHours,
+                CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            securities.Add(Symbols.SPY, underlying);
+            underlying.SetMarketPrice(new Tick { Symbol = Symbols.SPY, TickType = TickType.Quote, BidPrice = 0.5009m, AskPrice = 0.54m, Value = 0.54m, Time = today });
+
+            var symbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Call, 0.5m, expiration);
+            var option = new Option(
+                SecurityExchangeHours,
+                CreateTradeBarDataConfig(SecurityType.Option, symbol),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(string.Empty, Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            ) { Underlying = underlying };
+            securities.Add(symbol, option);
+            option.Holdings.SetHoldings(0.1m, -10);
+            // the bid and ask fall in different commission tiers: selling the contracts at the bid is not worth exercising them
+            option.SetMarketPrice(new Tick { Symbol = symbol, TickType = TickType.Quote, BidPrice = 0.09m, AskPrice = 0.11m, Value = 0.10m, Time = today });
+
+            var result = new DefaultOptionAssignmentModel().GetAssignment(new OptionAssignmentParameters(option));
+
+            Assert.AreEqual(0, result.Quantity);
+        }
+
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
         {
             if (type == SecurityType.Equity)
