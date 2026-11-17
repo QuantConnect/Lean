@@ -190,21 +190,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
 
-            Func<double, int, BaseData> func = (x, i) =>
-            {
-                var price = Convert.ToDecimal(x);
-                switch (marketDataType)
-                {
-                    case MarketDataType.TradeBar:
-                        return new TradeBar(time.AddMinutes(i), Symbols.AAPL, price, price, price, price, 100m);
-                    case MarketDataType.QuoteBar:
-                        var bar = new Bar(price, price, price, price);
-                        return new QuoteBar(time.AddMinutes(i), Symbols.AAPL, bar, 10m, bar, 10m);
-                    default:
-                        throw new ArgumentException($"Invalid MarketDataType: {marketDataType}");
-                }
-            };
-
             var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));

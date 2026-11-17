@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Common.Util
     public class JsonRoundingConverterTests
     {
         [Test]
-        public void MinMaxValueDeserializesSuccessfuly()
+        public void MinMaxValueDeserializesSuccessfully()
         {
             var portfolioStatistics = new PortfolioStatistics
             {

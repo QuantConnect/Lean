@@ -94,7 +94,6 @@ namespace QuantConnect.Tests.Common.Exceptions
         public void VerifyMessageContainsStackTraceInformation()
         {
             var exception = CreateExceptionFromType(typeof(ClrBubbledException));
-            var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 

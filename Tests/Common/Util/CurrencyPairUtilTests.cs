@@ -42,10 +42,8 @@ namespace QuantConnect.Tests.Common.Util
         [TestCaseSource(nameof(decomposeThrowCases))]
         public void DecomposeThrowsOnNonCurrencyPair(Symbol symbol)
         {
-            string baseCurrency, quoteCurrency;
-
             Assert.Throws<ArgumentException>(
-                () => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out baseCurrency, out quoteCurrency));
+                () => CurrencyPairUtil.DecomposeCurrencyPair(symbol, out _, out _));
         }
 
         [TestCaseSource(nameof(isDecomposableCases))]

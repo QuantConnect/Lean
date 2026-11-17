@@ -320,10 +320,8 @@ namespace QuantConnect.Tests.API
         [Test]
         public void LiveTradierTest()
         {
-            var refreshToken = Config.Get("tradier-refresh-token");
             var account = Config.Get("tradier-account-id");
             var accessToken = Config.Get("tradier-access-token");
-            var dateIssued = Config.Get("tradier-issued-at");
 
             // Create default algorithm settings
             var tradierSettings = new Dictionary<string, object>()
@@ -502,8 +500,8 @@ namespace QuantConnect.Tests.API
             var password = "";
             var environment = "paper";
             var account = "";
-            var key = "";
-            var secretKey = "";
+            string key;
+            string secretKey;
 
             // Oanda Custom Variables
             var accessToken = "";
@@ -668,10 +666,10 @@ namespace QuantConnect.Tests.API
                 // Tradier specific settings
                 if (brokerageName == BrokerageName.TradierBrokerage)
                 {
-                    var tradierLiveAlogrithmSettings = settings;
+                    var tradierLiveAlgorithmSettings = settings;
 
-                    Assert.IsTrue(tradierLiveAlogrithmSettings["dateIssued"] == dateIssued);
-                    Assert.IsTrue(tradierLiveAlogrithmSettings["refreshToken"] == refreshToken);
+                    Assert.IsTrue(tradierLiveAlgorithmSettings["dateIssued"] == dateIssued);
+                    Assert.IsTrue(tradierLiveAlgorithmSettings["refreshToken"] == refreshToken);
                     Assert.IsTrue(settings["environment"] == "life");
                 }
 

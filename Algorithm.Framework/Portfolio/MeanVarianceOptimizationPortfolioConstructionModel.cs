@@ -298,8 +298,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                ReturnsSymbolData data;
-                if (_symbolDataDict.TryGetValue(removed.Symbol, out data))
+                if (_symbolDataDict.TryGetValue(removed.Symbol, out _))
                 {
                     _symbolDataDict.Remove(removed.Symbol);
                 }

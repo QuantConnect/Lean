@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Engine.Setup
     {
         private IAlgorithm _algorithm;
         private ITransactionHandler _transactionHandler;
-        private NonDequeingTestResultsHandler _resultHandler;
+        private NonDequeuingTestResultsHandler _resultHandler;
         private IBrokerage _brokerage;
         private DataManager _dataManager;
 
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Engine.Setup
             _dataManager = new DataManagerStub(_algorithm);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _transactionHandler = new BrokerageTransactionHandler();
-            _resultHandler = new NonDequeingTestResultsHandler();
+            _resultHandler = new NonDequeuingTestResultsHandler();
             _brokerage = new TestBrokerage();
 
             _brokerageSetupHandler = new TestableBrokerageSetupHandler();
@@ -148,7 +148,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
-            var objectStore = new Mock<IObjectStore>();
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
@@ -193,7 +192,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
-            var objectStore = new Mock<IObjectStore>();
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
@@ -282,7 +280,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -319,7 +316,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
@@ -350,7 +346,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -418,7 +413,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -465,7 +459,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -505,7 +498,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -554,7 +546,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -590,7 +581,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
             var brokerage = new Mock<IBrokerage>();
-            var objectStore = new Mock<IObjectStore>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
@@ -685,7 +675,6 @@ namespace QuantConnect.Tests.Engine.Setup
             var resultHandler = new Mock<IResultHandler>();
             var transactionHandler = new Mock<ITransactionHandler>();
             var realTimeHandler = new Mock<IRealTimeHandler>();
-            var objectStore = new Mock<IObjectStore>();
             var brokerage = new Mock<IBrokerage>();
 
             brokerage.Setup(x => x.IsConnected).Returns(true);
@@ -904,7 +893,7 @@ namespace QuantConnect.Tests.Engine.Setup
             return job;
         }
 
-        private class NonDequeingTestResultsHandler : TestResultHandler
+        private class NonDequeuingTestResultsHandler : TestResultHandler
         {
             private readonly AlgorithmNodePacket _job = new BacktestNodePacket();
             public readonly ConcurrentQueue<Packet> PersistentMessages = new ConcurrentQueue<Packet>();

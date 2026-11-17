@@ -25,17 +25,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     {
         public override PortfolioBias PortfolioBias => PortfolioBias.Long;
 
-        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic parameter = null)
         {
             if (language == Language.CSharp)
             {
-                return new InsightWeightingPortfolioConstructionModel(paramenter, PortfolioBias.Long);
+                return new InsightWeightingPortfolioConstructionModel(parameter, PortfolioBias.Long);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(InsightWeightingPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython(), ((int)PortfolioBias.Long).ToPython());
+                var instance = Py.Import(name).GetAttr(name).Invoke(((object)parameter).ToPython(), ((int)PortfolioBias.Long).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }

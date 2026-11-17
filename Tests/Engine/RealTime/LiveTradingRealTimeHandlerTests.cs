@@ -126,8 +126,6 @@ namespace QuantConnect.Tests.Engine.RealTime
             var symbol = security.Symbol;
             algorithm.SetFinishedWarmingUp();
 
-            var handleOptionNotification = typeof(BrokerageTransactionHandler).GetMethod("HandleOptionNotification", BindingFlags.NonPublic | BindingFlags.Instance);
-
             var transactionHandler = new TestBrokerageTransactionHandler();
             using var broker = new BacktestingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());

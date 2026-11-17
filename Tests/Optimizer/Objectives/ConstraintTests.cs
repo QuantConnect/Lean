@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Optimizer.Objectives
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var constraint = new Constraint("Drawdown", ComparisonOperatorTypes.Less, null);
+                new Constraint("Drawdown", ComparisonOperatorTypes.Less, null);
             });
         }
 

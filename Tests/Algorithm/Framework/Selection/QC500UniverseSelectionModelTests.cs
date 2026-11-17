@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 },
                 new TestFundamentalDataProvider(_industryTemplateCodeDict, primaryExchangeId, exchangeId),
                 out var algorithm,
-                out var coarseCountByDateTime,
+                out _,
                 out var fineCountByDateTime);
 
             var months = (algorithm.EndDate - algorithm.StartDate).Days / 30;
@@ -114,7 +114,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         [TestCase(Language.Python)]
         public void DoesNotFilterUniverseWithCoarseDataHasFundamentalFalse(Language language)
         {
-            QCAlgorithm algorithm;
             Dictionary<DateTime, int> coarseCountByDateTime;
             Dictionary<DateTime, int> fineCountByDateTime;
 
@@ -126,7 +125,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 },
                 (symbol, time) => new FineFundamental(time, symbol),
                 new TestFundamentalDataProvider(_industryTemplateCodeDict),
-                out algorithm,
+                out _,
                 out coarseCountByDateTime,
                 out fineCountByDateTime); ;
 
@@ -139,7 +138,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         [TestCase(Language.Python)]
         public void DoesNotFilterUniverseWithInvalidFineData(Language language)
         {
-            QCAlgorithm algorithm;
             Dictionary<DateTime, int> coarseCountByDateTime;
             Dictionary<DateTime, int> fineCountByDateTime;
 
@@ -158,7 +156,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     Value = 100
                 },
                 new NullFundamentalDataProvider(),
-                out algorithm,
+                out _,
                 out coarseCountByDateTime,
                 out fineCountByDateTime);
 

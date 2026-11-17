@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.API
             try
             {
                 var result = ApiClient.SetObjectStore(TestOrganization, key + "/test1.txt", _data);
-                var result2 = ApiClient.SetObjectStore(TestOrganization, key + "/test2.txt", _data);
+                ApiClient.SetObjectStore(TestOrganization, key + "/test2.txt", _data);
                 Assert.IsTrue(result.Success);
                 var objectsBefore = ApiClient.ListObjectStore(TestOrganization, key);
                 var stringRepresentation = objectsBefore.ToString();

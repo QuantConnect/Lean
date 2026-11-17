@@ -87,8 +87,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="scheduledEvent">The event to be removed</param>
         public override void Remove(ScheduledEvent scheduledEvent)
         {
-            int id;
-            ScheduledEvents.TryRemove(scheduledEvent, out id);
+            ScheduledEvents.TryRemove(scheduledEvent, out _);
 
             _sortingScheduledEventsRequired = true;
         }

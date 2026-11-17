@@ -119,5 +119,5 @@ class MeanReversionLunchBreakAlphaModel(AlphaModel):
         @property
         def insight(self):
             direction = InsightDirection.DOWN if self.price_change.current.value > 0 else InsightDirection.UP
-            margnitude = abs(self.mean_of_price_change.current.value)
-            return Insight.price(self._symbol, self.period, direction, margnitude, None)
+            magnitude = abs(self.mean_of_price_change.current.value)
+            return Insight.price(self._symbol, self.period, direction, magnitude, None)

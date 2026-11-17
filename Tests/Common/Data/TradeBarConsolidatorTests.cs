@@ -89,12 +89,7 @@ namespace QuantConnect.Tests.Common.Data
         {
             // defining a TradeBarConsolidator with a zero period should cause it to always throw an exception
 
-            TradeBar consolidated = null;
             using var consolidator = new TradeBarConsolidator(TimeSpan.Zero);
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
 
             var reference = new DateTime(2014, 12, 01, 01, 01, 00);
             Assert.Throws<ArgumentException>(() => consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay }));
@@ -295,12 +290,6 @@ namespace QuantConnect.Tests.Common.Data
 
             using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
 
-            TradeBar consolidated = null;
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
-
             // from 1/1 9:30 to 1/2 12:00 by minute
             var start = new DateTime(2014, 01, 01, 09, 30, 00, 00);
             var end =   new DateTime(2014, 01, 02, 12, 00, 00, 00);
@@ -417,12 +406,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ThrowsWhenPeriodIsSmallerThanDataPeriod()
         {
-            TradeBar consolidated = null;
             using var consolidator = new TradeBarConsolidator(Time.OneHour);
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
 
             var reference = new DateTime(2015, 04, 13);
             Assert.Throws<ArgumentException>(() => consolidator.Update(new TradeBar { Time = reference, Period = Time.OneDay }));
@@ -545,13 +529,13 @@ namespace QuantConnect.Tests.Common.Data
 
         private readonly TimeSpan marketStop = new DateTime(2000, 1, 1, 12 + 4, 0, 0).TimeOfDay;
         private readonly TimeSpan marketStart = new DateTime(2000, 1, 1, 9, 30, 0).TimeOfDay;
-        private IEnumerable<TradeBar> StreamTradeBars(DateTime start, DateTime end, TimeSpan resolution, bool skipAferMarketHours = true)
+        private IEnumerable<TradeBar> StreamTradeBars(DateTime start, DateTime end, TimeSpan resolution, bool skipAfterMarketHours = true)
         {
             DateTime current = start;
             while (current < end)
             {
                 var timeOfDay = current.TimeOfDay;
-                if (skipAferMarketHours && (marketStart > timeOfDay || marketStop < timeOfDay))
+                if (skipAfterMarketHours && (marketStart > timeOfDay || marketStop < timeOfDay))
                 {
                     // set current to the next days market start
                     current = current.Date.AddDays(1).Add(marketStart);

@@ -801,8 +801,6 @@ namespace QuantConnect.Securities.Future
                    // The three months of June and December plus the next three months of December
 
                     // The Business Day immediately preceding the last Business Day of the Contract Month
-                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
-
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(Market.HKFE, Futures.Indices.HangSeng);
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
                     var priorBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1, holidays);
@@ -1155,8 +1153,8 @@ namespace QuantConnect.Securities.Future
 
                     // 9:16 a.m. Central Time (CT) on the business day immediately preceding the third Wednesday of the contract month (usually Tuesday).
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
-                    var businessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1, holidays);
-                    return businessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
+                    var businessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1, holidays);
+                    return businessDayPrecedingThirdWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
             // JPY (6J): http://www.cmegroup.com/trading/fx/g10/japanese-yen_contract_specifications.html

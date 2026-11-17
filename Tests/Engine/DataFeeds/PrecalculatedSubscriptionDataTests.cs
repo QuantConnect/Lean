@@ -59,7 +59,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var sumOfDividends = 100m;
             var adjustedTb = tb.Clone(tb.IsFillForward).Normalize(factor, DataNormalizationMode.Adjusted, 0);
 
-            var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, new DateTime(2020, 5, 21), new DateTime(2020, 5, 22));
 
             var emitTimeUtc = offsetProvider.ConvertToUtc(tb.EndTime);
@@ -87,14 +86,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _config.DataNormalizationMode = DataNormalizationMode.TotalReturn;
             Assert.Throws<ArgumentException>(() =>
                 {
-                    var data = subscriptionData.Data;
+                    _ = subscriptionData.Data;
                 }
             );
 
             _config.DataNormalizationMode = DataNormalizationMode.SplitAdjusted;
             Assert.Throws<ArgumentException>(() =>
                 {
-                    var data = subscriptionData.Data;
+                    _ = subscriptionData.Data;
                 }
             );
         }

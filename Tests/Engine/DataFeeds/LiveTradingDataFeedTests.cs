@@ -584,7 +584,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
-            var universe = _algorithm.AddUniverse(Filter);
+            _algorithm.AddUniverse(Filter);
 
             _algorithm.PostInitialize();
 
@@ -977,7 +977,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // after algorithm initialization let's set the time provider time to reflect warmup window
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
-            var es = securityType == SecurityType.Option
+            _ = securityType == SecurityType.Option
                 ? _algorithm.AddOption("AAPL", resolution)
                 : _algorithm.AddIndexOption("SPX", resolution);
             // allow time for the exchange to pick up the selection point
@@ -1020,7 +1020,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _startDate = new DateTime(2013, 12, 15);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            var endDate = _startDate.AddDays(1);
             _algorithm.SetBenchmark(x => 1);
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             var feed = RunDataFeed();
@@ -1048,8 +1047,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
                     // old future mapped contract is removed
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out _));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out _));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
@@ -1083,7 +1082,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _startDate = new DateTime(2013, 10, 10);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
 
-            var endDate = _startDate.AddDays(1);
             _algorithm.SetBenchmark(x => 1);
             _algorithm.UniverseSettings.Resolution = Resolution.Hour;
             var feed = RunDataFeed();
@@ -1102,8 +1100,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     Assert.AreEqual(2, result.Count);
-                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out var holding));
-                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out holding));
+                    Assert.IsTrue(result.TryGetValue(es.Symbol.ID.ToString(), out _));
+                    Assert.IsTrue(result.TryGetValue(es.Mapped.ID.ToString(), out _));
 
                     Assert.AreEqual(0, LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService, onlyInvested: true).Count);
 
@@ -1140,7 +1138,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // after algorithm initialization let's set the time provider time to reflect warmup window
             _manualTimeProvider.SetCurrentTimeUtc(_algorithm.UtcTime);
 
-            var es = _algorithm.AddFuture("ES");
+            _algorithm.AddFuture("ES");
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
             var countWarmup = 0;
@@ -1777,7 +1775,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     lastTime = ts.Time;
                     return;
                 }
-                var delta = (DateTime.UtcNow - ts.Time).TotalMilliseconds;
                 Assert.AreEqual(lastTime.Add(Time.OneSecond), ts.Time);
                 Assert.AreEqual(1, ts.Slice.QuoteBars.Count);
                 lastTime = ts.Time;
@@ -3060,9 +3057,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(10, 12)]
         [TestCase(100, 12)]
         [TestCase(280, 13)]
-        public void UniverseScheduleUtcShitft(int dateShitft, int expectedTimeShift)
+        public void UniverseScheduleUtcShift(int dateShift, int expectedTimeShift)
         {
-            var result = LiveTradingDataFeed.GetScheduledUniverseUtcTimeShift(new DateTime(2026, 3, 1).AddDays(dateShitft));
+            var result = LiveTradingDataFeed.GetScheduledUniverseUtcTimeShift(new DateTime(2026, 3, 1).AddDays(dateShift));
             Assert.AreEqual(expectedTimeShift, (int)result.TotalHours);
         }
 
@@ -3189,7 +3186,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             DateTime endDate = default(DateTime))
         {
             var endTime = DateTime.UtcNow.Add(timeout);
-            bool startedReceivingata = false;
+            bool startedReceivingData = false;
             using var cancellationTokenSource = new CancellationTokenSource(timeout * 2);
             _algorithm.SetLocked();
             foreach (var timeSlice in _synchronizer.StreamData(cancellationTokenSource.Token))
@@ -3210,13 +3207,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 AlgorithmManager.HandleDividends(timeSlice, _algorithm, liveMode: true);
                 AlgorithmManager.HandleSplits(timeSlice, _algorithm, liveMode: true);
 
-                if (!startedReceivingata
+                if (!startedReceivingData
                     && (timeSlice.Slice.Count != 0
                         || sendUniverseData && timeSlice.UniverseData.Count > 0))
                 {
-                    startedReceivingata = true;
+                    startedReceivingData = true;
                 }
-                if (startedReceivingata || alwaysInvoke)
+                if (startedReceivingData || alwaysInvoke)
                 {
                     handler(timeSlice);
                 }
@@ -4335,7 +4332,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 equities: new() { "SPY" },
                 dataQueueHandler: dataQueueHandler);
 
-            var consolidatedData = new List<TradeBar>();
             var consolidatorUpdateData = new List<TradeBar>();
 
             const int consolidatorBarCountSpan = 6;
@@ -4415,7 +4411,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             {
                                 foreach (var dataPoint in update.Data)
                                 {
-                                    if (consolidator is TradeBarConsolidator tradeBarConsolidator)
+                                    if (consolidator is TradeBarConsolidator)
                                     {
                                         consolidatorUpdateData.Add(dataPoint as TradeBar);
                                     }

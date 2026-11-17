@@ -192,7 +192,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var count = 0;
-            var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0 && timeSlice.Time.Date <= algorithm.EndDate)
@@ -245,7 +244,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var count = 0L;
-            var lastMonth = algorithm.StartDate.Month;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (!timeSlice.IsTimePulse && timeSlice.UniverseData?.Count > 0 && timeSlice.Time.Date <= algorithm.EndDate)
@@ -275,7 +273,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol == future.Symbol));
                         Assert.IsTrue(universeData.Any(kvp => kvp.Key.Configuration.Symbol.ID.Symbol.Contains("CONTINUOUS", StringComparison.InvariantCultureIgnoreCase)));
 
-                        var continuousData = universeData.Where(x => x.Key is ContinuousContractUniverse).Single().Value;
+                        universeData.Where(x => x.Key is ContinuousContractUniverse).Single();
                         Assert.AreEqual(TimeSpan.Zero, nyTime.TimeOfDay, $"Failed on: {nyTime}");
                         Assert.IsTrue(!chainData.FilteredContracts.IsNullOrEmpty());
                     }

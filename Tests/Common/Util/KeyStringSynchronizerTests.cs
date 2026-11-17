@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Common.Util
 
         [TestCase(true)]
         [TestCase(false)]
-        public void ExecuteMultipleTimes(bool shouldThorw)
+        public void ExecuteMultipleTimes(bool shouldThrow)
         {
             var synchronizer = new KeyStringSynchronizer();
 
@@ -107,7 +107,7 @@ namespace QuantConnect.Tests.Common.Util
                             synchronizer.Execute("someKey", singleExecution: false, () =>
                             {
                                 counter++;
-                                if (shouldThorw)
+                                if (shouldThrow)
                                 {
                                     throw new Exception("This shouldn't matter");
                                 }
@@ -119,7 +119,7 @@ namespace QuantConnect.Tests.Common.Util
                         }
                     }
 
-                    Assert.AreEqual(shouldThorw ? 5 : 0, exceptionCount);
+                    Assert.AreEqual(shouldThrow ? 5 : 0, exceptionCount);
 
                     if (Interlocked.Increment(ref endedCount) == taskCount)
                     {

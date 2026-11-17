@@ -66,12 +66,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// <summary>
         /// Configurable look-back period for canonical option symbols, used to limit the date range of underlying contract data downloads.
         /// </summary>
-        private static readonly int _optionLookbackYeard = Config.GetInt("options-lookback-years", 1);
+        private static readonly int _optionLookbackYears = Config.GetInt("options-lookback-years", 1);
 
         /// <summary>
         /// Configurable look-back period for canonical future symbols, used to limit the date range of underlying contract data downloads.
         /// </summary>
-        private static readonly int _futureLookbackYeard = Config.GetInt("futures-lookback-years", 2);
+        private static readonly int _futureLookbackYears = Config.GetInt("futures-lookback-years", 2);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
@@ -180,11 +180,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             var minLookBack = expiryDate;
             if (contract.ID.SecurityType.IsOption())
             {
-                minLookBack = expiryDate.AddYears(-_optionLookbackYeard);
+                minLookBack = expiryDate.AddYears(-_optionLookbackYears);
             }
             else if (contract.ID.SecurityType == SecurityType.Future)
             {
-                minLookBack = expiryDate.AddYears(-_futureLookbackYeard);
+                minLookBack = expiryDate.AddYears(-_futureLookbackYears);
             }
 
             if (minLookBack > originalEndDateUtc || expiryDate < originalStartDateUtc)
@@ -209,7 +209,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             var blockingCollection = new BlockingCollection<BaseData>();
 
             var processedContracts = 0L;
-            var producerTask = Task.Run(() =>
+            Task.Run(() =>
             {
                 try
                 {
@@ -270,7 +270,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// </summary>
         private IEnumerable<Symbol> GetContracts(Symbol symbol, DateTime startUtc, DateTime endUtc)
         {
-            var chainProvider = default(Func<Symbol, DateTime, IEnumerable<Symbol>>);
+            Func<Symbol, DateTime, IEnumerable<Symbol>> chainProvider;
             if (symbol.SecurityType == SecurityType.Future)
             {
                 chainProvider = _futureChainProvider.GetFutureContractList;

@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
         {
             var mapFileProvider = TestGlobals.MapFileProvider;
             var sw = Stopwatch.StartNew();
-            var mapFileresolver = mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
+            mapFileProvider.Get(AuxiliaryDataKey.EquityUsa);
             sw.Stop();
             Log.Trace($"elapsed: {sw.Elapsed.TotalSeconds} seconds");
         }

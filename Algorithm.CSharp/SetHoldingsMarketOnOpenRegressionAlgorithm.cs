@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Securities[_aapl].HasData)
                 {
                     SetHoldings(_aapl, 1);
-                    var orderTicket = Transactions.GetOpenOrderTickets(_aapl).Single();
+                    Transactions.GetOpenOrderTickets(_aapl).Single();
                 }
             }
         }
@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Submitted)
             {
-                var orderTickets = Transactions.GetOpenOrderTickets(_aapl).Single();
+                Transactions.GetOpenOrderTickets(_aapl).Single();
             }
             else
             {

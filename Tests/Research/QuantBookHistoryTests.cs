@@ -495,7 +495,7 @@ namespace QuantConnect.Tests.Research
         }
 
         [Test]
-        public void CanoicalFutureCrashesGetOptionHistory()
+        public void CanonicalFutureCrashesGetOptionHistory()
         {
             var qb = new QuantBook();
             var future = Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
@@ -694,7 +694,7 @@ def getHistory():
         }
 
         [Test]
-        public void HistoryDataDoesWorksCorrecltyWithoutAddingTheCustomDataInPython()
+        public void HistoryDataDoesWorksCorrectlyWithoutAddingTheCustomDataInPython()
         {
             using (Py.GIL())
             {
@@ -779,7 +779,7 @@ class TestTradeBar(TradeBar):
         }
 
         [Test]
-        public void HistoryDataWorksCorrecltyWithoutAddingTheCustomDataInCSharp()
+        public void HistoryDataWorksCorrectlyWithoutAddingTheCustomDataInCSharp()
         {
             var qb = new QuantBook();
             var symbol = qb.AddEquity("AAPL", Resolution.Daily).Symbol;

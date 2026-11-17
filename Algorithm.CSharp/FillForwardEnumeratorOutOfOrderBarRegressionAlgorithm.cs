@@ -28,8 +28,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FillForwardEnumeratorOutOfOrderBarRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private decimal _exptectedClose = 84.09m;
-        private DateTime _exptectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
+        private decimal _expectedClose = 84.09m;
+        private DateTime _expectedTime = new DateTime(2008, 3, 10, 9, 30, 0);
         private Symbol _shy;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
-            var trackingBar = slice.Bars.Values.FirstOrDefault(s => s.Time.Equals(_exptectedTime));
+            var trackingBar = slice.Bars.Values.FirstOrDefault(s => s.Time.Equals(_expectedTime));
 
             if (trackingBar != null)
             {
@@ -55,10 +55,10 @@ namespace QuantConnect.Algorithm.CSharp
                     SetHoldings(_shy, 1);
                 }
 
-                if (trackingBar.Close != _exptectedClose)
+                if (trackingBar.Close != _expectedClose)
                 {
                     throw new RegressionTestException(
-                        $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
+                        $"Bar at {_expectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_expectedClose.ToStringInvariant()}");
                 }
             }
         }

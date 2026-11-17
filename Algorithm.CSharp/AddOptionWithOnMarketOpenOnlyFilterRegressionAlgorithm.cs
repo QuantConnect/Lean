@@ -55,9 +55,6 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            var changeOptions = changes.AddedSecurities.Concat(changes.RemovedSecurities)
-                                                                        .Where(s => s.Type == SecurityType.Option);
-
             if (Time != Time.Date)
             {
                 throw new RegressionTestException($"Expected options filter to be run only at midnight. Actual was {Time}");

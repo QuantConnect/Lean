@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void SortsTheSameAsDecimalAsecending()
+        public void SortsTheSameAsDecimalAscending()
         {
             int count = 100;
             var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture))).ToList();
@@ -191,7 +191,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void IndicatorsOfDifferentTypeDiplaySameCurrentTime()
+        public void IndicatorsOfDifferentTypeDisplaySameCurrentTime()
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
@@ -358,12 +358,12 @@ namespace QuantConnect.Tests.Indicators
             TestOperator(indicator, default(TValue), "Inequality", false, false);
         }
 
-        private static void TestOperator<TIndicator, TValue>(TIndicator indicator, TValue value, string opName, bool tvalueIsFirstParm, bool expected)
+        private static void TestOperator<TIndicator, TValue>(TIndicator indicator, TValue value, string opName, bool tvalueIsFirstParam, bool expected)
         {
-            var method = GetOperatorMethodInfo<TValue>(opName, tvalueIsFirstParm ? 0 : 1);
+            var method = GetOperatorMethodInfo<TValue>(opName, tvalueIsFirstParam ? 0 : 1);
             var ctIndicator = Expression.Constant(indicator);
             var ctValue = Expression.Constant(value);
-            var call = tvalueIsFirstParm ? Expression.Call(method, ctValue, ctIndicator) : Expression.Call(method, ctIndicator, ctValue);
+            var call = tvalueIsFirstParam ? Expression.Call(method, ctValue, ctIndicator) : Expression.Call(method, ctIndicator, ctValue);
             var lamda = Expression.Lambda<Func<bool>>(call);
             var func = lamda.Compile();
             Assert.AreEqual(expected, func());

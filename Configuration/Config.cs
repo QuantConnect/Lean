@@ -342,12 +342,12 @@ namespace QuantConnect.Configuration
             if (!Settings.IsValueCreated) return;
             var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
 
-            var taget = ConfigurationFileName;
+            var target = ConfigurationFileName;
             if (!string.IsNullOrEmpty(targetPath))
             {
-                taget = Path.Combine(targetPath, ConfigurationFileName);
+                target = Path.Combine(targetPath, ConfigurationFileName);
             }
-            File.WriteAllText(taget, serialized);
+            File.WriteAllText(target, serialized);
         }
 
         /// <summary>

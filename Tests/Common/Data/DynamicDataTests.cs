@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Common.Data
     public class DynamicDataTests
     {
         [Test]
-        public void SupportsSnakeNameRetrival()
+        public void SupportsSnakeNameRetrieval()
         {
             dynamic data = new DataType();
             data.PropertyA = 1;

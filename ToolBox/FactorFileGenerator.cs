@@ -78,7 +78,7 @@ namespace QuantConnect.ToolBox
                 )
             };
 
-            return RecursivlyGenerateFactorFile(orderedDividendSplitQueue, factorFileRows);
+            return RecursivelyGenerateFactorFile(orderedDividendSplitQueue, factorFileRows);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace QuantConnect.ToolBox
         /// <param name="orderedDividendSplits">Queue of dividends and splits ordered by date</param>
         /// <param name="factorFileRows">The list of factor file rows</param>
         /// <returns><see cref="FactorFile"/> instance</returns>
-        private CorporateFactorProvider RecursivlyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<CorporateFactorRow> factorFileRows)
+        private CorporateFactorProvider RecursivelyGenerateFactorFile(Queue<BaseData> orderedDividendSplits, List<CorporateFactorRow> factorFileRows)
         {
             // If there is no more dividends or splits, return
             if (!orderedDividendSplits.Any())
@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox
             if (nextFactorFileRow != null)
                 factorFileRows.Add(nextFactorFileRow);
 
-            return RecursivlyGenerateFactorFile(orderedDividendSplits, factorFileRows);
+            return RecursivelyGenerateFactorFile(orderedDividendSplits, factorFileRows);
         }
 
         /// <summary>

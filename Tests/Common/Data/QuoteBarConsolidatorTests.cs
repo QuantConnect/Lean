@@ -28,12 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ThrowsWhenPeriodIsSmallerThanDataPeriod()
         {
-            QuoteBar quoteBar = null;
             using var creator = new QuoteBarConsolidator(Time.OneHour);
-            creator.DataConsolidated += (sender, args) =>
-            {
-                quoteBar = args;
-            };
 
             var time = new DateTime(2022, 6, 6, 13, 30, 1);
             var bar1 = new QuoteBar

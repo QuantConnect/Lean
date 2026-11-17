@@ -157,11 +157,9 @@ namespace QuantConnect.Tests.Common.Data
         public void ClassicCyclesUpAndDown()
         {
             RenkoBar bar = null;
-            int rcount = 0;
             using var consolidator = new ClassicRenkoConsolidator(1m, x => x.Value, x => 0);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                rcount++;
                 bar = consolidated;
             };
 
@@ -274,7 +272,7 @@ def getConsolidator():
 ");
                     Assert.DoesNotThrow(() =>
                     {
-                        var consolidator = testModule.GetAttr("getConsolidator").Invoke();
+                        testModule.GetAttr("getConsolidator").Invoke();
                     });
                 }
             }

@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         [TestCase("VIXW", "1.16", "1.16")]
         [TestCase("VIXW", "4.14", "4.14")]
         [TestCase("VIXW", "4.16", "4.16")]
-        public void DynamicIndexOptionPriceRoundeding(string indexOption, string orderPriceStr, string expectedPriceStr)
+        public void DynamicIndexOptionPriceRounding(string indexOption, string orderPriceStr, string expectedPriceStr)
         {
             var orderPrice = decimal.Parse(orderPriceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
             var expectedPrice = decimal.Parse(expectedPriceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture);
@@ -971,7 +971,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
 
             var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields() { Quantity = 10000 });
-            var updateTicket = _transactionHandler.Process(updateRequest);
+            _transactionHandler.Process(updateRequest);
             _transactionHandler.HandleOrderRequest(updateRequest);
             Assert.AreEqual(OrderRequestStatus.Processed, updateRequest.Status);
             Assert.IsTrue(updateRequest.Response.IsSuccess);
@@ -1014,7 +1014,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
 
             var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket.OrderId, new UpdateOrderFields() { Quantity = 10000 });
-            var updateTicket = _transactionHandler.Process(updateRequest);
+            _transactionHandler.Process(updateRequest);
             _transactionHandler.HandleOrderRequest(updateRequest);
             Assert.AreEqual(OrderRequestStatus.Processed, updateRequest.Status);
             Assert.IsTrue(updateRequest.Response.IsSuccess);
@@ -1953,7 +1953,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 CallBase = true
             };
-            var cashBalance = mock.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount>());
+            mock.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount>());
             mock.Setup(m => m.IsConnected).Returns(true);
             mock.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>())).Returns(true);
 

@@ -727,8 +727,8 @@ namespace QuantConnect.Tests.Common.Securities
             // Open market
             localTimeKeeper.UpdateTime(new DateTime(2020, 2, 3));
 
-            var fourtyPercentQuantity = (quantityClosedMarket * 0.4m).DiscretelyRoundBy(lotSize);
-            futureSecurity.Holdings.SetHoldings(100, fourtyPercentQuantity);
+            var fortyPercentQuantity = (quantityClosedMarket * 0.4m).DiscretelyRoundBy(lotSize);
+            futureSecurity.Holdings.SetHoldings(100, fortyPercentQuantity);
 
             var halfQuantity = (quantityClosedMarket / 2).DiscretelyRoundBy(lotSize);
             Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
@@ -943,7 +943,6 @@ namespace QuantConnect.Tests.Common.Securities
                 { "ZW.csv", 2 }
             };
 
-            var lines = new List<string>();
             foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
             {
                 var greaterMessage = $"A jump less than -80% was encountered in {marginFile.Name}";

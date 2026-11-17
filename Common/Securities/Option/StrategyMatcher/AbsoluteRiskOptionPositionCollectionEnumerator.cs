@@ -46,8 +46,6 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 yield break;
             }
 
-            var marketPrice = _marketPriceProvider(positions.Underlying);
-
             var longPositions = new List<OptionPosition>();
             var shortPuts = new SortedDictionary<decimal, OptionPosition>();
             var shortCalls = new SortedDictionary<decimal, OptionPosition>();

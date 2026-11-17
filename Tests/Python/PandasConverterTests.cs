@@ -1865,9 +1865,9 @@ def indexDataFrameBySymbol(dataFrame, symbol):
                 var symbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.GOOG };
                 var dataFrame = GetTestDataFrame(symbols);
 
-                var looupkSymbols = new List<Symbol> { Symbols.AAPL, Symbols.GOOG };
+                var lookupSymbols = new List<Symbol> { Symbols.AAPL, Symbols.GOOG };
                 dynamic indexedDataFrame = null;
-                Assert.DoesNotThrow(() => indexedDataFrame = indexDataFrameBySymbols(dataFrame, looupkSymbols));
+                Assert.DoesNotThrow(() => indexedDataFrame = indexDataFrameBySymbols(dataFrame, lookupSymbols));
                 Assert.IsNotNull(indexedDataFrame);
 
                 dynamic aaplDataFrame = null;
@@ -3728,7 +3728,7 @@ def Test(dataFrame, symbol):
             var converter = new PandasConverter();
             var tickType = TickType.OpenInterest;
             var dataType = LeanData.GetDataType(resolution, tickType);
-            var subcriptionDataConfig = new SubscriptionDataConfig(dataType, symbol, resolution,
+            var subscriptionDataConfig = new SubscriptionDataConfig(dataType, symbol, resolution,
                                                                    TimeZones.Chicago, TimeZones.Chicago,
                                                                    tickType: tickType, fillForward: false,
                                                                    extendedHours: true, isInternalFeed: true);
@@ -3736,7 +3736,7 @@ def Test(dataFrame, symbol):
             for (int i = 0; i < 10; i++)
             {
                 var line = $"{1000 * i},{11 * i}";
-                var openInterestTicks = new OpenInterest(subcriptionDataConfig, symbol, line, new DateTime(2017, 10, 10));
+                var openInterestTicks = new OpenInterest(subscriptionDataConfig, symbol, line, new DateTime(2017, 10, 10));
                 openinterest.Add(openInterestTicks);
             }
 

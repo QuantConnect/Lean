@@ -96,8 +96,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void RemoveOrderFromCollection(int orderId)
         {
-            CancelPendingOrder cancelPendingOrderTrash;
-            _cancelPendingOrders.TryRemove(orderId, out cancelPendingOrderTrash);
+            _cancelPendingOrders.TryRemove(orderId, out _);
         }
 
         private class CancelPendingOrder

@@ -160,9 +160,8 @@ namespace QuantConnect.Data.Custom.Intrinio
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var obs = line.Split(',');
-            var time = DateTime.MinValue;
             if (!DateTime.TryParseExact(obs[0], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                                        out time)) return null;
+                                        out var time)) return null;
             var value = obs[1].ToDecimal();
             return new IntrinioEconomicData
             {

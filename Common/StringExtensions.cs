@@ -164,9 +164,8 @@ namespace QuantConnect
                 var indexOfColon = format.IndexOfInvariant(":");
                 if (indexOfColon != -1)
                 {
-                    int padding;
                     var beforeColon = format.Substring(0, indexOfColon);
-                    if (int.TryParse(beforeColon, out padding))
+                    if (int.TryParse(beforeColon, out _))
                     {
                         return string.Format(FormatProvider, $"{{0,{format}}}", formattable);
                     }

@@ -56,7 +56,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            var nextValue = base.ComputeNextValue(input);
+            base.ComputeNextValue(input);
 
             VolumeRatio.Update(input);
 

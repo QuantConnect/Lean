@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var cash = new Cash(currency, 0, 0);
+                new Cash(currency, 0, 0);
             }, "Cash symbols cannot be null or empty.");
         }
 
@@ -259,7 +259,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void EnsureCurrencyDataFeedDoesNotMarkIsCurrencyDataFeedForExistantSubscriptions()
+        public void EnsureCurrencyDataFeedDoesNotMarkIsCurrencyDataFeedForExistentSubscriptions()
         {
             const int quantity = 100;
             const decimal conversionRate = 1 / 100m;
@@ -450,8 +450,8 @@ namespace QuantConnect.Tests.Common.Securities
                     SecurityChanges.None,
                     dataManager.SecurityService,
                     cashBook.AccountCurrency));
-            Assert.IsFalse(SymbolCache.TryGetSymbol("USDJPY", out symbol));
-            Assert.IsFalse(SymbolCache.TryGetSymbol("GBPUSD", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("USDJPY", out _));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("GBPUSD", out _));
         }
 
         [Test]

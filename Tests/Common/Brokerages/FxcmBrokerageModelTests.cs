@@ -46,8 +46,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var model = new FxcmBrokerageModel();
 
-            BrokerageMessageEvent messageEvent;
-            Assert.AreEqual(isValid, model.CanSubmitOrder(security, order, out messageEvent));
+            Assert.AreEqual(isValid, model.CanSubmitOrder(security, order, out _));
         }
 
         private Security CreateSecurity(Symbol symbol)

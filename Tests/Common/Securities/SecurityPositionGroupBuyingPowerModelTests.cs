@@ -94,8 +94,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsFalse(maxQuantityResult.IsError);
             Assert.AreNotEqual(maxQuantityResult.Quantity, 0);
 
-            var maxLotsarameters = new GetMaximumLotsForDeltaBuyingPowerParameters(_portfolio, positionGroup, deltaBuyingPower, 0);
-            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(maxLotsarameters);
+            var maxLotsParameters = new GetMaximumLotsForDeltaBuyingPowerParameters(_portfolio, positionGroup, deltaBuyingPower, 0);
+            var maxLotsForDeltaResult = buyingPowerModel.GetMaximumLotsForDeltaBuyingPower(maxLotsParameters);
 
             Assert.IsFalse(maxLotsForDeltaResult.IsError);
             Assert.AreEqual(maxQuantityResult.Quantity, maxLotsForDeltaResult.NumberOfLots * _security.SymbolProperties.LotSize);

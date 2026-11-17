@@ -29,10 +29,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = "12345";
             Assert.AreEqual(5, symbol.Length);
-            string basec, quotec;
             Assert.Throws<ArgumentException>(() =>
             {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out _, out _);
             }, "Currency pairs must be exactly 6 characters");
         }
 
@@ -41,10 +40,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         {
             string symbol = "1234567";
             Assert.AreEqual(7, symbol.Length);
-            string basec, quotec;
             Assert.Throws<ArgumentException>(() =>
             {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out _, out _);
             }, "Currency pairs must be exactly 6 characters");
         }
 
@@ -52,10 +50,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void DecomposeThrowsOnNullSymbol()
         {
             string symbol = null;
-            string basec, quotec;
             Assert.Throws<ArgumentException>(() =>
             {
-                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out basec, out quotec);
+                QuantConnect.Securities.Forex.Forex.DecomposeCurrencyPair(symbol, out _, out _);
             }, "Currency pairs must be exactly 6 characters");
         }
 

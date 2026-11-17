@@ -191,9 +191,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void UpdatesFactorFileCorrectly()
         {
-            var dateBeforeUpadate = new DateTime(2018, 3, 14);
-            var dateAtUpadate = new DateTime(2018, 3, 15);
-            var dateAfterUpadate = new DateTime(2018, 3, 16);
+            var dateBeforeUpdate = new DateTime(2018, 3, 14);
+            var dateAtUpdate = new DateTime(2018, 3, 15);
+            var dateAfterUpdate = new DateTime(2018, 3, 16);
 
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
@@ -202,7 +202,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             // Before factor file update date (2018, 3, 15)
             _rawDataEnumerator.CurrentValue = new Tick(
-                dateBeforeUpadate,
+                dateBeforeUpdate,
                 _config.Symbol,
                 10,
                 10,
@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             var factorFile = TestGlobals.FactorFileProvider.Get(_config.Symbol);
-            var expectedFactor = factorFile.GetPriceFactor(dateBeforeUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor = factorFile.GetPriceFactor(dateBeforeUpdate, DataNormalizationMode.Adjusted);
             var tick = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor, tick.Price);
@@ -218,13 +218,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             // At factor file update date (2018, 3, 15)
             _rawDataEnumerator.CurrentValue = new Tick(
-                dateAtUpadate,
+                dateAtUpdate,
                 _config.Symbol,
                 10,
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor2 = factorFile.GetPriceFactor(dateAtUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor2 = factorFile.GetPriceFactor(dateAtUpdate, DataNormalizationMode.Adjusted);
             var tick2 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor2, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor2, tick2.Price);
@@ -232,13 +232,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             // After factor file update date (2018, 3, 15)
             _rawDataEnumerator.CurrentValue = new Tick(
-                dateAfterUpadate,
+                dateAfterUpdate,
                 _config.Symbol,
                 10,
                 10,
                 10);
             Assert.IsTrue(enumerator.MoveNext());
-            var expectedFactor3 = factorFile.GetPriceFactor(dateAfterUpadate, DataNormalizationMode.Adjusted);
+            var expectedFactor3 = factorFile.GetPriceFactor(dateAfterUpdate, DataNormalizationMode.Adjusted);
             var tick3 = enumerator.Current as Tick;
             Assert.AreEqual(expectedFactor3, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor3, tick3.Price);

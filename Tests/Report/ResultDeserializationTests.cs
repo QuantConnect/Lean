@@ -336,8 +336,8 @@ namespace QuantConnect.Tests.Report
         {
             parametersTemplate = parametersTemplate.Replace("\r", string.Empty);
             var algorithmConfiguration = new AlgorithmConfiguration { Parameters = parameters };
-            var parametersReportElment = new ParametersReportElement("parameters", "", algorithmConfiguration, null, parametersTemplate);
-            var parametersTable = parametersReportElment.Render();
+            var parametersReportElement = new ParametersReportElement("parameters", "", algorithmConfiguration, null, parametersTemplate);
+            var parametersTable = parametersReportElement.Render();
             expectedParametersTable = expectedParametersTable.Replace("\r", string.Empty);
             Assert.AreEqual(expectedParametersTable, parametersTable);
         }

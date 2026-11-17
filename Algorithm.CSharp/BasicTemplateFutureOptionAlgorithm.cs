@@ -62,7 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
             // Access Data
             foreach(var kvp in slice.OptionChains)
             {
-                var underlyingFutureContract = kvp.Key.Underlying;
                 var chain = kvp.Value;
 
                 if (chain.Count() == 0) continue;

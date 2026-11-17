@@ -366,7 +366,7 @@ namespace QuantConnect.Tests.Common
             var resultsPut = priceModel.Evaluate(new OptionPriceModelParameters(optionPut, null, contractPut));
 
             Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
-            Assert.AreEqual(OptionPriceModelResult.None, resultsCall);
+            Assert.AreEqual(OptionPriceModelResult.None, resultsPut);
         }
 
         [TestCase("BlackScholes", OptionStyle.American, true)]
@@ -874,12 +874,11 @@ namespace QuantConnect.Tests.Common
             var contract = GetOptionContract(optionSymbol, spy, evaluationDate);
             var payoff = new PlainVanillaPayoff(contract.Right == OptionRight.Call ? QLNet.Option.Type.Call : QLNet.Option.Type.Put, (double)contract.Strike);
             var forwardPrice = underlyingPrice / 0.99d;
-            BlackCalculator black = null;
 
             // running evaluation with 0% dividend yield and 1% interest rate
             var initialGuess = Math.Sqrt(2 * Math.PI) * price / underlyingPrice;
             var priceModel = new TestOptionPriceModel();
-            var impliedVolEstimate = priceModel.TestImpliedVolEstimator(price, initialGuess, 1, 0.99d, forwardPrice, payoff, out black);
+            var impliedVolEstimate = priceModel.TestImpliedVolEstimator(price, initialGuess, 1, 0.99d, forwardPrice, payoff, out _);
 
             // Expect minor error due to interest rate and dividend yield used in IB
             Assert.AreEqual(impliedVolEstimate, ibImpliedVol, 0.001);

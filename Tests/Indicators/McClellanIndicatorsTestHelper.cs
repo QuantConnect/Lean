@@ -68,7 +68,6 @@ namespace QuantConnect.Tests.Indicators
             var closeValue = 1m;
             foreach (var parts in TestHelper.GetCsvFileStream(fileName))
             {
-                parts.TryGetValue("a/d difference", out var adDifference);
                 parts.TryGetValue("date", out var date);
 
                 var data = new TradeBar() { Symbol = Symbols.SPY, Close = closeValue, Open = closeValue - 1, Volume = 1, Time = Parse.DateTimeExact(date, "yyyyMMdd") };

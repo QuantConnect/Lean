@@ -335,8 +335,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var currentIsMarketClose = false;
             while (previous.EndTime < end)
             {
-                var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-
                 Assert.IsTrue(fillForwardEnumerator.MoveNext(), $"Previous: {previous.EndTime}");
 
                 if (currentIsMarketOpen || currentIsMarketClose)

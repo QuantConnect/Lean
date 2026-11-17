@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetSecurityInitializer(x => x.SetMarketPrice(GetLastKnownPrice(x)));
 
-            var equity = AddEquity("GOOG");
+            AddEquity("GOOG");
             var option = AddOption("GOOG");
             _optionSymbol = option.Symbol;
 

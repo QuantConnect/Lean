@@ -109,7 +109,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             var first = true;
-            BaseData last = null;
             using var lastUpdated = new AutoResetEvent(false);
             exchange.AddEnumerator(Symbols.SPY, enqueable, handleData: spy =>
             {
@@ -118,7 +117,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     first = false;
                     throw new RegressionTestException("This exception should be swalloed by the exchange!");
                 }
-                last = spy;
                 lastUpdated.Set();
             });
 

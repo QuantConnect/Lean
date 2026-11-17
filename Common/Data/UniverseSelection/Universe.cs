@@ -350,8 +350,7 @@ namespace QuantConnect.Data.UniverseSelection
         {
             if (CanRemoveMember(utcTime, security))
             {
-                Member member;
-                return Securities.TryRemove(security.Symbol, out member);
+                return Securities.TryRemove(security.Symbol, out _);
             }
             return false;
         }

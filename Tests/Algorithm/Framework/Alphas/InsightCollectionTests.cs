@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             var collection = new InsightCollection();
             Assert.Throws<KeyNotFoundException>(() =>
             {
-                var insight = collection[Symbols.AAPL];
+                _ = collection[Symbols.AAPL];
             });
         }
 

@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Flat)]
         public abstract void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction);
 
-        public abstract IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null);
+        public abstract IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic parameter = null);
 
         public abstract Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = 0.01);
 
@@ -222,9 +222,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return new List<IPortfolioTarget> { PortfolioTarget.Percent(Algorithm, Symbols.SPY, -1m) };
         }
 
-        protected void SetPortfolioConstruction(Language language, dynamic paramenter = null)
+        protected void SetPortfolioConstruction(Language language, dynamic parameter = null)
         {
-            var model = GetPortfolioConstructionModel(language, paramenter ?? Resolution.Daily);
+            var model = GetPortfolioConstructionModel(language, parameter ?? Resolution.Daily);
             Algorithm.SetPortfolioConstruction(model);
 
             foreach (var kvp in Algorithm.Portfolio)

@@ -136,8 +136,6 @@ namespace QuantConnect.Api
                 writer.WritePropertyName("statistics");
                 writer.WriteStartObject();
 
-                var customStatisticsNames = new HashSet<string>();
-
                 foreach (var (name, statisticValue, index) in optimizationBacktest.Statistics
                     .Select(kvp => (Name: kvp.Key, kvp.Value, Index: StatisticsIndices.TryGetValue(kvp.Key, out var index) ? index : int.MaxValue))
                     .OrderBy(t => t.Index)

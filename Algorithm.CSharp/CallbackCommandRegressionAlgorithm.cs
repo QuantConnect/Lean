@@ -56,8 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
             ProjectId = 21805137;
 
             // All live deployments receive the broadcasts below
-            var broadcastResult = BroadcastCommand(potentialCommand);
-            var broadcastResult2 = BroadcastCommand(new { Symbol = "SPY", Parameters = new Dictionary<string, int>() { { "Quantity", 10 } } });
+            BroadcastCommand(potentialCommand);
+            BroadcastCommand(new { Symbol = "SPY", Parameters = new Dictionary<string, int>() { { "Quantity", 10 } } });
         }
 
         /// <summary>

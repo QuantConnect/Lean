@@ -48,7 +48,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             )
         {
             var order = shortOrder ? parameters.CreateShortOrder(Quantity) : parameters.CreateLongOrder(Quantity);
-            var securit = security;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
             var expectedFee = expectedFeeFactor * Math.Abs(Quantity) * security.SymbolProperties.ContractMultiplier *

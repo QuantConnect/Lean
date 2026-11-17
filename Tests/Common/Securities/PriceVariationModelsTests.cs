@@ -35,17 +35,17 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             var symbol = Symbol.Create(ticker, securityType, market);
             var security = GetSecurity(symbol, mode);
             var expected = security.SymbolProperties.MinimumPriceVariation;
-            var adjutedEquity = mode == DataNormalizationMode.Adjusted && securityType == SecurityType.Equity;
+            var adjustedEquity = mode == DataNormalizationMode.Adjusted && securityType == SecurityType.Equity;
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 10m));
             var actual = security.PriceVariationModel.GetMinimumPriceVariation(
                 new GetMinimumPriceVariationParameters(security, security.Price));
-            Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
+            Assert.AreEqual(adjustedEquity ? 0 : expected, actual);
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 1m));
             actual = security.PriceVariationModel.GetMinimumPriceVariation(
                 new GetMinimumPriceVariationParameters(security, security.Price));
-            Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
+            Assert.AreEqual(adjustedEquity ? 0 : expected, actual);
 
             // Special case, if stock price less than $1, minimum price variation is $0.0001
             if (securityType == SecurityType.Equity) expected = 0.0001m;
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, .99m));
             actual = security.PriceVariationModel.GetMinimumPriceVariation(
                 new GetMinimumPriceVariationParameters(security, security.Price));
-            Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
+            Assert.AreEqual(adjustedEquity ? 0 : expected, actual);
         }
 
         [TestCase("ZO", SecurityType.Future, Market.CBOT, DataNormalizationMode.Adjusted, new float[] { 3.7025f, 3.72f, 3.6875f, 3.6425f, 3.5225f, 3.5125f, 3.47f, 3.46f, 3.445f, 3.4625f, 3.435f, 3.3575f })]

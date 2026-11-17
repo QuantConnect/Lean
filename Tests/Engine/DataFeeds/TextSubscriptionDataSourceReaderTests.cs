@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Parallel.ForEach(datas, enumerable =>
             {
                 // after the first call should use the cache
-                foreach (var data in enumerable)
+                foreach (var _ in enumerable)
                 {
                     Interlocked.Increment(ref counter);
                 }
@@ -298,7 +298,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Parallel.ForEach(datas, enumerable =>
             {
                 // after the first call should use the cache
-                foreach (var data in enumerable)
+                foreach (var _ in enumerable)
                 {
                     Interlocked.Increment(ref counter);
                 }
@@ -351,15 +351,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Parallel.ForEach(datas, enumerable =>
             {
                 // after the first call should use the cache
-                foreach (var data in enumerable)
+                foreach (var _ in enumerable)
                 {
                     Interlocked.Increment(ref counter);
                 }
-                foreach (var data in enumerable)
+                foreach (var _ in enumerable)
                 {
                     Interlocked.Increment(ref counter);
                 }
-                foreach (var data in enumerable)
+                foreach (var _ in enumerable)
                 {
                     Interlocked.Increment(ref counter);
                 }

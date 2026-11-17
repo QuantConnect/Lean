@@ -135,7 +135,7 @@ namespace QuantConnect.Tests.API
         {
             try
             {
-                using (JsonDocument doc = JsonDocument.Parse(jsonString))
+                using (JsonDocument.Parse(jsonString))
                 {
 
                 }
@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.API
         /// <returns></returns>
         public static Compile WaitForCompilerResponse(Api.Api apiClient, int projectId, string compileId, int seconds = 300)
         {
-            var compile = new Compile();
+            Compile compile;
             var finish = DateTime.UtcNow.AddSeconds(seconds);
             do
             {

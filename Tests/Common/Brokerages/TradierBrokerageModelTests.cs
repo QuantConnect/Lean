@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = GetOrder();
             order.Setup(x => x.Quantity).Returns(-100);
             order.Object.Properties.TimeInForce = TimeInForce.Day;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out var message));
+            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(_security, order.Object, out _));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.SetMarketPrice(new Tick(security.LocalTime, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out _));
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.SetMarketPrice(new Tick(security.LocalTime, security.Symbol, 100, 1000));
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
-            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+            Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out _));
         }
 
         [Test]

@@ -355,7 +355,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         private List<DateTime> GetSliceDateTimes(int maxCount)
         {
-            var i = 0;
             var sliceDateTimes = new List<DateTime>();
             var utcDateTime = Algorithm.StartDate;
 
@@ -379,7 +378,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     {
                         sliceDateTimes.Add(utcDateTime);
                     }
-                    i++;
                 }
             }
 

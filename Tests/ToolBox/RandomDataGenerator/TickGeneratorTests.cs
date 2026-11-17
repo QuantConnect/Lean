@@ -225,8 +225,6 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         [Test]
         public void HistoryGeneratesOpenInterestDataAsExpected()
         {
-            var start = new DateTime(2020, 1, 6);
-            var end = new DateTime(2020, 1, 10);
             var history = _tickGenerator.GenerateTicks().ToList();
             Assert.IsNotEmpty(history);
             Assert.AreEqual(3, history.Where(s => s.TickType == TickType.OpenInterest).Count());

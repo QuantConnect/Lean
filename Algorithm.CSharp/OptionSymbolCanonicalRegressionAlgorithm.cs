@@ -56,7 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
             _canonicalOptionContract = _optionContract.Canonical;
             if (slice.OptionChains.ContainsKey(_optionContract.Canonical))
             {
-                var chain = slice.OptionChains[_optionContract.Canonical];
                 if (!Portfolio.Invested)
                 {
                     MarketOrder(_optionContract, 1);

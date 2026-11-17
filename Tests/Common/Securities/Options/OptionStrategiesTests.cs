@@ -413,7 +413,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingButterflyCallStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var higherStrike = 350m;
@@ -513,7 +512,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingButterflyPutStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var higherStrike = 350m;
@@ -613,7 +611,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingCallCalendarSpreadStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var strike = 350m;
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
@@ -700,7 +697,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingPutCalendarSpreadStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var strike = 350m;
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
@@ -787,7 +783,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingIronButterflyStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 300m;
@@ -890,7 +885,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingIronCondorStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 300m;
@@ -997,7 +991,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingBoxSpreadStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 300m;
@@ -1084,7 +1077,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingJellyRollStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var strike = 350m;
             var nearExpiration = new DateTime(2023, 08, 18);
             var farExpiration = new DateTime(2023, 09, 18);
@@ -1190,7 +1182,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingBearCallLadderStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 300m;
@@ -1247,7 +1238,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingBearPutLadderStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 350m;
@@ -1304,7 +1294,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingBullCallLadderStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 300m;
@@ -1361,7 +1350,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingBullPutLadderStrategy()
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             var strike1 = 350m;
@@ -1419,7 +1407,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingCallBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             // Unordered and repeated strikes
@@ -1461,7 +1448,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingPutBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             // Unordered and repeated strikes
@@ -1503,7 +1489,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingShortCallBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             // Unordered and repeated strikes
@@ -1545,7 +1530,6 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void FailsBuildingShortPutBackspreadStrategy(decimal strike1, decimal strike2)
         {
             var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
-            var underlying = Symbols.SPY;
             var expiration = new DateTime(2023, 08, 18);
 
             // Unordered and repeated strikes

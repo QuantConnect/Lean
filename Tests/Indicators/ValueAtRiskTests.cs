@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void DivisonByZero()
+        public void DivisionByZero()
         {
             var indicator = CreateIndicator();
 

@@ -108,14 +108,14 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException("Trading contracts were not set");
                 }
 
-                if (!Securities.TryGetValue(_deselectedContractSymbol, out var deselectedContract))
+                if (!Securities.TryGetValue(_deselectedContractSymbol, out _))
                 {
                     throw new RegressionTestException($"Deselected contract {_deselectedContractSymbol} is tradable");
                 }
             }
             else if (Time.Day == 28 && !Portfolio.Invested)
             {
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out _))
                 {
                     if (_deselectedContractSymbol == null || _notSelectedContractSymbol == null)
                     {

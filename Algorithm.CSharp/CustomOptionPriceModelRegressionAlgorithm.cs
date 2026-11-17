@@ -53,7 +53,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (slice.OptionChains.TryGetValue(_optionSymbol, out var chain))
             {
-                var underlyingPrice = chain.Underlying.Price;
                 var atmContract = chain
                     .OrderByDescending(x => x.Expiry)
                     .ThenBy(x => Math.Abs(chain.Underlying.Price - x.Strike))

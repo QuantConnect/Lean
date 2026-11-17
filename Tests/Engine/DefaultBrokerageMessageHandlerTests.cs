@@ -59,11 +59,11 @@ namespace QuantConnect.Tests.Engine
             algorithm.AddSecurities(equities: new List<string> { "SPY" });
             var referenceTime = DateTime.UtcNow;
             algorithm.SetDateTime(referenceTime);
-            var localReferencTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
-            var open = localReferencTime.AddSeconds(1).TimeOfDay;
+            var localReferenceTime = referenceTime.ConvertFromUtc(TimeZones.NewYork);
+            var open = localReferenceTime.AddSeconds(1).TimeOfDay;
             var closed = TimeSpan.FromDays(1);
             var marketHours = new MarketHoursSegment(MarketHoursState.Market, open, closed);
-            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(new [] {marketHours}, localReferencTime.DayOfWeek);
+            algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(new [] {marketHours}, localReferenceTime.DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
             using var api = new Api.Api();

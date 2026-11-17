@@ -127,7 +127,6 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             IFeeModel feeModel = new KrakenFeeModel();
 
             Order order = parameters.CreateShortOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
@@ -142,7 +141,6 @@ namespace QuantConnect.Tests.Brokerages.Kraken
             IFeeModel feeModel = new KrakenFeeModel();
 
             Order order = parameters.CreateShortOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
             var fee =
                 feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 

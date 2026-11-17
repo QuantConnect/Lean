@@ -281,17 +281,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic parameter = null)
         {
             if (language == Language.CSharp)
             {
-                return new SectorWeightingPortfolioConstructionModel(paramenter);
+                return new SectorWeightingPortfolioConstructionModel(parameter);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(SectorWeightingPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                var instance = Py.Import(name).GetAttr(name).Invoke(((object)parameter).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }

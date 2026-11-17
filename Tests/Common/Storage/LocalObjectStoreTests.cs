@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void ExistingFilesLoadedCorretly()
+        public void ExistingFilesLoadedCorrectly()
         {
 #pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))

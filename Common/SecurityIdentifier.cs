@@ -831,8 +831,7 @@ namespace QuantConnect
         /// <returns>True on success, otherwise false</returns>
         public static bool TryParse(string value, out SecurityIdentifier identifier)
         {
-            Exception exception;
-            return TryParse(value, out identifier, out exception);
+            return TryParse(value, out identifier, out _);
         }
 
         /// <summary>

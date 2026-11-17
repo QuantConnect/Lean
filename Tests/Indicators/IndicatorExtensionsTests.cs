@@ -546,7 +546,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void OverDivdesLeftAndConstant_Py()
+        public void OverDividesLeftAndConstant_Py()
         {
             using (Py.GIL())
             {
@@ -632,7 +632,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void MinusSubstractsLeftAndRight_Py()
+        public void MinusSubtractsLeftAndRight_Py()
         {
             using (Py.GIL())
             {

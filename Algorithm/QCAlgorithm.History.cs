@@ -813,7 +813,6 @@ namespace QuantConnect.Algorithm
             int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
         {
             IEnumerable<HistoryRequest> historyRequests;
-            var isRetry = failedRequests != null;
 
             symbols = symbols?.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
 
@@ -1021,7 +1020,7 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             // filter out any universe securities that may have made it this far
-            var filteredRequests = GetFilterestRequests(requests).ToList();
+            var filteredRequests = GetFilteredRequests(requests).ToList();
 
             _largeHistoryRequestDiagnostics.WarnOnLargeHistoryRequests(filteredRequests, Debug);
 
@@ -1039,7 +1038,7 @@ namespace QuantConnect.Algorithm
             return history;
         }
 
-        private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
+        private IEnumerable<HistoryRequest> GetFilteredRequests(IEnumerable<HistoryRequest> requests)
         {
             var sentMessage = false;
             foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))

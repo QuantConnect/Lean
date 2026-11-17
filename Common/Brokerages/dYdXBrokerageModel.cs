@@ -143,7 +143,6 @@ public class dYdXBrokerageModel : DefaultBrokerageModel
             return false;
         }
 
-        message = null;
         bool quantityIsValid;
 
         switch (order)

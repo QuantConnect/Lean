@@ -39,10 +39,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             var equity = AddEquity("SPY", Resolution.Tick, Market.USA);
-            var quoteConsolidator = Consolidate(equity.Symbol, Resolution.Tick, TickType.Quote, (Tick tick) => OnQuoteTick(tick));
+            Consolidate(equity.Symbol, Resolution.Tick, TickType.Quote, (Tick tick) => OnQuoteTick(tick));
             _thereIsAtLeastOneQuoteTick = false;
 
-            var tradeConsolidator = Consolidate(equity.Symbol, Resolution.Tick, TickType.Trade, (Tick tick) => OnTradeTick(tick));
+            Consolidate(equity.Symbol, Resolution.Tick, TickType.Trade, (Tick tick) => OnTradeTick(tick));
             _thereIsAtLeastOneTradeTick = false;
 
             // TickConsolidators with max count

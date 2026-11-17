@@ -127,12 +127,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             if (_rights.Count != 2)
             {
                 // ensure we always have both rights indexed, even if empty
-                ImmutableHashSet<Symbol> value;
-                if (!_rights.TryGetValue(OptionRight.Call, out value))
+                if (!_rights.TryGetValue(OptionRight.Call, out _))
                 {
                     _rights = _rights.SetItem(OptionRight.Call, ImmutableHashSet<Symbol>.Empty);
                 }
-                if (!_rights.TryGetValue(OptionRight.Put, out value))
+                if (!_rights.TryGetValue(OptionRight.Put, out _))
                 {
                     _rights = _rights.SetItem(OptionRight.Put, ImmutableHashSet<Symbol>.Empty);
                 }
@@ -141,16 +140,15 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             if (_sides.Count != 3)
             {
                 // ensure we always have all three sides indexed, even if empty
-                ImmutableHashSet<Symbol> value;
-                if (!_sides.TryGetValue(PositionSide.None, out value))
+                if (!_sides.TryGetValue(PositionSide.None, out _))
                 {
                     _sides = _sides.SetItem(PositionSide.None, ImmutableHashSet<Symbol>.Empty);
                 }
-                if (!_sides.TryGetValue(PositionSide.Short, out value))
+                if (!_sides.TryGetValue(PositionSide.Short, out _))
                 {
                     _sides = _sides.SetItem(PositionSide.Short, ImmutableHashSet<Symbol>.Empty);
                 }
-                if (!_sides.TryGetValue(PositionSide.Long, out value))
+                if (!_sides.TryGetValue(PositionSide.Long, out _))
                 {
                     _sides = _sides.SetItem(PositionSide.Long, ImmutableHashSet<Symbol>.Empty);
                 }

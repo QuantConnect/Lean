@@ -163,7 +163,7 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void MultipleConsoldation()
+        public void MultipleConsolidation()
         {
             VolumeRenkoBar bar = null;
             using var consolidator = new VolumeRenkoConsolidator(10m);

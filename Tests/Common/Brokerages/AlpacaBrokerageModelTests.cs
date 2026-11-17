@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class AlpacaBrokerageModelTests
     {
-        private static IEnumerable<TestCaseData> OrderOusideRegularHoursTestCases
+        private static IEnumerable<TestCaseData> OrderOutsideRegularHoursTestCases
         {
             get
             {
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
         }
 
-        [TestCaseSource(nameof(OrderOusideRegularHoursTestCases))]
+        [TestCaseSource(nameof(OrderOutsideRegularHoursTestCases))]
         public void CanSubmitOrderWhenOutsideRegularTradingHours(OrderType orderType, TimeInForce timeInForce, bool shouldSubmit)
         {
             var security = TestsHelpers.GetSecurity(symbol: "AAPL", securityType: SecurityType.Equity, market: Market.USA);
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             };
 
             var brokerageModel = new AlpacaBrokerageModel();
-            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }

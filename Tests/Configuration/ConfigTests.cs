@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Configuration
         public void ChangeConfigurationFileNameWrites()
         {
             // we need to load the current config, since it's lazy we get the current env to load it up
-            var env = Config.GetEnvironment();
+            Config.GetEnvironment();
             var tempFile = Path.GetTempFileName();
             Config.SetConfigurationFile(tempFile);
             Config.Write();

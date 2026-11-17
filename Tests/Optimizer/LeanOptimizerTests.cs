@@ -254,7 +254,6 @@ namespace QuantConnect.Tests.Optimizer
             {
                 Config.Set("optimization-update-interval", 1);
             }
-            OptimizationResult result = null;
             using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
@@ -298,7 +297,6 @@ namespace QuantConnect.Tests.Optimizer
             };
             optimizer.Ended += (s, solution) =>
             {
-                result = solution;
                 optimizer.DisposeSafely();
                 resetEvent.Set();
             };

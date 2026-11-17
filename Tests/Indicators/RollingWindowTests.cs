@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Indicators
             // add one and the window is ready, but MostRecentlyRemoved throws
 
             window.Add(0);
-            Assert.Throws<InvalidOperationException>(() => { var x = window.MostRecentlyRemoved; });
+            Assert.Throws<InvalidOperationException>(() => { _ = window.MostRecentlyRemoved; });
             Assert.AreEqual(1, window.Count);
             Assert.IsTrue(window.IsReady);
 
@@ -236,7 +236,7 @@ namespace QuantConnect.Tests.Indicators
             var window = new RollingWindow<int>(1);
             Assert.IsFalse(window.IsReady);
 
-            Assert.DoesNotThrow(() => { var x = window[-1]; });
+            Assert.DoesNotThrow(() => { _ = window[-1]; });
         }
 
         [Test]
@@ -473,8 +473,8 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(30, window[-3]);
 
             // Invalid negative indices (exceeding window size)
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-4]; });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[-5]; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { _ = window[-4]; });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { _ = window[-5]; });
         }
 
         [Test]
@@ -520,7 +520,7 @@ namespace QuantConnect.Tests.Indicators
             var testCases = new[] { -5, -10, int.MinValue };
             foreach (var index in testCases)
             {
-                Assert.Throws<ArgumentOutOfRangeException>(() => { var x = window[index]; });
+                Assert.Throws<ArgumentOutOfRangeException>(() => { _ = window[index]; });
             }
         }
 

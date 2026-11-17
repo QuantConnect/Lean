@@ -185,7 +185,7 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public override bool Update(IBaseData input)
         {
-            T _previousSymbolInput = default(T);
+            T _previousSymbolInput;
             if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
             {
                 if (!_loggedForwardOnlyIndicatorError)

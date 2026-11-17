@@ -129,7 +129,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 blackListedTickers = File.ReadAllLines(_blackListedTickersFile.FullName).ToHashSet();
             }
 
-            var securityIdentifierContexts = PopulateSidContex(mapFileResolver, blackListedTickers);
+            var securityIdentifierContexts = PopulateSidContext(mapFileResolver, blackListedTickers);
             var dailyPricesByTicker = new ConcurrentDictionary<string, List<TradeBar>>();
             var outputCoarseContent = new ConcurrentDictionary<DateTime, List<CoarseFundamental>>();
 
@@ -324,9 +324,9 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="mapFileResolver">The map file resolver.</param>
         /// <param name="exclusions">The exclusions.</param>
         /// <returns></returns>
-        private IEnumerable<SecurityIdentifierContext> PopulateSidContex(MapFileResolver mapFileResolver, HashSet<string> exclusions)
+        private IEnumerable<SecurityIdentifierContext> PopulateSidContext(MapFileResolver mapFileResolver, HashSet<string> exclusions)
         {
-            Log.Trace("CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
+            Log.Trace("CoarseUniverseGeneratorProgram.PopulateSidContext(): Generating SID context from QuantQuote's map files.");
             foreach (var mapFile in mapFileResolver)
             {
                 if (exclusions.Contains(mapFile.Last().MappedSymbol))

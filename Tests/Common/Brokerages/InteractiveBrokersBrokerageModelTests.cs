@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out _);
             Assert.IsTrue(result);
         }
 
@@ -192,15 +192,15 @@ namespace QuantConnect.Tests.Common.Brokerages
             var security = algo.AddSecurity(securityType, ticker);
 
             var order = new MarketOnCloseOrder(security.Symbol, 1, DateTime.UtcNow);
-            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out _);
             Assert.IsTrue(result);
         }
 
         [TestCase(AccountType.Cash, 1)]
         [TestCase(AccountType.Margin, 10)]
-        public void GetsCorrectLeverageForCfds(AccountType accounType, decimal expectedLeverage)
+        public void GetsCorrectLeverageForCfds(AccountType accountType, decimal expectedLeverage)
         {
-            var brokerageModel = new InteractiveBrokersBrokerageModel(accounType);
+            var brokerageModel = new InteractiveBrokersBrokerageModel(accountType);
             var security = new Cfd(Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash("USD", 0, 0),
@@ -224,7 +224,7 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new SecurityCache());
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2023, 1, 20));
 
-            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.IsTrue(canSubmit);
         }

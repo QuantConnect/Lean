@@ -1110,7 +1110,6 @@ namespace QuantConnect.Tests.Common.Securities
             var wednesday = LocalMarketHours.OpenAllDay(DayOfWeek.Wednesday);
             var thursday = LocalMarketHours.OpenAllDay(DayOfWeek.Thursday);
             var friday = new LocalMarketHours(DayOfWeek.Friday, TimeSpan.Zero, new TimeSpan(17, 0, 0));
-            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var holidays = _mhdbUSHolidays.Value;
 
@@ -1139,7 +1138,6 @@ namespace QuantConnect.Tests.Common.Securities
             var wednesday = LocalMarketHours.OpenAllDay(DayOfWeek.Wednesday);
             var thursday = LocalMarketHours.OpenAllDay(DayOfWeek.Thursday);
             var friday = LocalMarketHours.OpenAllDay(DayOfWeek.Friday);
-            var saturday = LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday);
 
             var holidays = new List<DateTime>();
             var earlyCloses = new Dictionary<DateTime, TimeSpan> { { new DateTime(2018, 12, 31), new TimeSpan(17, 0, 0) } };

@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void EmitsFirstExchangeDateEvent(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, null, out var tradableDates, out var config, out var exchangeHours);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, true, null, out var tradableDates, out _, out _);
 
             var emittedExchangeDates = new List<DateTime>();
             void HandleNewTradableDate(object sender, DateTime date)
@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCaseSource(nameof(TimeZonesTestCases))]
         public void ExchangeDatesAreEmittedByAdvancingToNextDataDate(DateTimeZone dataTimeZone, DateTimeZone exchangeTimeZone)
         {
-            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, null, out var tradableDates, out var config, out var exchangeHours);
+            using var timeKeeper = GetTimeKeeper(dataTimeZone, exchangeTimeZone, false, null, out var tradableDates, out _, out _);
 
             var exchangeDateEmitted = false;
             var emittedExchangeDates = new List<DateTime>();

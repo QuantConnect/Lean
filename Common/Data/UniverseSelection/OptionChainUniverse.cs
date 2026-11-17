@@ -126,8 +126,7 @@ namespace QuantConnect.Data.UniverseSelection
             // we update member reference in this case
             if (Securities.Any(x => x.Value.Security == security))
             {
-                Member member;
-                Securities.TryRemove(security.Symbol, out member);
+                Securities.TryRemove(security.Symbol, out _);
             }
 
             return Securities.TryAdd(security.Symbol, new Member(utcTime, security, isInternal));

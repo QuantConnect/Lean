@@ -48,8 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _dataCount += slice.Bars.Count;
 
-            TradeBar bar;
-            if (!slice.Bars.TryGetValue(_symbol, out bar)) return;
+            if (!slice.Bars.TryGetValue(_symbol, out _)) return;
 
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {

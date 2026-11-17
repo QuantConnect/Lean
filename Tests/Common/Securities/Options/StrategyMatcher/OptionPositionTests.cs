@@ -59,11 +59,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         [Test]
         public void AdditionOperator_ThrowsInvalidOperationException_WhenSymbolsDoNotMatch()
         {
-            OptionPosition sum;
             var left = new OptionPosition(Symbols.SPY, 42);
             var right = new OptionPosition(Symbols.SPY_P_192_Feb19_2016, 1);
             Assert.Throws<InvalidOperationException>(
-                () => sum = left + right
+                () => _ = left + right
             );
         }
 
@@ -92,11 +91,10 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         [Test]
         public void SubtractionOperator_ThrowsInvalidOperationException_WhenSymbolsDoNotMatch()
         {
-            OptionPosition difference;
             var left = new OptionPosition(Symbols.SPY, 42);
             var right = new OptionPosition(Symbols.SPY_P_192_Feb19_2016, 1);
             Assert.Throws<InvalidOperationException>(
-                () => difference = left - right
+                () => _ = left - right
             );
         }
 

@@ -607,7 +607,7 @@ namespace QuantConnect.Lean.Engine
         {
             SymbolPropertiesDatabase.FromDataFolder();
             // This is slow because it create all static timezones
-            var nyTime = TimeZones.NewYork;
+            _ = TimeZones.NewYork;
             // slow because if goes to disk and parses json
             return MarketHoursDatabase.FromDataFolder();
         }

@@ -37,11 +37,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             var collection = new PortfolioTargetCollection();
 
-            Assert.IsFalse(collection.TryGetValue(Symbols.SPY, out var target));
+            Assert.IsFalse(collection.TryGetValue(Symbols.SPY, out _));
 
             collection[Symbols.SPY] = new PortfolioTarget(Symbols.SPY, 1);
 
-            Assert.IsTrue(collection.TryGetValue(Symbols.SPY, out target));
+            Assert.IsTrue(collection.TryGetValue(Symbols.SPY, out var target));
             Assert.AreEqual(target, collection[Symbols.SPY]);
         }
 

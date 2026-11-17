@@ -61,7 +61,7 @@ namespace QuantConnect
         {
             var jobject = JObject.Load(reader);
 
-            if (jobject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var type))
+            if (jobject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out _))
             {
                 return BuildSymbolFromUserFriendlyValue(jobject);
             }

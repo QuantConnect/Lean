@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Security _security;
         private Queue<DateTime> _tradableDates;
         private bool _securityWasRemoved;
-        private Dictionary<Security, int> _securityInializationCounts = new();
+        private Dictionary<Security, int> _securityInitializationCounts = new();
 
         protected virtual DateTime StartTimeToUse => new DateTime(2013, 10, 05);
 
@@ -49,11 +49,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             var seeder = new FuncSecuritySeeder((security) =>
             {
-                if (!_securityInializationCounts.TryGetValue(security, out var count))
+                if (!_securityInitializationCounts.TryGetValue(security, out var count))
                 {
                     count = 0;
                 }
-                _securityInializationCounts[security] = count + 1;
+                _securityInitializationCounts[security] = count + 1;
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
                 return GetLastKnownPrices(security);
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Before we remove the security let's check that it was not initialized again
-                AssertSecurityInitializationCount(_securityInializationCounts, _security);
+                AssertSecurityInitializationCount(_securityInitializationCounts, _security);
 
                 // Remove the security every day
                 Debug($"[{Time}] Removing the security");
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private Security AddSecurityImpl()
         {
-            _securityInializationCounts.Clear();
+            _securityInitializationCounts.Clear();
             var security = AddSecurity();
 
             if (_security != null && !ReferenceEquals(_security, security))
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Expected the security to be the same as the original security");
             }
 
-            AssertSecurityInitializationCount(_securityInializationCounts, security);
+            AssertSecurityInitializationCount(_securityInitializationCounts, security);
 
             return security;
         }
@@ -160,14 +160,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        protected virtual void AssertSecurityInitializationCount(Dictionary<Security, int>  securityInializationCounts, Security security)
+        protected virtual void AssertSecurityInitializationCount(Dictionary<Security, int>  securityInitializationCounts, Security security)
         {
-            if (securityInializationCounts.Count != 1)
+            if (securityInitializationCounts.Count != 1)
             {
-                throw new RegressionTestException($"Expected only one security to be initialized. Got {securityInializationCounts.Count}");
+                throw new RegressionTestException($"Expected only one security to be initialized. Got {securityInitializationCounts.Count}");
             }
 
-            if (!securityInializationCounts.TryGetValue(security, out var count) || count != 1)
+            if (!securityInitializationCounts.TryGetValue(security, out var count) || count != 1)
             {
                 throw new RegressionTestException($"Expected the security to be initialized once and once only, " +
                     $"but was initialized {count} times");

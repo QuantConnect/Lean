@@ -68,13 +68,13 @@ namespace QuantConnect.DataLibrary.Tests
                 var result = base.DetermineTargetPercent(activeInsights);
                 foreach (var kvp in result)
                 {
-                    if (!Weights.TryGetValue(kvp.Key.Symbol, out var symbolWeigths))
+                    if (!Weights.TryGetValue(kvp.Key.Symbol, out var symbolWeights))
                     {
-                        symbolWeigths = new HashSet<double>();
-                        Weights[kvp.Key.Symbol] = symbolWeigths;
+                        symbolWeights = new HashSet<double>();
+                        Weights[kvp.Key.Symbol] = symbolWeights;
                     }
 
-                    symbolWeigths.Add(kvp.Value);
+                    symbolWeights.Add(kvp.Value);
                 }
 
                 return result;

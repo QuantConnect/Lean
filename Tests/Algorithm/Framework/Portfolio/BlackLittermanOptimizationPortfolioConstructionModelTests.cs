@@ -515,8 +515,7 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
                 Assert.DoesNotThrow(() => returns = _symbolDataDict.FormReturnsMatrix(insights.Select(x => x.Symbol)));
 
                 // Calculate posterior estimate of the mean and uncertainty in the mean
-                double[,] Σ;
-                var Π = GetEquilibriumReturns(returns, out Σ);
+                var Π = GetEquilibriumReturns(returns, out _);
 
                 Assert.IsFalse(double.IsNaN(Π[0]));
 

@@ -69,10 +69,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         public void ReturnsExpectedPortfolioTargetsAfterReset(Language language)
         {
             var algorithm = CreateAlgorithm(language, 0.1m);
-            var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
             algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, true, -10001));
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
-            targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
+            var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
 
             Assert.AreEqual(1, targets.Count);
             Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);

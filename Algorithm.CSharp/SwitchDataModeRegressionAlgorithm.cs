@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2014, 6, 6);
             SetEndDate(2014, 6, 6);
 
-            var aapl = AddEquity(UnderlyingTicker, Resolution.Minute);
+            AddEquity(UnderlyingTicker, Resolution.Minute);
         }
 
         public override void OnData(Slice slice)

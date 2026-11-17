@@ -310,7 +310,7 @@ namespace QuantConnect.Algorithm
             Func<IEnumerable<Fundamental>, object> fundamentalSelector;
             Universe universe;
 
-            if (pyObject.TryCreateType(out var type))
+            if (pyObject.TryCreateType(out _))
             {
                 return AddUniverse(pyObject, null, null);
             }
@@ -368,7 +368,7 @@ namespace QuantConnect.Algorithm
                 // pass
             }
 
-            if (pyObject.TryCreateType(out var type))
+            if (pyObject.TryCreateType(out _))
             {
                 return AddUniverse(pyObject, null, pyfine);
             }
@@ -1919,7 +1919,7 @@ namespace QuantConnect.Algorithm
         public void AddCommand(PyObject type)
         {
             // create a test instance to validate interface is implemented accurate
-            var testInstance = new CommandPythonWrapper(type);
+            new CommandPythonWrapper(type);
 
             var wrappedType = Extensions.CreateType(type);
             _registeredCommands[wrappedType.Name] = (CallbackCommand command) =>

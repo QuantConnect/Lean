@@ -30,10 +30,9 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(0.00004, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
-            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Kraken), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _krakenBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Kraken), order.Object, out _));
         }
     }
 }

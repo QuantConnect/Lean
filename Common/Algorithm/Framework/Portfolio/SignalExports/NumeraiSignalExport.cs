@@ -226,7 +226,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
             {
                 Content = new StreamContent(positionsStream)
             };
-            var putResponse = HttpClient.SendAsync(putRequest).Result;
+            _ = HttpClient.SendAsync(putRequest).Result;
 
             // SUBMISSION REQUEST
             var createQuery = @"mutation($filename: String!

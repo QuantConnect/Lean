@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Engine
         [TestCase(typeof(TestAlgorithmWithErrorLogOnInit))]
         [TestCase(typeof(TestAlgorithmWithDebugLogOnInit))]
         [TestCase(typeof(TestAlgorithmWithLogOnInit))]
-        public void AlgorithmCompletesWhenCallingErroLogOnInit(Type algorithmType)
+        public void AlgorithmCompletesWhenCallingErrorLogOnInit(Type algorithmType)
         {
             var parameters = new RegressionTests.AlgorithmStatisticsTestParameters("QuantConnect.Tests.Engine.AlgorithmLogTests+" + algorithmType.Name,
                 Activator.CreateInstance<BasicTemplateDailyAlgorithm>().ExpectedStatistics,

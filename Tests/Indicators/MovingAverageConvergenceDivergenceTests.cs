@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void FastPeriodLessThanSlowPeriod()
         {
-            var a = new MovingAverageConvergenceDivergence(fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
+            new MovingAverageConvergenceDivergence(fastPeriod: 2, slowPeriod: 3, signalPeriod: 2);
             Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 3, slowPeriod: 3, signalPeriod: 2));
             Assert.Throws<ArgumentException>(() => new MovingAverageConvergenceDivergence(fastPeriod: 4, slowPeriod: 3, signalPeriod: 2));
         }

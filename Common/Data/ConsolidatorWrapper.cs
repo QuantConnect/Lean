@@ -131,10 +131,10 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    var pontetialEndTime = _consolidator.WorkingData.EndTime.ConvertToUtc(_localTimeKeeper.TimeZone);
-                    if (pontetialEndTime > _timeKeeper.UtcTime)
+                    var potentialEndTime = _consolidator.WorkingData.EndTime.ConvertToUtc(_localTimeKeeper.TimeZone);
+                    if (potentialEndTime > _timeKeeper.UtcTime)
                     {
-                        UtcScanTime = pontetialEndTime;
+                        UtcScanTime = potentialEndTime;
                     }
                     else
                     {

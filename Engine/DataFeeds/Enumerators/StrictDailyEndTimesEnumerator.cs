@@ -64,10 +64,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 // before setting the strict daily end times, let's clone it because underlying enumerator (SubscriptionDataReader) might be using it
-                var pontentialNewBar = _underlying.Current.Clone();
-                if (LeanData.SetStrictEndTimes(pontentialNewBar, _securityExchange) && pontentialNewBar.EndTime >= _localStartTime)
+                var potentialNewBar = _underlying.Current.Clone();
+                if (LeanData.SetStrictEndTimes(potentialNewBar, _securityExchange) && potentialNewBar.EndTime >= _localStartTime)
                 {
-                    Current = pontentialNewBar;
+                    Current = potentialNewBar;
                     break;
                 }
             }

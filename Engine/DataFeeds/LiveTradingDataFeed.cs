@@ -238,9 +238,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var auxEnumerators = new List<IEnumerator<BaseData>>();
 
                 if (LiveAuxiliaryDataEnumerator.TryCreate(request.Configuration, _timeProvider, request.Security.Cache, _mapFileProvider,
-                    _factorFileProvider, request.StartTimeLocal, out var auxDataEnumator))
+                    _factorFileProvider, request.StartTimeLocal, out var auxDataEnumerator))
                 {
-                    auxEnumerators.Add(auxDataEnumator);
+                    auxEnumerators.Add(auxDataEnumerator);
                 }
 
                 EventHandler handler = (_, _) => subscription?.OnNewDataAvailable();
@@ -323,7 +323,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // grab the relevant exchange hours
             var config = request.Universe.Configuration;
-            var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator = null;

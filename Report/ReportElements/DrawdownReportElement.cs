@@ -49,9 +49,7 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var backtestPoints = ResultsUtil.EquityPoints(_backtest);
-            var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
             var strategySeries = DrawdownCollection.NormalizeResults(_backtest, _live);
 
             var seriesUnderwaterPlot = DrawdownCollection.GetUnderwater(strategySeries).DropMissing();

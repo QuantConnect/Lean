@@ -454,7 +454,7 @@ namespace QuantConnect.Tests.Algorithm
                 var funcInitializer2CallCount = 0;
                 algorithm.AddSecurityInitializer((_) => funcInitializer2CallCount++);
 
-                var security = algorithm.AddEquity("SPY");
+                algorithm.AddEquity("SPY");
                 Assert.AreEqual(1, classInitializer1.CallCount);
                 Assert.AreEqual(1, classInitializer2.CallCount);
                 Assert.AreEqual(1, funcInitializer1CallCount);
@@ -498,7 +498,7 @@ def func_security_initializer2(security):
 
                 Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
 
-                var security = algorithm.AddEquity("SPY");
+                algorithm.AddEquity("SPY");
 
                 using var classInitializer1 = module.GetAttr("class_initializer1");
                 var classInitializer1CallCount = classInitializer1.GetAttr("call_count").GetAndDispose<int>();
@@ -586,7 +586,7 @@ def set_security_initializer(algorithm):
                 var funcInitializer2CallCount = 0;
                 algorithm.AddSecurityInitializer((_) => funcInitializer2CallCount++);
 
-                var security = algorithm.AddEquity("SPY");
+                algorithm.AddEquity("SPY");
                 Assert.AreEqual(1, classInitializer1.CallCount);
                 Assert.AreEqual(1, classInitializer2.CallCount);
                 Assert.AreEqual(1, funcInitializer1CallCount);
@@ -638,7 +638,7 @@ def func_security_initializer2(security):
 
                 Assert.IsInstanceOf<CompositeSecurityInitializer>(algorithm.SecurityInitializer);
 
-                var security = algorithm.AddEquity("SPY");
+                algorithm.AddEquity("SPY");
 
                 using var classInitializer1 = module.GetAttr("class_initializer1");
                 var classInitializer1CallCount = classInitializer1.GetAttr("call_count").GetAndDispose<int>();
@@ -658,7 +658,7 @@ def func_security_initializer2(security):
 
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
-        public void SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer(Language language)
+        public void SetBrokerageModelAppendsSecurityInitializerAfterAddSecurityInitializer(Language language)
         {
             var algorithm = new AlgorithmStub();
 
@@ -687,7 +687,7 @@ def func_security_initializer2(security):
             else
             {
                 using var _ = Py.GIL();
-                using var module = PyModule.FromString("SetBrokerageModelAppendsSecurityIntializerAfterAddSecurityInitializer", @"
+                using var module = PyModule.FromString("SetBrokerageModelAppendsSecurityInitializerAfterAddSecurityInitializer", @"
 from QuantConnect.Tests.Algorithm import AlgorithmAddSecurityTests
 
 class TestCustomSecurityInitializer:

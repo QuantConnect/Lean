@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // save off a strongly typed version of the brokerage
         private BacktestingBrokerage _brokerage;
         private IAlgorithm _algorithm;
-        private Delistings _lastestDelistings;
+        private Delistings _latestDelistings;
 
         /// <summary>
         /// Gets current time UTC. This is here to facilitate testing
@@ -80,9 +80,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _brokerage.Scan();
 
             // Run our delistings processing, only do this once a slice
-            if (_algorithm.CurrentSlice != null && _algorithm.CurrentSlice.Delistings != _lastestDelistings)
+            if (_algorithm.CurrentSlice != null && _algorithm.CurrentSlice.Delistings != _latestDelistings)
             {
-                _lastestDelistings = _algorithm.CurrentSlice.Delistings;
+                _latestDelistings = _algorithm.CurrentSlice.Delistings;
                 _brokerage.ProcessDelistings(_algorithm.CurrentSlice.Delistings);
             }
         }

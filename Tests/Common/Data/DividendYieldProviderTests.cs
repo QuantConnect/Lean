@@ -109,12 +109,12 @@ namespace QuantConnect.Tests.Common.Data
         {
             using var fileProviderTest = new DividendYieldProviderTest(Symbol.Create("TEST_A", SecurityType.Equity, QuantConnect.Market.USA));
 
-            var applYield = fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest.FetchCount);
 
             using var fileProviderTest2 = new DividendYieldProviderTest(Symbol.Create("TEST_B", SecurityType.Equity, QuantConnect.Market.USA));
 
-            var spyYield = fileProviderTest2.GetDividendYield(new DateTime(2020, 1, 1));
+            fileProviderTest2.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest2.FetchCount);
         }
 

@@ -182,9 +182,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             public void Update()
             {
-                OrderTicket ticket;
-                TryEnter(out ticket);
-                TryExit(out ticket);
+                TryEnter(out _);
+                TryExit(out _);
             }
 
             public bool TryEnter(out OrderTicket ticket)

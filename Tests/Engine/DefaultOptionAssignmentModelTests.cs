@@ -44,7 +44,6 @@ namespace QuantConnect.Tests.Engine
 
             // dictionaries with expected and actual results
             var expected = new Dictionary<Option, bool>();
-            var actual = new Dictionary<Option, bool>();
 
             // we build option chain at expiration
             var expiration = new DateTime(2016, 02, 19);

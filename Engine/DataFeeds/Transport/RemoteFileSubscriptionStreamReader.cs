@@ -69,9 +69,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             var useCache = !dataCacheProvider.IsDataEphemeral;
 
             // create a hash for a new filename
-            string baseFileName = string.Empty;
-            string extension = string.Empty;
-            string entryName = string.Empty;
+            string baseFileName;
+            string extension;
+            string entryName;
             try
             {
                 var uri = new Uri(source);

@@ -414,7 +414,6 @@ namespace QuantConnect.Tests.Common.Securities
             var algo = GetAlgorithm();
             var security = InitAndGetSecurity(algo, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security));
-            var order = new MarketOrder(_symbol, actual, DateTime.UtcNow);
             // (100000 * 2 * 0.9975 setHoldingsBuffer) / 25 = -7980m
             Assert.AreEqual(-7980m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));

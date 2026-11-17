@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Python
             // Renaming GetMarginCall will cause a NotImplementedException exception
             var code = CreateCustomMarginCallModelCode();
             code = code.Replace("GetMarginCall", "SetMarginCall");
-            var pyObject = CreateCustomMarginCallModel(code, portfolio);
+            CreateCustomMarginCallModel(code, portfolio);
             Assert.Throws<NotImplementedException>(() => portfolio.SetMarginCallModel(CreateCustomMarginCallModel(code, portfolio)));
         }
 

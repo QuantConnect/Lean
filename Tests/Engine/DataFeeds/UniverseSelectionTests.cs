@@ -231,11 +231,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 )
             );
-            Symbol symbol;
             Assert.AreEqual(1, securityChanges.AddedSecurities.Count);
             Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.First().Symbol);
-            Assert.IsFalse(SymbolCache.TryGetSymbol("AAPL", out symbol));
-            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out symbol));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("AAPL", out _));
+            Assert.IsFalse(SymbolCache.TryGetSymbol("SPY", out _));
         }
 
         [Test]

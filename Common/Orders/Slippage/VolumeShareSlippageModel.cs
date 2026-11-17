@@ -48,7 +48,7 @@ namespace QuantConnect.Orders.Slippage
             var lastData = asset.GetLastData();
             if (lastData == null) return 0;
 
-            var barVolume = 0m;
+            decimal barVolume;
             var slippagePercent = _volumeLimit * _volumeLimit * _priceImpact;
 
             switch (lastData.DataType)

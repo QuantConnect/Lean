@@ -143,7 +143,6 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     SymbolData symbolData2;
                     if (_symbolDataBySymbol.TryGetValue(_following[j], out symbolData2))
                     {
-                        var dailyReturn2 = symbolData2.DailyReturnArray;
                         for (var i = 0; i < _historyDays; i++)
                         {
                             matrix[i, j + 1] = symbolData2.DailyReturnArray[i];

@@ -168,7 +168,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         break;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignore
                 }

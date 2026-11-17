@@ -401,7 +401,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2023, 06, 20), dynamicSecurity.DateTime);
             Assert.AreEqual(new ExponentialMovingAverage(10), dynamicSecurity.EMA);
 
-            Assert.Throws<RuntimeBinderException>(() => { var notAProperty = dynamicSecurity.NotAProperty; });
+            Assert.Throws<RuntimeBinderException>(() => { _ = dynamicSecurity.NotAProperty; });
         }
 
         [Test]
@@ -496,7 +496,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new DateTime(2023, 06, 20), security["DateTime"]);
             Assert.AreEqual(new ExponentialMovingAverage(10), security["EMA"]);
 
-            Assert.Throws<KeyNotFoundException>(() => { var notAProperty = security["NotAProperty"]; });
+            Assert.Throws<KeyNotFoundException>(() => { _ = security["NotAProperty"]; });
         }
 
         [Test]

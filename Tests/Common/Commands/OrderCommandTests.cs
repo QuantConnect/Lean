@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Commands
         [TestCase(false, false, true, 1)]
         [TestCase(false, false, false, 1)]
         [TestCase(false, true, true, 1)]
-        public void RunOrderCommand(bool warminUp, bool hasData, bool securityAdded, int quantity)
+        public void RunOrderCommand(bool warmingUp, bool hasData, bool securityAdded, int quantity)
         {
             var command = new OrderCommand
             {
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Commands
             };
 
             var algorithm = new AlgorithmStub();
-            if (!warminUp)
+            if (!warmingUp)
             {
                 algorithm.SetFinishedWarmingUp();
             }
@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Common.Commands
             }
 
             var response = command.Run(algorithm);
-            if (!warminUp && hasData && securityAdded && quantity > 0)
+            if (!warmingUp && hasData && securityAdded && quantity > 0)
             {
                 Assert.IsTrue(response.Success);
             }

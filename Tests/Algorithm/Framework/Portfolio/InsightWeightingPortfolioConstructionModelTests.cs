@@ -90,17 +90,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(actualTargets, new[] {new PortfolioTarget(Symbols.SPY, 0)});
         }
 
-        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic parameter = null)
         {
             if (language == Language.CSharp)
             {
-                return new InsightWeightingPortfolioConstructionModel(paramenter);
+                return new InsightWeightingPortfolioConstructionModel(parameter);
             }
 
             using (Py.GIL())
             {
                 const string name = nameof(InsightWeightingPortfolioConstructionModel);
-                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                var instance = Py.Import(name).GetAttr(name).Invoke(((object)parameter).ToPython());
                 return new PortfolioConstructionModelPythonWrapper(instance);
             }
         }

@@ -39,7 +39,7 @@ namespace QuantConnect.Indicators
             var d2 = CalculateD2(d1, volatility, timeToExpiration);
             var norm = new Normal();
 
-            var optionPrice = 0.0;
+            double optionPrice;
             if (optionType == OptionRight.Call)
             {
                 optionPrice = spotPrice * Math.Exp(-dividendYield * timeToExpiration) * norm.CumulativeDistribution(d1)

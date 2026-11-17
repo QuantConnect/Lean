@@ -164,7 +164,6 @@ namespace QuantConnect.Tests.Indicators
         {
             var vp = new VolumeProfile(2);
             var reference = new DateTime(2000, 1, 1);
-            var period = ((IIndicatorWarmUpPeriodProvider)vp).WarmUpPeriod;
             for (var i = 0; i < bars.Length; i++)
             {
                 var dataPoint = new TradeBar() { Symbol = Symbols.AAPL, Close = bars[i].closePrice, Volume = bars[i].volume, Time = reference.AddDays(1 + i) };

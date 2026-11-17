@@ -40,7 +40,6 @@ namespace QuantConnect.Securities
             //Get the required information from the vehicle this order will affect
             var isLong = security.Holdings.IsLong;
             var isShort = security.Holdings.IsShort;
-            var closedPosition = false;
             //Make local decimals to avoid any rounding errors from int multiplication
             var quantityHoldings = (decimal)security.Holdings.Quantity;
             var averageHoldingsPrice = security.Holdings.AveragePrice;
@@ -81,7 +80,7 @@ namespace QuantConnect.Securities
 
                 // did we close or open a position further? an event with no fill quantity, such as the brokerage
                 // closing an order short of its quantity after its last fill, trades nothing
-                closedPosition = fill.FillQuantity != 0
+                var closedPosition = fill.FillQuantity != 0
                     && (isLong && fill.Direction == OrderDirection.Sell || isShort && fill.Direction == OrderDirection.Buy);
 
                 // calculate the last trade profit

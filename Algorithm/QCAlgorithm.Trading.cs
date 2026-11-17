@@ -907,7 +907,7 @@ namespace QuantConnect.Algorithm
 
             // check quote currency existence/conversion rate on all orders
             var quoteCurrency = security.QuoteCurrency.Symbol;
-            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out var quoteCash))
+            if (!Portfolio.CashBook.TryGetValue(quoteCurrency, out _))
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.QuoteCurrencyRequired,
                     $"{request.Symbol.Value}: requires {quoteCurrency} in the cashbook to trade."

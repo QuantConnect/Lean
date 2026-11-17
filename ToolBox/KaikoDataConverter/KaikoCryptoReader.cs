@@ -144,17 +144,17 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// Take a minute snapshot of order book information and make a single Lean quote tick
         /// </summary>
         /// <param name="date">The data being processed</param>
-        /// <param name="currentEpcohTicks">The snapshot of bid/ask Kaiko data</param>
+        /// <param name="currentEpochTicks">The snapshot of bid/ask Kaiko data</param>
         /// <returns>A single Lean quote tick</returns>
-        private Tick CreateQuoteTick(DateTime date, List<KaikoTick> currentEpcohTicks)
+        private Tick CreateQuoteTick(DateTime date, List<KaikoTick> currentEpochTicks)
         {
             // lowest ask
-            var bestAsk = currentEpcohTicks.Where(x => x.OrderDirection == "a")
+            var bestAsk = currentEpochTicks.Where(x => x.OrderDirection == "a")
                                         .OrderBy(x => x.Value)
                                         .FirstOrDefault();
 
             // highest bid
-            var bestBid = currentEpcohTicks.Where(x => x.OrderDirection == "b")
+            var bestBid = currentEpochTicks.Where(x => x.OrderDirection == "b")
                                         .OrderByDescending(x => x.Value)
                                         .FirstOrDefault();
 

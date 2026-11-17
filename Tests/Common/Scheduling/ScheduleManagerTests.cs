@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var spy = algorithm.AddEquity("SPY").Symbol;
 
             var eventTriggerTimes = new List<DateTime>();
-            var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
                 algorithm.Schedule.TimeRules.BeforeMarketClose(spy, 3),
                 () =>
                 {
@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             var time = new DateTime(2024, 02, 10);
             SetUp(time, out var algorithm, out var handler, out var spy);
             var eventTriggerTimes = new List<DateTime>();
-            var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
+            algorithm.Schedule.On(algorithm.Schedule.DateRules.WeekStart(spy),
                 algorithm.Schedule.TimeRules.BeforeMarketClose(spy, 60),
                 () =>
                 {
@@ -172,8 +172,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         public void DatesReturnedAreNormalized()
         {
             var time = new DateTime(2024, 02, 10);
-            SetUp(time, out var algorithm, out var handler, out var spy);
-            var eventTriggerTimes = new List<DateTime>();
+            SetUp(time, out var algorithm, out var handler, out _);
             using var finished = new ManualResetEventSlim(false);
 
             // Schedule a task to advance time
@@ -192,7 +191,6 @@ namespace QuantConnect.Tests.Common.Scheduling
                 () =>
                 {
                     handler.ManualTimeProvider.Advance(timeStep);
-                    var now = handler.ManualTimeProvider.GetUtcNow();
                     finished.Set();
                 });
 

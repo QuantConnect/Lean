@@ -1089,7 +1089,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
-        public void HandlesDaylightSavingTimeChange_InifinteLoop()
+        public void HandlesDaylightSavingTimeChange_InfiniteLoop()
         {
             var dailyBarsEmitted = 0;
             var fillForwardBars = new List<BaseData>();

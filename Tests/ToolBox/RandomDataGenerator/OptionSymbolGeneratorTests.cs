@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
                     _randomValueGenerator,
                     price,
                     50m);
-                var symbols = BaseSymbolGeneratorTests.GenerateAsset(_symbolGenerator).ToList();
+                var symbols = BaseSymbolGeneratorTests.GenerateAsset(symbolGenerator).ToList();
                 Assert.AreEqual(3, symbols.Count);
 
                 var option = symbols[1];

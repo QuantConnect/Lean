@@ -120,7 +120,6 @@ namespace QuantConnect.Report
             // Generate the html content
             Log.Trace("QuantConnect.Report.Main(): Starting content compile...");
             string html;
-            string _;
 
             report.Compile(out html, out _);
 

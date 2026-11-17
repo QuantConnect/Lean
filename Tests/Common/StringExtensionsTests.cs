@@ -104,11 +104,9 @@ namespace QuantConnect.Tests.Common
             // BEHAVIOR CHANGE --
             var value = 5.678m;
             var format = "-20:P2";
-            var sameBehavior = $"{value,-20:P2}";
             var expected = string.Format(CultureInfo.InvariantCulture, "{0,-20:P2}", value);
 
             // the usage of the InvariantCulture add a space between the number of the percent sign
-            //Assert.AreEqual("567.80%            ", sameBehavior); // this passes in windows but failed in travis
             Assert.AreEqual("567.80 %            ", expected);
 
             var actual = value.ToStringInvariant(format);

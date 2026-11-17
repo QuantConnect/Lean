@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private List<Symbol> _selectedSymbols;
         private int _selectionsCount;
 
-        private Dictionary<Security, int> _securityInializationCounts = new();
+        private Dictionary<Security, int> _securityInitializationCounts = new();
 
         public override void Initialize()
         {
@@ -49,11 +49,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             var seeder = new FuncSecuritySeeder((security) =>
             {
-                if (!_securityInializationCounts.TryGetValue(security, out var count))
+                if (!_securityInitializationCounts.TryGetValue(security, out var count))
                 {
                     count = 0;
                 }
-                _securityInializationCounts[security] = count + 1;
+                _securityInitializationCounts[security] = count + 1;
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
                 return GetLastKnownPrices(security);
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private IEnumerable<string> SelectionFunction(DateTime dateTime)
         {
-            _securityInializationCounts.Clear();
+            _securityInitializationCounts.Clear();
             _selectionsCount++;
 
             _selectedSymbols = _symbolsToSelect.Skip(dateTime.Day % 2 == 0 ? 0 : 3).Take(3).ToList();
@@ -109,12 +109,12 @@ namespace QuantConnect.Algorithm.CSharp
                     $"Selected: {string.Join(", ", _selectedSymbols)}");
             }
 
-            if (changes.AddedSecurities.Count != _securityInializationCounts.Count ||
-                changes.AddedSecurities.Any(x => !_securityInializationCounts.TryGetValue(x, out var count) || count != 1))
+            if (changes.AddedSecurities.Count != _securityInitializationCounts.Count ||
+                changes.AddedSecurities.Any(x => !_securityInitializationCounts.TryGetValue(x, out var count) || count != 1))
             {
                 throw new RegressionTestException($"Expected all contracts to be initialized. " +
                     $"Added: {string.Join(", ", changes.AddedSecurities.Select(x => x.Symbol.Value))}, " +
-                    $"Initialized: {string.Join(", ", _securityInializationCounts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
+                    $"Initialized: {string.Join(", ", _securityInitializationCounts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
             }
 
             if (changes.RemovedSecurities.Count > 0)

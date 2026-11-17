@@ -71,9 +71,9 @@ namespace QuantConnect.Tests.Engine.Results
         [Test]
         public void UninitializedAlgorithm()
         {
-            using var messagging = new QuantConnect.Messaging.Messaging();
+            using var messaging = new QuantConnect.Messaging.Messaging();
             var result = new LiveTradingResultHandler();
-            result.Initialize(new(new LiveNodePacket(), messagging, null, new BacktestingTransactionHandler(), null));
+            result.Initialize(new(new LiveNodePacket(), messaging, null, new BacktestingTransactionHandler(), null));
 
             var algorithm = new AlgorithmStub();
             algorithm.AddEquity("SPY");
@@ -156,10 +156,10 @@ namespace QuantConnect.Tests.Engine.Results
         public void DailySampleValueBasedOnMarketHour(bool extendedMarketHoursEnabled)
         {
             using var api = new Api.Api();
-            using var messagging = new QuantConnect.Messaging.Messaging();
+            using var messaging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
+            resultHandler.Initialize(new(new LiveNodePacket(), messaging, api, new BacktestingTransactionHandler(), null));
 
             try
             {

@@ -190,14 +190,14 @@ namespace QuantConnect.Tests.Common
 
         private class FakeIsolatorLimitResultProvider : IIsolatorLimitResultProvider
         {
-            private List<int> _ivocations = new List<int>();
+            private List<int> _invocations = new List<int>();
             public List<int> Invocations
             {
                 get
                 {
-                    lock (_ivocations)
+                    lock (_invocations)
                     {
-                        return _ivocations.ToList();
+                        return _invocations.ToList();
                     }
                 }
             }
@@ -209,17 +209,17 @@ namespace QuantConnect.Tests.Common
 
             public void RequestAdditionalTime(int minutes)
             {
-                lock (_ivocations)
+                lock (_invocations)
                 {
-                    _ivocations.Add(minutes);
+                    _invocations.Add(minutes);
                 }
             }
 
             public bool TryRequestAdditionalTime(int minutes)
             {
-                lock (_ivocations)
+                lock (_invocations)
                 {
-                    _ivocations.Add(minutes);
+                    _invocations.Add(minutes);
                 }
                 return true;
             }

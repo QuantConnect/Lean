@@ -81,8 +81,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_ZeroToShort()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 0);
+            var algo = GetAlgorithm(out _, 0);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -91,8 +90,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_ZeroToShort_SmallConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 1);
+            var algo = GetAlgorithm(out _, 1);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -101,8 +99,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_ZeroToShort_HighConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 10000);
+            var algo = GetAlgorithm(out _, 10000);
             var actual = algo.CalculateOrderQuantity(_symbol, -0.5m);
             // no shorting allowed
             Assert.AreEqual(0, actual);
@@ -273,8 +270,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_LongToShort()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 0);
+            var algo = GetAlgorithm(out _, 0);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -287,8 +283,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_LongToShort_SmallConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 1);
+            var algo = GetAlgorithm(out _, 1);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -301,8 +296,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_LongToShort_HighConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 10000);
+            var algo = GetAlgorithm(out _, 10000);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -315,8 +309,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_HalfLongToFullShort()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 0);
+            var algo = GetAlgorithm(out _, 0);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -329,8 +322,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_HalfLongToFullShort_SmallConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 1);
+            var algo = GetAlgorithm(out _, 1);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -343,8 +335,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void SetHoldings_HalfLongToFullShort_HighConstantFeeStructure()
         {
-            Security security;
-            var algo = GetAlgorithm(out security, 10000);
+            var algo = GetAlgorithm(out _, 10000);
             //Half cash spent on 2000 shares.
             algo.Portfolio.SetCash(50000);
             algo.Portfolio.CashBook.Add(_cashSymbol, 2000, 25);
@@ -714,7 +705,7 @@ namespace QuantConnect.Tests.Algorithm
             algo.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
             algo.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             algo.SetFinishedWarmingUp();
-            var cashSymbol = string.Empty;
+            string cashSymbol;
             if (securityType == SecurityType.Crypto)
             {
                 cashSymbol = "BTC";

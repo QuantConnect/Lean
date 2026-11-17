@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Option.StrategyMatcher;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -63,8 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallLadder.Name, 5);
 
-                    var callSecurity = (Option)Securities[highStrikeCall.Symbol];
-                    var undPrice = chain.Underlying.Price;
                     var expectedMarginUsage = 80899m;
 
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)

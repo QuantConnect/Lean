@@ -194,7 +194,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [Test]
-        public void OptionUnivereDataFiltersAreNotSupportedForFutureOptions()
+        public void OptionUniverseDataFiltersAreNotSupportedForFutureOptions()
         {
             // Set up
             var symbol = Symbols.CreateFutureOptionSymbol(Symbols.ES_Future_Chain, OptionRight.Call,

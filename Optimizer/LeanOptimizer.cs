@@ -391,8 +391,7 @@ namespace QuantConnect.Optimizer
             {
                 foreach (var backtestId in RunningParameterSetForBacktest.Keys)
                 {
-                    ParameterSet parameterSet;
-                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out parameterSet))
+                    if (RunningParameterSetForBacktest.TryRemove(backtestId, out _))
                     {
                         Interlocked.Increment(ref _failedBacktest);
                         try

@@ -226,7 +226,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // define aggregators via settings
                     var aggregators = CreateAggregators(_settings, tickTypesPerSecurityType[currentSymbol.SecurityType].ToArray()).ToList();
                     Symbol previousSymbol = null;
-                    var currentCount = 0;
                     var monthsTrading = 0;
 
                     foreach (var renamed in renamedSymbols)
@@ -294,7 +293,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         Log.Trace($"RandomDataGenerator.Run(): Symbol[{count}]: {symbol} Progress: {progress:0.0}% - Symbol data generation and output completed");
 
                         previousSymbol = renamed.Key;
-                        currentCount++;
                     }
                 }
             }

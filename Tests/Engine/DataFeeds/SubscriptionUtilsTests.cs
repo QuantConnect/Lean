@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             point3.Time = referenceTime.AddDays(1);
             ;
             var enumerator = new List<BaseData> { point2, point3 }.GetEnumerator();
-            var factorFileProfider = new Mock<IFactorFileProvider>();
+            var factorFileProvider = new Mock<IFactorFileProvider>();
 
             var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
@@ -189,7 +189,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
             }, referenceTime);
 
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
+            factorFileProvider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
             #pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -201,7 +201,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                factorFileProvider.Object,
                 true, false);
             #pragma warning restore CA2000
             Assert.IsTrue(subscription.MoveNext());
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var point3 = point.Clone(false);
             point3.Time = referenceTime.AddDays(2);
             var enumerator = new List<BaseData> { point, point2, point3 }.GetEnumerator();
-            var factorFileProfider = new Mock<IFactorFileProvider>();
+            var factorFileProvider = new Mock<IFactorFileProvider>();
 
             var factorFile = new CorporateFactorProvider(_security.Symbol.Value, new[]
             {
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new CorporateFactorRow(referenceTime.AddDays(1), 1m, 1)
             }, referenceTime);
 
-            factorFileProfider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
+            factorFileProvider.Setup(s => s.Get(It.IsAny<Symbol>())).Returns(factorFile);
             #pragma warning disable CA2000
             var subscription = SubscriptionUtils.CreateAndScheduleWorker(
                 new SubscriptionRequest(
@@ -246,7 +246,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Time.EndOfTime
                 ),
                 enumerator,
-                factorFileProfider.Object,
+                factorFileProvider.Object,
                 true, false);
             #pragma warning restore CA2000
             Assert.IsTrue(subscription.MoveNext());

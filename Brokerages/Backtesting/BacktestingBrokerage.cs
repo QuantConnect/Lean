@@ -164,8 +164,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
             lock (_needsScanLock)
             {
-                Order pending;
-                if (!_pending.TryGetValue(order.Id, out pending))
+                if (!_pending.TryGetValue(order.Id, out _))
                 {
                     // can't update something that isn't there
                     return false;
@@ -720,8 +719,6 @@ namespace QuantConnect.Brokerages.Backtesting
         {
             var result = true;
             stillNeedsScan = false;
-
-            var removedOrdersIds = new HashSet<int>();
 
             foreach (var kvp in ordersSecurities)
             {

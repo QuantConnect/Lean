@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
         private readonly DataNormalizationMode _aigNormalizationMode = DataNormalizationMode.TotalReturn;
 
         private readonly DataNormalizationMode _esNormalizationMode = DataNormalizationMode.BackwardsRatio;
-        private readonly DataNormalizationMode _btcustdNormalizationMode = DataNormalizationMode.ForwardPanamaCanal;
+        private readonly DataNormalizationMode _btcusdtNormalizationMode = DataNormalizationMode.ForwardPanamaCanal;
 
         private Dictionary<Equity, Tuple<decimal, decimal>> _priceRanges = new();
 
@@ -58,8 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
             var esFutures = AddSecurity(SecurityType.Future, "ES", Resolution.Minute, dataNormalizationMode: _esNormalizationMode);
             CheckEquityDataNormalizationMode(esFutures, _esNormalizationMode);
 
-            var btsustdCryto = AddSecurity(SecurityType.Crypto,  "BTCUSDT", Resolution.Minute, dataNormalizationMode: _btcustdNormalizationMode);
-            CheckEquityDataNormalizationMode(btsustdCryto, _btcustdNormalizationMode);
+            var btcusdtCrypto = AddSecurity(SecurityType.Crypto,  "BTCUSDT", Resolution.Minute, dataNormalizationMode: _btcusdtNormalizationMode);
+            CheckEquityDataNormalizationMode(btcusdtCrypto, _btcusdtNormalizationMode);
         }
 
         public override void OnData(Slice slice)
