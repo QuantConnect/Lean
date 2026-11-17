@@ -210,11 +210,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
-        [TestCase(Language.CSharp, Resolution.Minute)]
-        [TestCase(Language.Python, Resolution.Minute)]
-        [TestCase(Language.CSharp, Resolution.Hour)]
-        [TestCase(Language.Python, Resolution.Hour)]
-        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language, Resolution otherResolution)
+        [TestCase(Language.CSharp, Resolution.Minute, false)]
+        [TestCase(Language.Python, Resolution.Minute, false)]
+        [TestCase(Language.CSharp, Resolution.Hour, false)]
+        [TestCase(Language.Python, Resolution.Hour, false)]
+        [TestCase(Language.CSharp, Resolution.Minute, true)]
+        [TestCase(Language.Python, Resolution.Minute, true)]
+        [TestCase(Language.CSharp, Resolution.Hour, true)]
+        [TestCase(Language.Python, Resolution.Hour, true)]
+        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language, Resolution otherResolution,
+            bool firstUniverseSubscribesAgain)
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
 
@@ -251,6 +256,17 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 }
                 CollectionAssert.AreEqual(new[] { otherSubscription },
                     algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL));
+
+                if (firstUniverseSubscribesAgain)
+                {
+                    // another symbol takes the freed slots, so the first universe's new minute subscription comes after the other one
+                    algorithm.AddEquity(Symbols.MSFT.Value);
+                    var returningSubscription = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Minute,
+                        security.Exchange.TimeZone, security.Exchange.TimeZone, true, false, false);
+                    Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, returningSubscription, time, time.AddDays(1))));
+                    CollectionAssert.AreEqual(new[] { otherSubscription, returningSubscription },
+                        algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL));
+                }
 
                 // the first universe selects the symbol again: the security still reports the removed subscription's resolution,
                 // so the new consolidator has to follow the data the other universe's subscription receives
