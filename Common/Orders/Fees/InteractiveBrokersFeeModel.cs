@@ -237,11 +237,11 @@ namespace QuantConnect.Orders.Fees
                 case OrderType.Market:
                     if (order.Direction == OrderDirection.Buy)
                     {
-                        price = security.BidPrice;
+                        price = security.AskPrice;
                     }
                     else
                     {
-                        price = security.AskPrice;
+                        price = security.BidPrice;
                     }
                     break;
                 case OrderType.ComboLimit:

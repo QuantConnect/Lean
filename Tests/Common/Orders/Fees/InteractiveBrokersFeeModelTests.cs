@@ -352,7 +352,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new SecurityCache(),
                 null
             );
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, optionPrice, 0));
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 0, optionPrice));
             var order = (new Mock<Order>()).Object;
             var groupOrderManager = new GroupOrderManager(0, 2, 10);
 
@@ -402,6 +402,49 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual((decimal)expectedFees, fee.Value.Amount);
+        }
+
+        [TestCase(OrderType.Market, 10, 0.09, 0.11, 6.5)]
+        [TestCase(OrderType.Market, -10, 0.09, 0.11, 5)]
+        [TestCase(OrderType.Market, 10, 0.04, 0.06, 5)]
+        [TestCase(OrderType.Market, -10, 0.04, 0.06, 2.5)]
+        [TestCase(OrderType.MarketOnOpen, 10, 0.09, 0.11, 6.5)]
+        [TestCase(OrderType.MarketOnOpen, -10, 0.09, 0.11, 5)]
+        [TestCase(OrderType.MarketOnOpen, 10, 0.04, 0.06, 5)]
+        [TestCase(OrderType.MarketOnOpen, -10, 0.04, 0.06, 2.5)]
+        [TestCase(OrderType.MarketOnClose, 10, 0.09, 0.11, 6.5)]
+        [TestCase(OrderType.MarketOnClose, -10, 0.09, 0.11, 5)]
+        [TestCase(OrderType.MarketOnClose, 10, 0.04, 0.06, 5)]
+        [TestCase(OrderType.MarketOnClose, -10, 0.04, 0.06, 2.5)]
+        [TestCase(OrderType.ComboMarket, 10, 0.09, 0.11, 6.5)]
+        [TestCase(OrderType.ComboMarket, -10, 0.09, 0.11, 5)]
+        [TestCase(OrderType.ComboMarket, 10, 0.04, 0.06, 5)]
+        [TestCase(OrderType.ComboMarket, -10, 0.04, 0.06, 2.5)]
+        public void USAOptionMarketFeeUsesExecutableSideOfTheSpread(OrderType orderType, int quantity, double bidPrice, double askPrice, double expectedFee)
+        {
+            var security = new Option(Symbols.SPY_C_192_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 0),
+                new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache(),
+                null
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, (decimal)bidPrice, (decimal)askPrice));
+
+            Order order = orderType switch
+            {
+                OrderType.MarketOnOpen => new MarketOnOpenOrder(security.Symbol, quantity, DateTime.UtcNow),
+                OrderType.MarketOnClose => new MarketOnCloseOrder(security.Symbol, quantity, DateTime.UtcNow),
+                OrderType.ComboMarket => new ComboMarketOrder(security.Symbol, quantity, DateTime.UtcNow, new GroupOrderManager(0, 1, quantity)),
+                _ => new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
+            };
+
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual((decimal)expectedFee, fee.Value.Amount);
         }
 
         [Test]
