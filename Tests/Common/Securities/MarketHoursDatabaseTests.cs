@@ -555,16 +555,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new TimeSpan(21, 30, 0), losAngeles.EarlyCloses[new DateTime(2025, 12, 24)]);
         }
 
-        [TestCase("IBGB100", false)]
-        [TestCase("IBEU50", false)]
         [TestCase("IBDE40", false)]
-        [TestCase("IBFR40", false)]
-        [TestCase("IBES35", false)]
-        [TestCase("IBNL25", false)]
-        [TestCase("IBCH20", false)]
-        [TestCase("IBJP225", false)]
+        [TestCase("IBEU50", false)]
         [TestCase("IBHK50", false)]
-        [TestCase("IBAU200", false)]
+        // the database holds no calendar of their exchanges yet, so they keep the US one
+        [TestCase("IBGB100", true)]
+        [TestCase("IBFR40", true)]
+        [TestCase("IBES35", true)]
+        [TestCase("IBNL25", true)]
+        [TestCase("IBCH20", true)]
+        [TestCase("IBJP225", true)]
+        [TestCase("IBAU200", true)]
         [TestCase("IBUS500", true)]
         [TestCase("IBUS30", true)]
         [TestCase("IBUST100", true)]
@@ -572,7 +573,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("XAGUSD", true)]
         // a CFD the database doesn't list, such as a US stock CFD, gets the market-wide entry
         [TestCase("AAPL", true)]
-        public void InteractiveBrokersCfdsFollowTheUSCalendarOnlyWhenTheyTrackAUSMarket(string ticker, bool usCalendar)
+        public void InteractiveBrokersCfdsFollowTheUSCalendarUnlessTheyHaveTheirExchangeCalendar(string ticker, bool usCalendar)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
@@ -594,10 +595,21 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("IBDE40", "2025-05-01", false)]
         [TestCase("IBEU50", "2025-05-01", false)]
         [TestCase("IBDE40", "2025-12-24", false)]
-        [TestCase("IBGB100", "2025-05-01", true)]
+        [TestCase("IBDE40", "2025-01-29", true)]
+        // Eurex doesn't observe New Year's Day on the next Monday
+        [TestCase("IBDE40", "2023-01-02", true)]
+        // missing from the Eurex calendar, but closed as in every market
+        [TestCase("IBDE40", "2003-12-25", false)]
         [TestCase("IBHK50", "2025-01-29", false)]
         [TestCase("IBHK50", "2025-10-01", false)]
-        [TestCase("IBDE40", "2025-01-29", true)]
+        // observed holidays
+        [TestCase("IBHK50", "2022-12-27", false)]
+        [TestCase("IBHK50", "2026-05-25", false)]
+        // before the Hong Kong Futures Exchange calendar starts, it keeps the US one
+        [TestCase("IBHK50", "2016-11-24", false)]
+        [TestCase("IBGB100", "2022-12-26", false)]
+        [TestCase("IBGB100", "2023-01-02", false)]
+        [TestCase("IBGB100", "2026-05-25", false)]
         public void NonUSInteractiveBrokersIndexCfdsFollowTheirExchangeCalendar(string ticker, string date, bool open)
         {
             var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
