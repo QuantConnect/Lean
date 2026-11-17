@@ -84,6 +84,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The currency converter of the security's portfolio
+        /// </summary>
+        internal ICurrencyConverter CurrencyConverter => _currencyConverter;
+
+        /// <summary>
         /// Gets the current target holdings for this security
         /// </summary>
         public IPortfolioTarget Target

@@ -99,12 +99,11 @@ namespace QuantConnect.Orders.Fees
             switch (security.Type)
             {
                 case SecurityType.Forex:
-                    // get the total order value in the account currency
-                    var totalOrderValue = order.GetValue(security);
-                    var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
-                    feeResult = Math.Max(_forexMinimumOrderFee, fee);
                     // IB Forex fees are all in USD
                     feeCurrency = Currencies.USD;
+                    var totalOrderValue = GetOrderValue(order, security, feeCurrency);
+                    var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
+                    feeResult = Math.Max(_forexMinimumOrderFee, fee);
                     break;
 
                 case SecurityType.Option:
@@ -164,9 +163,8 @@ namespace QuantConnect.Orders.Fees
                     }
                     else if (order.Type is OrderType.Limit or OrderType.StopLimit or OrderType.LimitIfTouched or OrderType.ComboLegLimit)
                     {
-                        // Before it fills, the order's own limit price bounds its fill. Its value is in the account currency
-                        var conversionRate = security.QuoteCurrency.ConversionRate;
-                        tradeValue = conversionRate == 0 ? 0 : Math.Abs(order.GetValue(security)) / conversionRate;
+                        // Before it fills, the order's own limit price bounds its fill
+                        tradeValue = Math.Abs(GetOrderValue(order, security, security.QuoteCurrency.Symbol));
                     }
                     else
                     {
@@ -196,9 +194,9 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 case SecurityType.Cfd:
-                    var value = Math.Abs(order.GetValue(security));
-                    feeResult = 0.00002m * value; // 0.002%
                     feeCurrency = security.QuoteCurrency.Symbol;
+                    var value = Math.Abs(GetOrderValue(order, security, feeCurrency));
+                    feeResult = 0.00002m * value; // 0.002%
 
                     var minimumFee = security.QuoteCurrency.Symbol switch
                     {

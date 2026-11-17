@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -204,14 +205,20 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * expectedFee, fee.Value.Amount);
         }
 
-        [TestCase("USD", 70000, 0.00002 * 70000)]
-        [TestCase("USD", 100000, 0.00002 * 100000)]
-        [TestCase("USD", 10000, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
-        [TestCase("JPY", 3000000, 0.00002 * 3000000)]
-        [TestCase("JPY", 1000000, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
-        [TestCase("HKD", 600000, 0.00002 * 600000)]
-        [TestCase("HKD", 200000, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
-        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal expectedFee)
+        [TestCase("USD", 70000, 1, 0.00002 * 70000)]
+        [TestCase("USD", 100000, 1, 0.00002 * 100000)]
+        [TestCase("USD", 10000, 1, 1)] // The calculated fee will be under 1, but the minimum fee is 1 USD
+        [TestCase("JPY", 3000000, 1, 0.00002 * 3000000)]
+        [TestCase("JPY", 1000000, 1, 40)]// The calculated fee will be under 40, but the minimum fee is 40 JPY
+        [TestCase("HKD", 600000, 1, 0.00002 * 600000)]
+        [TestCase("HKD", 200000, 1, 10)]// The calculated fee will be under 10, but the minimum fee is 10 HKD
+        // The fee and its minimum are in the quote currency, whatever its conversion rate to the account currency
+        [TestCase("EUR", 100000, 1.2, 2)]
+        [TestCase("EUR", 10000, 1.2, 1)]
+        [TestCase("JPY", 3000000, 0.0067, 0.00002 * 3000000)]
+        [TestCase("JPY", 1000000, 0.0067, 40)]
+        [TestCase("HKD", 600000, 0.128, 0.00002 * 600000)]
+        public void CalculatesCFDFee(string quoteCurrency, decimal price, decimal conversionRate, decimal expectedFee)
         {
             var security = new Cfd(Symbols.DE10YBEUR,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -220,7 +227,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache());
-            security.QuoteCurrency.ConversionRate = 1;
+            security.QuoteCurrency.ConversionRate = conversionRate;
 
 
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
@@ -433,7 +440,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m, string.Empty),
-                ErrorCurrencyConverter.Instance,
+                new CashBook(),
                 RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
@@ -447,6 +454,66 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(2m, fee.Value.Amount);
+        }
+
+        [TestCase("EURUSD", 1000000, 22)]
+        [TestCase("EURUSD", -1000000, 22)]
+        [TestCase("EURUSD", 10000, 2)] // The calculated fee will be under 2, but the minimum fee is 2 USD
+        [TestCase("USDJPY", 1000000, 20)]
+        [TestCase("EURGBP", 1000000, 22)]
+        [TestCase("EURGBP", 10000, 2)]
+        public void ForexFeeInUSDDoesNotDependOnTheAccountCurrency(string ticker, decimal quantity, decimal expectedFee)
+        {
+            foreach (var accountCurrency in new[] { Currencies.USD, Currencies.EUR, Currencies.GBP, Currencies.JPY })
+            {
+                var security = GetForex(ticker, accountCurrency);
+
+                var fee = _feeModel.GetOrderFee(
+                    new OrderFeeParameters(
+                        security,
+                        new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
+                    )
+                );
+
+                Assert.AreEqual(Currencies.USD, fee.Value.Currency, accountCurrency);
+                Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee).Within(0.0000000001m), accountCurrency);
+            }
+        }
+
+        /// <summary>
+        /// Gets a forex pair, priced at the conversion rates between its currencies, in an account of the given currency
+        /// </summary>
+        public static Forex GetForex(string ticker, string accountCurrency)
+        {
+            var valuesInUSD = new Dictionary<string, decimal>
+            {
+                { Currencies.USD, 1m },
+                { Currencies.EUR, 1.10m },
+                { Currencies.GBP, 1.25m },
+                { Currencies.JPY, 1m / 150m }
+            };
+            var cashBook = new CashBook { AccountCurrency = accountCurrency };
+            foreach (var (currency, valueInUSD) in valuesInUSD.Where(x => x.Key != accountCurrency))
+            {
+                cashBook.Add(currency, 0, valueInUSD / valuesInUSD[accountCurrency]);
+            }
+
+            var symbol = Symbol.Create(ticker, SecurityType.Forex, Market.Oanda);
+            var baseCurrency = ticker.Substring(0, 3);
+            var quoteCurrency = ticker.Substring(3);
+            var tz = TimeZones.NewYork;
+            var security = new Forex(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                cashBook[quoteCurrency],
+                cashBook[baseCurrency],
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties(ticker, quoteCurrency, 1, 0.00001m, 1, string.Empty),
+                cashBook,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            var price = valuesInUSD[baseCurrency] / valuesInUSD[quoteCurrency];
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+            return security;
         }
 
         [Test]

@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Orders.Fees;
 using System;
 
 namespace QuantConnect.Tests.Brokerages.Exante
@@ -152,6 +153,25 @@ namespace QuantConnect.Tests.Brokerages.Exante
                 fee.Value.Amount
             );
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+        }
+
+        [TestCase("EURUSD", 1000000, 1100000)]
+        [TestCase("USDJPY", -1000000, 1000000)]
+        [TestCase("EURGBP", 1000000, 1100000)]
+        public void ForexFeeInUSDDoesNotDependOnTheAccountCurrency(string ticker, decimal quantity, decimal valueInUSD)
+        {
+            IFeeModel feeModel = new ExanteFeeModel();
+
+            foreach (var accountCurrency in new[] { Currencies.USD, Currencies.EUR, Currencies.GBP, Currencies.JPY })
+            {
+                var security = InteractiveBrokersFeeModelTests.GetForex(ticker, accountCurrency);
+
+                var fee = feeModel.GetOrderFee(
+                    new OrderFeeParameters(security, new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)));
+
+                Assert.AreEqual(Currencies.USD, fee.Value.Currency, accountCurrency);
+                Assert.That(fee.Value.Amount, Is.EqualTo(0.25m * valueInUSD).Within(0.0000001m), accountCurrency);
+            }
         }
     }
 }
