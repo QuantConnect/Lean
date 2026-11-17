@@ -283,6 +283,44 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void CommissionReportedAfterTradeClosedKeepsCapturedResultsConsistent(
+            [Values] FillGroupingMethod groupingMethod,
+            [Values] FillMatchingMethod matchingMethod)
+        {
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
+            var time = _startTime;
+
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time, OrderStatus.Filled, OrderDirection.Buy,
+                    fillPrice: 300m, fillQuantity: 2, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(1), OrderStatus.PartiallyFilled, OrderDirection.Sell,
+                    fillPrice: 301m, fillQuantity: -2, orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+
+            var capturedTrades = builder.ClosedTrades;
+            var capturedStatistics = new TradeStatistics(capturedTrades);
+
+            // the exit order's commission arrives once its trade is already closed
+            var lateCommission = new OrderFee(new CashAmount(0.01m, Currencies.USD));
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(2), OrderStatus.Filled, OrderDirection.Sell,
+                    fillPrice: 0m, fillQuantity: 0, orderFee: lateCommission),
+                ConversionRate, lateCommission.Value.Amount);
+
+            Assert.AreEqual(1m, capturedStatistics.TotalFees);
+            Assert.AreEqual(1m, capturedTrades.Sum(trade => trade.TotalFees));
+
+            var trades = builder.ClosedTrades;
+            Assert.AreEqual(1, trades.Count);
+            Assert.AreEqual(capturedTrades[0].Id, trades[0].Id);
+            Assert.AreEqual(1.01m, trades[0].TotalFees);
+            Assert.AreEqual(1.01m, new TradeStatistics(trades).TotalFees);
+        }
+
+        [Test]
         public void AllInAllOutLong(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,

@@ -251,15 +251,18 @@ namespace QuantConnect.Statistics
                     return;
                 }
 
-                Trade closedTrade;
                 lock (_closedTrades)
                 {
-                    closedTrade = _closedTrades.FindLast(trade => trade.OrderIds.Contains(fill.OrderId));
-                }
-                if (closedTrade != null)
-                {
-                    closedTrade.TotalFees += orderFee;
-                    return;
+                    var closedTradeIndex = _closedTrades.FindLastIndex(trade => trade.OrderIds.Contains(fill.OrderId));
+                    if (closedTradeIndex >= 0)
+                    {
+                        // replaced by a copy, since results already captured hold the published trade
+                        _closedTrades[closedTradeIndex] = new Trade(_closedTrades[closedTradeIndex])
+                        {
+                            TotalFees = _closedTrades[closedTradeIndex].TotalFees + orderFee
+                        };
+                        return;
+                    }
                 }
 
                 if (!_positions.TryGetValue(fill.Symbol, out var position))
