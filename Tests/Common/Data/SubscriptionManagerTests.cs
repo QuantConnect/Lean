@@ -760,6 +760,42 @@ def get_consolidator():
             Assert.AreEqual(1, std.Samples);
         }
 
+        [Test]
+        public void DeregisteringIndicatorsSharingAPythonConsolidatorUnsubscribesFromItsEvent()
+        {
+            using var _ = Py.GIL();
+            using var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
+from AlgorithmImports import *
+
+def register(algorithm, symbol, consolidator, sma, std):
+    algorithm.register_indicator(symbol, sma, consolidator)
+    algorithm.register_indicator(symbol, std, consolidator)
+
+def deregister(algorithm, sma, std):
+    algorithm.deregister_indicator(sma)
+    algorithm.deregister_indicator(std)
+");
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+            using var otherConsolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(1));
+            algorithm.SubscriptionManager.AddConsolidator(symbol, otherConsolidator);
+            using var pyConsolidator = CreateCustomTradeBarPythonConsolidator();
+            var source = pyConsolidator.As<PythonConsolidator>();
+            using var pyAlgorithm = algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+            using var pySma = new SimpleMovingAverage(2).ToPython();
+            using var pyStd = new StandardDeviation(2).ToPython();
+
+            module.GetAttr("register").Invoke(pyAlgorithm, pySymbol, pyConsolidator, pySma, pyStd).Dispose();
+            Assert.AreEqual(1, GetDataConsolidatedHandlerCount(source));
+
+            // the shared consolidator has not emitted a bar yet, both deregistrations remove it
+            module.GetAttr("deregister").Invoke(pyAlgorithm, pySma, pyStd).Dispose();
+
+            CollectionAssert.AreEqual(new[] { otherConsolidator }, GetConsolidators(algorithm, symbol));
+            Assert.AreEqual(0, GetDataConsolidatedHandlerCount(source));
+        }
+
         private static PyObject CreateCustomTradeBarPythonConsolidator()
         {
             using var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
