@@ -66,8 +66,10 @@ namespace QuantConnect.Orders.Fees
             {
                 case SecurityType.Forex:
                     feeCurrency = Currencies.USD;
-                    var totalOrderValue = GetOrderValue(order, security, feeCurrency);
-                    feeResult = Math.Abs(_forexCommissionRate * totalOrderValue);
+                    // A zero rate needs no USD value, which a cash book without USD can't give
+                    feeResult = _forexCommissionRate == 0
+                        ? 0
+                        : Math.Abs(_forexCommissionRate * GetOrderValue(order, security, feeCurrency));
                     break;
 
                 case SecurityType.Equity:
