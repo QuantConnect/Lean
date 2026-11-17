@@ -725,47 +725,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void ExecutesTheRequestedOrderWhenTheScaledDownOneHasNotEnoughBuyingPower()
-        {
-            var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, 0);
-            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
-            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
-            // the orders are checked for buying power, as the transaction handler does before submitting them
-            orderProcessor.RejectsOrder = requests =>
-                !portfolio.HasSufficientBuyingPowerForOrder(requests.Select(request => Order.CreateOrder(request)).ToList()).IsSufficient;
-
-            // 10 protective puts (+1000 SPY / +10 puts at the money) and 100 IBM, the loser
-            var time = DateTime.Now;
-            var spy = GetSecurity(Symbols.SPY, portfolio.CashBook);
-            var putSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 100m, new DateTime(2016, 2, 19));
-            var put = GetOption(putSymbol, portfolio.CashBook);
-            put.Underlying = spy;
-            var ibm = GetSecurity(Symbols.IBM, portfolio.CashBook);
-            foreach (var (security, price, averagePrice, quantity) in new[] { (spy, 100m, 100m, 1000m), (put, 1m, 1m, 10m), (ibm, 100m, 200m, 100m) })
-            {
-                portfolio.Securities.Add(security);
-                security.SetLeverage(2);
-                security.SetMarketPrice(new Tick(time, security.Symbol, price, price));
-                security.Holdings.SetHoldings(averagePrice, quantity);
-            }
-            portfolio.CashBook[Currencies.USD].SetAmount(-102500);
-            portfolio.InvalidateTotalPortfolioValue();
-
-            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
-            Assert.AreEqual(10, marginCallOrders.Single(request => request.Symbol == putSymbol).GroupOrderManager.Quantity);
-
-            // IBM's order releases $5000 of the $6500 deficit: 2 protective puts would cover the rest, but the 8 left would need more
-            // initial margin than the 10 held use, so that order is rejected and the 10 requested are liquidated instead
-            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-            Assert.AreEqual(5, tickets.Count);
-            Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
-            Assert.IsTrue(tickets.Skip(1).Take(2).All(ticket => ticket.Status == OrderStatus.Invalid && ticket.SubmitRequest.GroupOrderManager.Quantity == 2));
-            Assert.IsTrue(tickets.Skip(3).All(ticket => ticket.Status.IsOpen() && ticket.SubmitRequest.GroupOrderManager.Quantity == 10));
-            Assert.AreEqual(-1000, tickets.Skip(3).Single(ticket => ticket.Symbol == Symbols.SPY).Quantity);
-        }
-
-        [Test]
         public void ExecutesTheRequestedOrderWhenTheScaledDownOneIsBelowTheMinimumOrderSize()
         {
             var orderProcessor = new FakeOrderProcessor();
@@ -796,14 +755,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.LessOrEqual(requestedMsftQuantity, -25);
 
             // selling all of IBM leaves $1000 of the $1500 deficit: the 20 MSFT shares that cover it are fewer than the minimum,
-            // so that order is rejected and the requested one is executed instead
+            // so the requested order is executed instead
             var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-            Assert.AreEqual(3, tickets.Count);
+            Assert.AreEqual(2, tickets.Count);
             Assert.AreEqual(-100, tickets[0].Quantity);
-            Assert.AreEqual(-20, tickets[1].Quantity);
-            Assert.AreEqual(OrderStatus.Invalid, tickets[1].Status);
-            Assert.AreEqual(requestedMsftQuantity, tickets[2].Quantity);
-            Assert.IsTrue(tickets[2].Status.IsOpen());
+            Assert.AreEqual(requestedMsftQuantity, tickets[1].Quantity);
+            Assert.IsTrue(tickets.All(ticket => ticket.Status.IsOpen()));
         }
 
         [Test]

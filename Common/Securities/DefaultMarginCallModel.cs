@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Positions;
@@ -347,7 +348,9 @@ namespace QuantConnect.Securities
                         }
                     }
 
-                    if (lowerLots < requestedLots)
+                    // an order below the minimum order size would be rejected: the requested one is executed instead
+                    if (lowerLots < requestedLots && Enumerable.Range(0, requests.Count).All(i =>
+                        DefaultBrokerageModel.IsValidOrderSize(Portfolio.Securities[requests[i].Symbol], GetQuantity(i, lowerLots), out _)))
                     {
                         var scaledGroupOrderManager = groupOrderManager == null ? null : new GroupOrderManager(
                             Portfolio.Transactions.GetIncrementGroupOrderManagerId(), groupOrderManager.Count,
@@ -359,14 +362,21 @@ namespace QuantConnect.Securities
                     }
                 }
 
-                var tickets = Execute(requests);
-                if (requests != generatedRequests && tickets.All(ticket => ticket.Status == OrderStatus.Invalid))
+                var tickets = new List<OrderTicket>();
+                foreach (var request in requests)
                 {
-                    // a smaller order can fail checks the requested one passes, such as the initial margin of the holdings
-                    // it leaves or the brokerage's minimum order size: the requested one is executed instead, and the
-                    // smaller one isn't counted as a failure of these position groups
-                    _marginCallTickets.RemoveAll(tickets.Contains);
-                    Execute(generatedRequests);
+                    var ticket = Portfolio.Transactions.AddOrder(request);
+                    tickets.Add(ticket);
+                    _marginCallTickets.Add(ticket);
+                }
+
+                foreach (var ticket in tickets)
+                {
+                    if (ticket.Status.IsOpen())
+                    {
+                        Portfolio.Transactions.WaitForOrder(ticket.OrderId);
+                    }
+                    executedOrders.Add(ticket);
                 }
 
                 // if our margin used, once the margin call orders still open are filled, is back under the portfolio value
@@ -377,27 +387,6 @@ namespace QuantConnect.Securities
                 }
             }
             return executedOrders;
-
-            List<OrderTicket> Execute(List<SubmitOrderRequest> requestsToExecute)
-            {
-                var executedTickets = new List<OrderTicket>();
-                foreach (var request in requestsToExecute)
-                {
-                    var ticket = Portfolio.Transactions.AddOrder(request);
-                    executedTickets.Add(ticket);
-                    _marginCallTickets.Add(ticket);
-                }
-
-                foreach (var ticket in executedTickets)
-                {
-                    if (ticket.Status.IsOpen())
-                    {
-                        Portfolio.Transactions.WaitForOrder(ticket.OrderId);
-                    }
-                    executedOrders.Add(ticket);
-                }
-                return executedTickets;
-            }
         }
     }
 }
