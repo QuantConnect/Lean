@@ -233,24 +233,55 @@ namespace QuantConnect.Statistics
             decimal feeInAccountCurrency,
             decimal multiplier = 1.0m)
         {
-            // an event with no fill quantity, such as the brokerage closing an order short of its quantity, trades nothing
+            // If we have multiple fills per order, we assign the order fee only to its first fill reporting one
+            // to avoid counting the same order fee multiple times.
+            var orderFee = 0m;
+            if (feeInAccountCurrency != 0 && !_ordersWithFeesAssigned.Contains(fill.OrderId))
+            {
+                orderFee = feeInAccountCurrency;
+                _ordersWithFeesAssigned.Add(fill.OrderId);
+            }
+
+            // an event with no fill quantity, such as the brokerage closing an order short of its quantity, trades nothing,
+            // but its fee belongs to the trade holding the order's earlier executions
             if (fill.FillQuantity == 0)
             {
+                if (orderFee == 0)
+                {
+                    return;
+                }
+
+                Trade closedTrade;
+                lock (_closedTrades)
+                {
+                    closedTrade = _closedTrades.FindLast(trade => trade.OrderIds.Contains(fill.OrderId));
+                }
+                if (closedTrade != null)
+                {
+                    closedTrade.TotalFees += orderFee;
+                    return;
+                }
+
+                if (!_positions.TryGetValue(fill.Symbol, out var position))
+                {
+                    return;
+                }
+
+                var pendingTrade = position.PendingTrades.Find(tradeState => tradeState.Trade.OrderIds.Contains(fill.OrderId));
+                if (pendingTrade != null)
+                {
+                    pendingTrade.Trade.TotalFees += orderFee;
+                }
+                else if (position.PendingFills.Any(pendingFill => pendingFill.OrderId == fill.OrderId))
+                {
+                    position.TotalFees += orderFee;
+                }
                 return;
             }
 
             if (TryGetInverseCryptoFuture(fill.Symbol, out var cryptoFuture))
             {
                 securityConversionRate = cryptoFuture.BaseCurrency.ConversionRate;
-            }
-
-            // If we have multiple fills per order, we assign the order fee only to its first fill
-            // to avoid counting the same order fee multiple times.
-            var orderFee = 0m;
-            if (!_ordersWithFeesAssigned.Contains(fill.OrderId))
-            {
-                orderFee = feeInAccountCurrency;
-                _ordersWithFeesAssigned.Add(fill.OrderId);
             }
 
             switch (_groupingMethod)
