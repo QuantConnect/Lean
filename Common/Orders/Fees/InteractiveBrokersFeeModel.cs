@@ -240,11 +240,11 @@ namespace QuantConnect.Orders.Fees
                     decimal securityPrice;
                     if (order.Direction == OrderDirection.Buy)
                     {
-                        price = security.BidPrice;
+                        price = security.AskPrice;
                     }
                     else
                     {
-                        price = security.AskPrice;
+                        price = security.BidPrice;
                     }
                     break;
                 case OrderType.ComboLimit:

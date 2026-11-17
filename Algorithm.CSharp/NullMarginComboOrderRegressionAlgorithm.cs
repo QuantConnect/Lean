@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "10000"},
-            {"End Equity", "10658.5"},
+            {"End Equity", "10662.5"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -70,10 +70,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$11.50"},
+            {"Total Fees", "$7.50"},
             {"Estimated Strategy Capacity", "$13000000.00"},
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "7580.62%"},
+            {"Portfolio Turnover", "7577.77%"},
             {"Drawdown Recovery", "0"},
             {"OrderListHash", "06de8022dfcb44c5eb0a2199bd7a7232"}
         };
