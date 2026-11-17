@@ -34,9 +34,7 @@ namespace QuantConnect.Python
         /// </summary>
         public override IBaseData WorkingData
         {
-            // a disposed wrapper has released its python object, e.g. a consolidator shared by indicators that are
-            // deregistered one after the other is removed again after its first removal disposed it
-            get { return _disposed ? null : _pythonWrapper.GetProperty<IBaseData>(nameof(WorkingData)); }
+            get { return _pythonWrapper.GetProperty<IBaseData>(nameof(WorkingData)); }
         }
 
         /// <summary>
