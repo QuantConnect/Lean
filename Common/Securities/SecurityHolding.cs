@@ -482,6 +482,19 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Calculates the average price of the position after a fill adds to it
+        /// </summary>
+        /// <param name="averagePrice">The average price of the position before the fill</param>
+        /// <param name="quantity">The signed quantity of the position before the fill</param>
+        /// <param name="fillPrice">The price of the fill</param>
+        /// <param name="fillQuantity">The signed quantity of the fill, in the direction of the position</param>
+        /// <returns>The average price of the increased position</returns>
+        internal virtual decimal GetAveragePriceAfterIncrease(decimal averagePrice, decimal quantity, decimal fillPrice, decimal fillQuantity)
+        {
+            return (averagePrice * quantity + fillQuantity * fillPrice) / (quantity + fillQuantity);
+        }
+
+        /// <summary>
         /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>

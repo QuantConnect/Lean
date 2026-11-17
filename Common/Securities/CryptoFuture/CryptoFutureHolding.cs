@@ -88,5 +88,26 @@ namespace QuantConnect.Securities.CryptoFuture
 
             return base.GetProfitFromValueChange(entryValue, exitValue);
         }
+
+        /// <summary>
+        /// Calculates the average price of the position after a fill adds to it
+        /// </summary>
+        /// <param name="averagePrice">The average price of the position before the fill</param>
+        /// <param name="quantity">The signed quantity of the position before the fill</param>
+        /// <param name="fillPrice">The price of the fill</param>
+        /// <param name="fillQuantity">The signed quantity of the fill, in the direction of the position</param>
+        /// <returns>The average price of the increased position</returns>
+        internal override decimal GetAveragePriceAfterIncrease(decimal averagePrice, decimal quantity, decimal fillPrice, decimal fillQuantity)
+        {
+            // an average price of 0, such as from holdings without one, can't be inverted
+            if (Symbol.ID.Market != Market.DYDX && ((CryptoFuture)Security).IsCryptoCoinFuture() && averagePrice != 0)
+            {
+                // Inverse contracts average the entry price harmonically, weighted by quantity, so the
+                // position's value in the margin coin is the sum of the fills' values
+                return (quantity + fillQuantity) / (quantity / averagePrice + fillQuantity / fillPrice);
+            }
+
+            return base.GetAveragePriceAfterIncrease(averagePrice, quantity, fillPrice, fillQuantity);
+        }
     }
 }

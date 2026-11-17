@@ -309,6 +309,63 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             });
         }
 
+        [TestCase("BTCUSD", Market.Binance, 100, 40000, 50000, 45000, 250)]
+        [TestCase("BTCUSD", Market.Binance, -100, 40000, 50000, 45000, -250)]
+        [TestCase("BTCUSD", Market.Binance, 100, 50000, 40000, 40000, -2000)]
+        [TestCase("ADAUSDT", Market.Binance, 100, 0.4, 0.5, 0.45, 0)]
+        [TestCase("ADAUSDT", Market.Binance, -100, 0.4, 0.5, 0.4, 10)]
+        [TestCase("BTCUSD", Market.DYDX, 1, 40000, 50000, 45000, 0)]
+        [TestCase("BTCUSD", Market.DYDX, -1, 40000, 50000, 40000, 10000)]
+        public void AddingToPositionKeepsProfitOfEachFill(string ticker, string market, decimal quantity,
+            decimal firstPrice, decimal secondPrice, decimal exitPrice, decimal expectedProfit)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker, market: market);
+            var isInverse = ticker == "BTCUSD" && market == Market.Binance;
+            var marginCash = isInverse ? cryptoFuture.BaseCurrency : cryptoFuture.QuoteCurrency;
+            marginCash.SetAmount(1);
+            cryptoFuture.FeeModel = new ConstantFeeModel(0);
+            var direction = quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+
+            SetPrice(cryptoFuture, firstPrice);
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(1, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled, direction, firstPrice, quantity, OrderFee.Zero)
+            });
+            SetPrice(cryptoFuture, secondPrice);
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(2, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled, direction, secondPrice, quantity, OrderFee.Zero)
+            });
+
+            // COIN-M averages harmonically: total quantity / sum(quantity / price). Linear contracts average arithmetically.
+            var expectedAveragePrice = isInverse
+                ? 2 / (1 / firstPrice + 1 / secondPrice)
+                : (firstPrice + secondPrice) / 2;
+            var averagePrice = cryptoFuture.Holdings.AveragePrice;
+
+            SetPrice(cryptoFuture, exitPrice);
+            var unrealizedProfit = cryptoFuture.Holdings.UnrealizedProfit;
+            var cashBeforeClose = marginCash.Amount;
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(3, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled,
+                    quantity > 0 ? OrderDirection.Sell : OrderDirection.Buy, exitPrice, -2 * quantity, OrderFee.Zero)
+            });
+
+            // The literal USD profits are the sum of each fill's own profit: for COIN-M q * 100 * (1 / entry - 1 / exit) BTC
+            // converted at the exit price, for linear contracts q * (exit - entry).
+            var expectedMarginProfit = isInverse ? expectedProfit / exitPrice : expectedProfit;
+            Assert.Multiple(() =>
+            {
+                Assert.That(averagePrice, Is.EqualTo(expectedAveragePrice).Within(0.00000001m));
+                Assert.That(unrealizedProfit, Is.EqualTo(expectedProfit).Within(0.00000001m));
+                Assert.That(marginCash.Amount - cashBeforeClose, Is.EqualTo(expectedMarginProfit).Within(0.000000000001m));
+                Assert.That(cryptoFuture.Holdings.Profit, Is.EqualTo(expectedProfit).Within(0.00000001m));
+                Assert.AreEqual(0, cryptoFuture.Holdings.Quantity);
+            });
+        }
+
         private static QCAlgorithm GetAlgorithm()
         {
             // Initialize algorithm
