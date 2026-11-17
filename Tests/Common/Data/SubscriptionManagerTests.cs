@@ -26,6 +26,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Indicators;
 using QuantConnect.Logging;
 using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -732,6 +733,40 @@ def get_consolidator():
 
             Assert.AreEqual(0, wrappers.Count);
             Assert.IsTrue(wrapper.Disposed);
+        }
+
+        [Test]
+        public void RemovingAConsolidatorSharedByIndicatorsReleasesItsScanRegistration()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2018, 8, 2, 16, 0, 0).ConvertToUtc(TimeZones.NewYork));
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+            var manager = algorithm.SubscriptionManager;
+            var scanQueue = (PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority>)typeof(SubscriptionManager)
+                .GetField("_consolidatorsSortedByScanTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetValue(manager);
+
+            for (var cycle = 0; cycle < 3; cycle++)
+            {
+                var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(1));
+                var sma = new SimpleMovingAverage(2);
+                var std = new StandardDeviation(2);
+                algorithm.RegisterIndicator(symbol, sma, consolidator);
+                algorithm.RegisterIndicator(symbol, std, consolidator);
+
+                consolidator.Update(new TradeBar(algorithm.Time, symbol, 1, 1, 1, 1, 1, TimeSpan.FromMinutes(1)));
+                consolidator.Scan(algorithm.Time.AddMinutes(1));
+                // both indicators still receive the shared consolidator's bars
+                Assert.AreEqual(1, sma.Samples);
+                Assert.AreEqual(1, std.Samples);
+
+                manager.ScanPastConsolidators(algorithm.UtcTime.AddMinutes(1), algorithm);
+                Assert.AreEqual(1, scanQueue.Count);
+
+                manager.RemoveConsolidator(symbol, consolidator);
+                manager.ScanPastConsolidators(algorithm.UtcTime.AddDays(1), algorithm);
+                Assert.AreEqual(0, scanQueue.Count);
+            }
         }
 
         [Test]
