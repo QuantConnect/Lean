@@ -659,7 +659,7 @@ def get_consolidator():
 ");
 
             var algorithm = new AlgorithmStub();
-            var symbol = algorithm.AddEquity("SPY").Symbol;
+            algorithm.AddEquity("SPY");
 
             var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
 
@@ -699,7 +699,7 @@ def get_consolidator():
 ");
 
             var algorithm = new AlgorithmStub();
-            var symbol = algorithm.AddEquity("SPY").Symbol;
+            algorithm.AddEquity("SPY");
 
             var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
 

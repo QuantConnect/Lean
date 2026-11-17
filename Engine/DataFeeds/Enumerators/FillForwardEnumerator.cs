@@ -534,8 +534,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // and ending the next one (Friday).
                 if (_strictEndTimeIntraDayFillForward)
                 {
-                    var firtMarketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime.Date, _isExtendedMarketHours);
-                    var firstCalendar = LeanData.GetDailyCalendar(firtMarketOpen, Exchange.Hours, false);
+                    var firstMarketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime.Date, _isExtendedMarketHours);
+                    var firstCalendar = LeanData.GetDailyCalendar(firstMarketOpen, Exchange.Hours, false);
 
                     if (firstCalendar.End > previousEndTime)
                     {

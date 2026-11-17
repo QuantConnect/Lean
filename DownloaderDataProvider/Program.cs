@@ -73,7 +73,7 @@ public static class Program
 
         var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
-        var dataDownloadConfig = default(BaseDataDownloadConfig);
+        BaseDataDownloadConfig dataDownloadConfig;
         switch (commandDataType)
         {
             case "UNIVERSE":

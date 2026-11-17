@@ -261,14 +261,8 @@ namespace QuantConnect.Tests.Optimizer.Strategies
                     set,
                     new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = amountOfSegments });
                 Queue<OptimizationResult> pendingOptimizationResults = new Queue<OptimizationResult>();
-                int depth = -1;
                 _strategy.NewParameterSet += (s, parameterSet) =>
                 {
-                    if (pendingOptimizationResults.Count == 0)
-                    {
-                        depth++;
-                    }
-
                     pendingOptimizationResults.Enqueue(new OptimizationResult(_stringify(_profit(parameterSet), _drawdown(parameterSet)), parameterSet, ""));
                 };
 

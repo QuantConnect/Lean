@@ -226,7 +226,6 @@ namespace QuantConnect.Tests.Common.Data
 
         protected override IEnumerable<IBaseData> GetTestValues()
         {
-            var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
             var time = new DateTime(2016, 1, 1);
             return new List<IndicatorDataPoint>()
             {

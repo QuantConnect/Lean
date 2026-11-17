@@ -98,9 +98,6 @@ namespace QuantConnect.Tests.Python
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
-                var time = DateTime.Today;
-                var period = TimeSpan.FromMinutes(1);
-
                 wrapper.Scan(DateTime.Now);
 
                 bool called;
@@ -130,9 +127,6 @@ namespace QuantConnect.Tests.Python
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
 
-                var time = DateTime.Today;
-                var period = TimeSpan.FromMinutes(1);
-
                 var type = wrapper.InputType;
                 Assert.True(type == typeof(QuoteBar));
             }
@@ -158,9 +152,6 @@ namespace QuantConnect.Tests.Python
 
                 var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
                 using var wrapper = new DataConsolidatorPythonWrapper(customConsolidator);
-
-                var time = DateTime.Today;
-                var period = TimeSpan.FromMinutes(1);
 
                 var type = wrapper.OutputType;
                 Assert.True(type == typeof(QuoteBar));

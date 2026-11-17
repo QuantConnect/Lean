@@ -76,9 +76,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
                 _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
 
-                var ticket = transactionHandler.AddOrder(orderRequest);
+                transactionHandler.AddOrder(orderRequest);
 
-                var ticket2 = transactionHandler.AddOrder(orderRequest);
+                transactionHandler.AddOrder(orderRequest);
 
                 // 600 after round off becomes 0 -> order is not placed
                 Assert.IsTrue(orderRequest.Response.IsProcessed);
@@ -132,7 +132,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                             Assert.AreEqual(OrderStatus.Submitted, orderEvent.Status);
 
                             // we send a new order request
-                            var ticket2 = transactionHandler.Process(orderRequest2);
+                            transactionHandler.Process(orderRequest2);
                             break;
                         case 2:
                             Assert.AreEqual(2, orderEvent.OrderId);
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     Log.Trace($"{orderEvent}");
                 };
 
-                var ticket = transactionHandler.Process(orderRequest);
+                transactionHandler.Process(orderRequest);
 
                 Assert.IsTrue(orderRequest.Response.IsProcessed);
                 Assert.IsTrue(orderRequest.Response.IsSuccess);
@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                             Assert.AreEqual(OrderStatus.Submitted, orderEvent.Status);
 
                             // we send a new order request
-                            var ticket2 = transactionHandler.Process(orderRequest2);
+                            transactionHandler.Process(orderRequest2);
                             break;
                         case 2:
                             Assert.AreEqual(2, orderEvent.OrderId);
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     Log.Trace($"{orderEvent}");
                 };
 
-                var ticket = transactionHandler.Process(orderRequest);
+                transactionHandler.Process(orderRequest);
 
                 Assert.IsTrue(orderRequest.Response.IsProcessed);
                 Assert.IsTrue(orderRequest.Response.IsSuccess);
@@ -306,13 +306,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                     // Let's place another order before this one is filled
                     if (orderEvent.OrderId == 1 && orderEvent.Status == OrderStatus.Submitted)
                     {
-                        var ticket2 = transactionHandler.Process(orderRequest2);
+                        transactionHandler.Process(orderRequest2);
                     }
 
                     Log.Debug($"{orderEvent}");
                 };
 
-                var ticket = transactionHandler.Process(orderRequest);
+                transactionHandler.Process(orderRequest);
 
                 if (!eventsReceived.WaitOne(10000))
                 {

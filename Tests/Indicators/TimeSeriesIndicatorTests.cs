@@ -28,8 +28,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var test = EvenOddSeries();
 
-            double[] heads;
-            var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out heads);
+            var differencer = TimeSeriesIndicator.DifferenceSeries(1, test, out _);
             Assert.AreEqual(-1, differencer.Sum());
         }
 

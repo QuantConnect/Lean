@@ -74,7 +74,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 var configs = kvp.Value;
                 var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * (360 - count + i) / 180.0));
                 var high = last * 1.005m;
-                var low = last / 1.005m;
 
                 var packets = new List<DataFeedPacket>();
 

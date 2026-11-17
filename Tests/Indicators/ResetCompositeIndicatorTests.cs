@@ -26,10 +26,10 @@ namespace QuantConnect.Tests.Indicators
         {
             var left = new Maximum("left", 2);
             var right = new Minimum("right", 2);
-            var resetActionExectuted = false;
+            var resetActionExecuted = false;
             var resetAction = () =>
             {
-                resetActionExectuted = true;
+                resetActionExecuted = true;
             };
             var composite = new ResetCompositeIndicator(left, right, (l, r) => l.Current.Value + r.Current.Value, resetAction);
 
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(right);
             Assert.AreEqual(left.PeriodsSinceMaximum, 0);
             Assert.AreEqual(right.PeriodsSinceMinimum, 0);
-            Assert.IsTrue(resetActionExectuted);
+            Assert.IsTrue(resetActionExecuted);
         }
 
         protected override CompositeIndicator CreateCompositeIndicator(IndicatorBase left, IndicatorBase right, CompositeIndicator.IndicatorComposer composer)

@@ -110,7 +110,6 @@ namespace QuantConnect.Tests.Indicators
             var warmUpPeriod = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
             var random = new Random();
-            var time = DateTime.UtcNow;
             for (int i = 0; i < 2 * warmUpPeriod; i++)
             {
                 var value = (decimal)(random.NextDouble() * 0.000000000000000000000000000001);

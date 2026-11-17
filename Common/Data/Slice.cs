@@ -495,7 +495,7 @@ namespace QuantConnect.Data
                         }
                         else
                         {
-                            foreach (var auxiliaryData in data.AuxilliaryData.Where(x => IsDataPointOfType(x, type, isPythonData)))
+                            foreach (var auxiliaryData in data.AuxiliaryData.Where(x => IsDataPointOfType(x, type, isPythonData)))
                             {
                                 dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, auxiliaryData });
                             }
@@ -653,7 +653,7 @@ namespace QuantConnect.Data
                         break;
 
                     case MarketDataType.Auxiliary:
-                        symbolData.AuxilliaryData.Add(datum);
+                        symbolData.AuxiliaryData.Add(datum);
                         break;
 
                     default:
@@ -780,13 +780,13 @@ namespace QuantConnect.Data
             public TradeBar TradeBar;
             public QuoteBar QuoteBar;
             public readonly List<Tick> Ticks;
-            public readonly List<BaseData> AuxilliaryData;
+            public readonly List<BaseData> AuxiliaryData;
 
             public SymbolData(Symbol symbol)
             {
                 Symbol = symbol;
                 Ticks = new List<Tick>();
-                AuxilliaryData = new List<BaseData>();
+                AuxiliaryData = new List<BaseData>();
             }
 
             public dynamic GetData()

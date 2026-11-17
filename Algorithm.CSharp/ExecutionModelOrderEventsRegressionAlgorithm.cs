@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // This method will get events for all orders, but if we save the tickets in Execute we can filter
                 // to process events for orders placed by this model
-                if (_orderTickets.TryGetValue(orderEvent.OrderId, out var ticket))
+                if (_orderTickets.TryGetValue(orderEvent.OrderId, out _))
                 {
                     if (orderEvent.Status.IsFill())
                     {

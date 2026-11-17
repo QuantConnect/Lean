@@ -15,11 +15,9 @@
 
 using System;
 using System.Linq;
-using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 
@@ -32,7 +30,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureStopMarketOrderOnExtendedHoursRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private OrderTicket _ticket;
         private Future _SP500EMini;
         public override void Initialize()
         {
@@ -50,23 +47,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 MarketOrder(_SP500EMini.Mapped, 1);
-                _ticket = StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
+                StopMarketOrder(_SP500EMini.Mapped, -1, _SP500EMini.Price * 1.1m);
             });
-        }
-
-        /// <summary>
-        /// Data Event Handler: receiving all subscription data in a single event
-        /// </summary>
-        /// <param name="slice">The current slice of data keyed by symbol string</param>
-        public override void OnData(Slice slice)
-        {
-            if (_ticket == null || _ticket.Status != OrderStatus.Submitted)
-            {
-                return;
-            }
-
-            var stopPrice = _ticket.Get(OrderField.StopPrice);
-            var bar = Securities[_ticket.Symbol].Cache.GetData<TradeBar>();
         }
 
         /// <summary>

@@ -938,10 +938,9 @@ namespace QuantConnect.Lean.Engine.Results
                 RuntimeStatistics = result.Results.RuntimeStatistics,
                 AlgorithmConfiguration = result.Results.AlgorithmConfiguration,
             };
-            CandlestickSeries equity = null;
             if (result.Results.Charts != null && result.Results.Charts.TryGetValue(StrategyEquityKey, out var chart) && chart.Series.TryGetValue(EquityKey, out var series))
             {
-                equity = (CandlestickSeries)series;
+                var equity = (CandlestickSeries)series;
                 var samplePeriod = Math.Min(7, series.Values.Count / 100);
                 if (samplePeriod > 1)
                 {

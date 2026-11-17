@@ -199,7 +199,7 @@ namespace QuantConnect.Python
 
             if(!Directory.Exists(pathToVirtualEnv))
             {
-                Log.Error($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                Log.Error($@"PythonInitializer.ActivatePythonVirtualEnvironment(): {
                     Messages.PythonInitializer.VirutalEnvironmentNotFound(pathToVirtualEnv)}");
                 return false;
             }
@@ -228,12 +228,12 @@ namespace QuantConnect.Python
             if(!includeSystemPackages.HasValue)
             {
                 includeSystemPackages = true;
-                Log.Error($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                Log.Error($@"PythonInitializer.ActivatePythonVirtualEnvironment(): {
                     Messages.PythonInitializer.FailedToFindSystemPackagesConfiguration(pathToVirtualEnv, configFile)}");
             }
             else
             {
-                Log.Trace($@"PythonIntializer.ActivatePythonVirtualEnvironment(): {
+                Log.Trace($@"PythonInitializer.ActivatePythonVirtualEnvironment(): {
                     Messages.PythonInitializer.SystemPackagesConfigurationFound(pathToVirtualEnv, includeSystemPackages.Value)}");
             }
 
@@ -298,7 +298,7 @@ namespace QuantConnect.Python
                         path.Add((string)p);
                     }
 
-                    Log.Debug($"PythonIntializer.InitPythonVirtualEnvironment(): PYTHONHOME: {os.getenv("PYTHONHOME")}." +
+                    Log.Debug($"PythonInitializer.InitPythonVirtualEnvironment(): PYTHONHOME: {os.getenv("PYTHONHOME")}." +
                         $" PYTHONPATH: {os.getenv("PYTHONPATH")}." +
                         $" sys.executable: {sys.executable}." +
                         $" sys.prefix: {sys.prefix}." +

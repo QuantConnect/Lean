@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.DoesNotThrow(() =>
             {
-                foreach (var item in casting) { }
+                foreach (var _ in casting) { }
             });
 
             CollectionAssert.AreEqual(list, casting);

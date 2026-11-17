@@ -27,7 +27,6 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void CreatesFromAssemblies()
         {
-            var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             Assert.AreEqual(1, interpreter.Interpreters.Count(p => p.GetType() == typeof(ClrBubbledExceptionInterpreter)));
         }

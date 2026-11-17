@@ -79,7 +79,6 @@ namespace QuantConnect.Tests.Common.Data
         {
             // Test Renko bar consistency amongst three consolidators starting at different times
 
-            var time = new DateTime(2016, 1, 1);
             var testValues = GetTestValues();
 
             var consolidatedBarsBefore = new List<IBaseData>();

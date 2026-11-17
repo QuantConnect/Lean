@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(false, false)]
         [TestCase(true, false)]
         [TestCase(false, true)]
-        public void WontCalculateIfMissindData(bool withUnderlyingData, bool withOptionData)
+        public void WontCalculateIfMissingData(bool withUnderlyingData, bool withOptionData)
         {
             GetTestData(withUnderlyingData, withOptionData, true, out var option, out var contract, out var securities);
             

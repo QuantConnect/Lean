@@ -69,7 +69,7 @@ from AlgorithmImports import *
 
 def getUniverseHistory(qb, start, end):
     universe = qb.AddUniverse(lambda fundamentals: [ x.Symbol for x in fundamentals ])
-" + GetBaseImplementation(expectedCount: 7000, identation: "    ", flatten: flatten));
+" + GetBaseImplementation(expectedCount: 7000, indentation: "    ", flatten: flatten));
 
                     dynamic getUniverse = testModule.GetAttr("getUniverseHistory");
                     var pyHistory = getUniverse(_qb, _start, _end);
@@ -151,7 +151,7 @@ class Test():
 
     def getUniverseHistory(self, qb, start, end):
         universe = qb.add_universe(self.selection)
-" + GetBaseImplementation(expectedCount: 1, identation: "        ", flatten: flatten)).GetAttr("Test");
+" + GetBaseImplementation(expectedCount: 1, indentation: "        ", flatten: flatten)).GetAttr("Test");
 
                     var instance = testModule(useUniverseUnchanged);
                     var pyHistory = instance.getUniverseHistory(_qb, _start, _end);
@@ -865,35 +865,35 @@ class Test():
             }
         }
 
-        private static string GetBaseImplementation(int expectedCount, string identation, bool flatten = true)
+        private static string GetBaseImplementation(int expectedCount, string indentation, bool flatten = true)
         {
             if (flatten)
             {
                 return @"
-{identation}universe_data_df = qb.universe_history(universe, start, end, flatten=True)
-{identation}for date in universe_data_df.index.levels[0]:
-{identation}    dateUniverseData = universe_data_df.loc[date]
-{identation}    dataPointCount = dateUniverseData.shape[0]
-{identation}    if dataPointCount < expectedCount:
-{identation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
-{identation}return universe_data_df
+{indentation}universe_data_df = qb.universe_history(universe, start, end, flatten=True)
+{indentation}for date in universe_data_df.index.levels[0]:
+{indentation}    dateUniverseData = universe_data_df.loc[date]
+{indentation}    dataPointCount = dateUniverseData.shape[0]
+{indentation}    if dataPointCount < expectedCount:
+{indentation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+{indentation}return universe_data_df
 ".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
-.Replace("{identation}", identation, StringComparison.InvariantCulture);
+.Replace("{indentation}", indentation, StringComparison.InvariantCulture);
             }
 
             return @"
-{identation}universeDataPerTime = qb.universe_history(universe, start, end)
-{identation}for universeDataCollection in universeDataPerTime:
-{identation}    dataPointCount = 0
-{identation}    for fundamental in universeDataCollection:
-{identation}        dataPointCount += 1
-{identation}        if type(fundamental) is not Fundamental:
-{identation}            raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
-{identation}    if dataPointCount < expectedCount:
-{identation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
-{identation}return universeDataPerTime
+{indentation}universeDataPerTime = qb.universe_history(universe, start, end)
+{indentation}for universeDataCollection in universeDataPerTime:
+{indentation}    dataPointCount = 0
+{indentation}    for fundamental in universeDataCollection:
+{indentation}        dataPointCount += 1
+{indentation}        if type(fundamental) is not Fundamental:
+{indentation}            raise ValueError(f""Unexpected Fundamentals data type {type(fundamental)}! {str(fundamental)}"")
+{indentation}    if dataPointCount < expectedCount:
+{indentation}        raise ValueError(f""Unexpected historical Fundamentals data count {dataPointCount}! Expected > expectedCount"")
+{indentation}return universeDataPerTime
 ".Replace("expectedCount", expectedCount.ToStringInvariant(), StringComparison.InvariantCulture)
-.Replace("{identation}", identation, StringComparison.InvariantCulture);
+.Replace("{indentation}", indentation, StringComparison.InvariantCulture);
         }
 
         private class QuantBookTestClass : QuantBook

@@ -93,8 +93,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            message = default;
-
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",

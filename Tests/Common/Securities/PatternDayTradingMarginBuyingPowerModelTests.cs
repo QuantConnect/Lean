@@ -208,7 +208,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void VerifyMaintenaceMargin()
+        public void VerifyMaintenanceMargin()
         {
             var model = GetModel();
 

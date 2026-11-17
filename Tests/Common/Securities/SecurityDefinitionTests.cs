@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             try
             {
-                var lines = SecurityDefinition.FromCsvLine(line);
+                SecurityDefinition.FromCsvLine(line);
                 Assert.Fail($"Successfully read line when expecting failure: {line}");
             }
             catch

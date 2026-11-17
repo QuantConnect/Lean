@@ -675,7 +675,7 @@ class GoodCustomIndicator:
         }
 
         [Test]
-        public void IndicatorHistoryDataFrameDoesNotCointainDefaultDateTimeIndex()
+        public void IndicatorHistoryDataFrameDoesNotContainDefaultDateTimeIndex()
         {
             var pandasConverter = new PandasConverter();
             var indicatorsDataPointPerProperty = new List<InternalIndicatorValues>
@@ -716,7 +716,6 @@ class GoodCustomIndicator:
             dynamic dataframe = indicatorValues.DataFrame;
             using (Py.GIL())
             {
-                var index = dataframe.index;
                 var columns = dataframe.columns;
                 var expectedColumns = new List<string> { "smaprop", "genericprop", "current", "nongenericprop", "counter", "indicatortype", "description" };
                 var columnsCount = 0;
@@ -896,7 +895,7 @@ def get_indicator(algo, symbol):
 
             using var pyAlgo = _algorithm.ToPython();
             using var pySymbol = symbol.ToPython();
-            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+            testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
 
             // The indicator should have been updated during the warm-up period
             var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
@@ -940,7 +939,7 @@ def get_indicator(algo, symbol):
 
             using var pyAlgo = _algorithm.ToPython();
             using var pySymbol = symbol.ToPython();
-            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+            testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
 
             // The indicator should have been updated during the warm-up period
             var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();

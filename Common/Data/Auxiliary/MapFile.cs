@@ -84,9 +84,8 @@ namespace QuantConnect.Data.Auxiliary
                 var dotIndex = firstTicker.LastIndexOf(".", StringComparison.Ordinal);
                 if (dotIndex > 0)
                 {
-                    int value;
                     var number = firstTicker.AsSpan(dotIndex + 1);
-                    if (int.TryParse(number, out value))
+                    if (int.TryParse(number, out _))
                     {
                         firstTicker = firstTicker.Substring(0, dotIndex);
                     }

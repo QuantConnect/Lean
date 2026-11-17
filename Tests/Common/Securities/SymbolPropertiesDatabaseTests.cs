@@ -515,8 +515,7 @@ namespace QuantConnect.Tests.Common.Securities
                 "0.01",
                 "1");
 
-            SecurityDatabaseKey key;
-            Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out key));
+            Assert.DoesNotThrow(() => TestingSymbolPropertiesDatabase.TestFromCsvLine(line, out _));
         }
 
         [Test]

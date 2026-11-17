@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         }
 
         [Test]
-        public void ThrowIsRundomValueGeneratorIsNull()
+        public void ThrowIsRandomValueGeneratorIsNull()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {

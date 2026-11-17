@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);
-            var equity = AddEquity("SPY");
+            AddEquity("SPY");
         }
 
         public override void OnData(Slice slice)

@@ -435,8 +435,8 @@ namespace QuantConnect.Tests.Common.Securities
         public void MissingOptionsEntriesResolveToUnderlyingMarketHours(string optionTicker, SecurityType securityType, string market)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
-            var underlyingTIcker = OptionSymbol.MapToUnderlying(optionTicker, securityType);
-            var underlying = Symbol.Create(underlyingTIcker, securityType, market);
+            var underlyingTicker = OptionSymbol.MapToUnderlying(optionTicker, securityType);
+            var underlying = Symbol.Create(underlyingTicker, securityType, market);
             var option = Symbol.CreateOption(
                 underlying,
                 market,
@@ -727,7 +727,7 @@ namespace QuantConnect.Tests.Common.Securities
                         $"Segments overlap for {symbol} on {date:yyyy-MM-dd} between {segments[i - 1]} and {segments[i]}");
                 }
 
-                bool hasEarlyClose = exchangeHours.EarlyCloses.TryGetValue(date, out var earlyCloseTime);
+                bool hasEarlyClose = exchangeHours.EarlyCloses.TryGetValue(date, out _);
                 bool hasLateOpen = exchangeHours.LateOpens.TryGetValue(date, out var lateOpenTime);
                 if (hasEarlyClose && hasLateOpen && segments.Count > 0)
                 {

@@ -57,8 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Purchased Stock");
             }
 
-            Symbol symbol;
-            if (SymbolCache.TryGetSymbol("AAPL", out symbol))
+            if (SymbolCache.TryGetSymbol("AAPL", out _))
             {
                 throw new RegressionTestException("Benchmark Symbol is not expected to be added to the Symbol cache");
             }

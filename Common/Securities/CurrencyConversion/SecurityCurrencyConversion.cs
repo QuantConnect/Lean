@@ -229,12 +229,11 @@ namespace QuantConnect.Securities.CurrencyConversion
                     var steps = new List<Step>(2);
 
                     // Step 1
-                    string baseCurrency;
                     string quoteCurrency;
 
                     CurrencyPairUtil.DecomposeCurrencyPair(
                         potentialConversionRateSymbol1,
-                        out baseCurrency,
+                        out _,
                         out quoteCurrency);
 
                     steps.Add(CreateStep(potentialConversionRateSymbol1,

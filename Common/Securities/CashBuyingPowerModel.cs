@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
                     openOrdersReservedQuantity, orderQuantity, baseCurrency));
             }
 
-            var maximumQuantity = 0m;
+            decimal maximumQuantity;
             if (parameters.Order.Type == OrderType.Market)
             {
                 // include existing holdings (in quote currency)

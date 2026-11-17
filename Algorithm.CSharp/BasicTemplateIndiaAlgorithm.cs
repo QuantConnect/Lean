@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                var marketTicket = MarketOrder("YESBANK", 1);
+                MarketOrder("YESBANK", 1);
             }
         }
 

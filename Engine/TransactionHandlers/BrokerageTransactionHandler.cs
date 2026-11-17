@@ -775,10 +775,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             var lowestOrderIdToKeep = max - maxOrdersToKeep;
             foreach (var item in _completeOrders.Where(x => x.Key <= lowestOrderIdToKeep))
             {
-                Order value;
-                OrderTicket ticket;
-                _completeOrders.TryRemove(item.Key, out value);
-                _completeOrderTickets.TryRemove(item.Key, out ticket);
+                _completeOrders.TryRemove(item.Key, out _);
+                _completeOrderTickets.TryRemove(item.Key, out _);
             }
 
             Log.Debug($"BrokerageTransactionHandler.ProcessSynchronousEvents(): New order count {_completeOrders.Count}. Exit");

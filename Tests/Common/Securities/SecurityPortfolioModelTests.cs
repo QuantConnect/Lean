@@ -665,7 +665,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             option.SetMarketPrice(new Tick { Value = 100m });
 
-            var underlyingPrice = 0m;
+            decimal underlyingPrice;
             if (win)
             {
                 underlyingPrice = orderDirection == OrderDirection.Buy ? 300m : 290m;
@@ -791,7 +791,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.Transactions.LossCount);
 
             // Before closing, update option market price
-            var finalOptionPrice = 0m;
+            decimal finalOptionPrice;
             if (win)
             {
                 finalOptionPrice = orderDirection == OrderDirection.Buy ? 150m : 50m;

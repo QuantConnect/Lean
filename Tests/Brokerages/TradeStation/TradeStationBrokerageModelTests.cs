@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity });
 
-            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, marketOrder, updateRequest, out var message);
+            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, marketOrder, updateRequest, out _);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldUpdate));
         }
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var updateRequest = new UpdateOrderRequest(new DateTime(default), 1, new UpdateOrderFields() { Quantity = newOrderQuantity, LimitPrice = newLimitPrice });
 
-            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, order, updateRequest, out var message);
+            var isPossibleUpdate = _brokerageModel.CanUpdateOrder(security, order, updateRequest, out _);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldUpdate));
         }
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var security = TestsHelpers.InitializeSecurity(AAPL.SecurityType, (AAPL, 209m, holdingQuantity))[AAPL];
 
-            var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
+            var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
             var security = TestsHelpers.InitializeSecurity(securityType, (symbol, 209m, 1))[symbol];
 
-            var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out var message);
+            var isPossibleUpdate = _brokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }

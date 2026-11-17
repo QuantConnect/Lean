@@ -261,7 +261,7 @@ class CustomPortfolioOptimizer:
                 var rebalance = module.GetAttr("rebalance");
                 var optimizer = module.GetAttr("CustomPortfolioOptimizer").Invoke();
 
-                var message = Assert.Throws<NotImplementedException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
+                Assert.Throws<NotImplementedException>(() => new MeanVarianceOptimizationPortfolioConstructionModel(rebalance, optimizer: optimizer));
             }
         }
 

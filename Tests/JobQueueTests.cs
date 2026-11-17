@@ -30,7 +30,7 @@ namespace QuantConnect.Tests
         [TestCase("../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py", "", Language.Python, true)]
         [TestCase("../../../ALGORITHM.PYTHON/BASICTEMPLATEFRAMEWORKALGORITHM.PY", "", Language.Python, true)]
         [TestCase("../../../test.jar", "", Language.Java, false)]
-        public void JobQueueSetsAlgorithmLanguageCorrectly(string algorithmLocation, string algorithmLanguage, Language expectedLangauge, bool isValidExtension)
+        public void JobQueueSetsAlgorithmLanguageCorrectly(string algorithmLocation, string algorithmLanguage, Language expectedLanguage, bool isValidExtension)
         {
             Config.Set("algorithm-location", algorithmLocation);
             Config.Set("algorithm-language", algorithmLanguage);
@@ -38,7 +38,7 @@ namespace QuantConnect.Tests
             var jobQueue = new JobQueueTestClass();
             if (isValidExtension)
             {
-                Assert.AreEqual(expectedLangauge, jobQueue.GetLanguage());
+                Assert.AreEqual(expectedLanguage, jobQueue.GetLanguage());
             }
             else
             {

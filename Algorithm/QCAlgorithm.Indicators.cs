@@ -149,8 +149,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public Alpha A(Symbol target, Symbol reference, int alphaPeriod = 1, int betaPeriod = 252, Resolution? resolution = null, decimal? riskFreeRate = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var baseBame = riskFreeRate.HasValue ? $"A({alphaPeriod},{betaPeriod},{riskFreeRate})" : $"A({alphaPeriod},{betaPeriod})";
-            var name = CreateIndicatorName(target, baseBame, resolution);
+            var baseName = riskFreeRate.HasValue ? $"A({alphaPeriod},{betaPeriod},{riskFreeRate})" : $"A({alphaPeriod},{betaPeriod})";
+            var name = CreateIndicatorName(target, baseName, resolution);
 
             // If risk free rate is not specified, use the default risk free rate model
             IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
@@ -2128,8 +2128,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public SharpeRatio SR(Symbol symbol, int sharpePeriod, decimal? riskFreeRate = null, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var baseBame = riskFreeRate.HasValue ? $"SR({sharpePeriod},{riskFreeRate})" : $"SR({sharpePeriod})";
-            var name = CreateIndicatorName(symbol, baseBame, resolution);
+            var baseName = riskFreeRate.HasValue ? $"SR({sharpePeriod},{riskFreeRate})" : $"SR({sharpePeriod})";
+            var name = CreateIndicatorName(symbol, baseName, resolution);
             IRiskFreeInterestRateModel riskFreeRateModel = riskFreeRate.HasValue
                 ? new ConstantRiskFreeRateInterestRateModel(riskFreeRate.Value)
                 // Make it a function so it's lazily evaluated: SetRiskFreeInterestRateModel can be called after this method

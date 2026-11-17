@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         {
             // allow the system to stabilize
             Thread.Sleep(1000);
-            var results = AlgorithmRunner.RunLocalBacktest(nameof(TestUserDefinedUniverseAlgorithm),
+            AlgorithmRunner.RunLocalBacktest(nameof(TestUserDefinedUniverseAlgorithm),
                 new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "1" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,

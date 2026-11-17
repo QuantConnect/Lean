@@ -83,7 +83,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
 
         ## Check to see if either ticker will return a NoneBar, and skip the data slice if so
         for security in algorithm.securities:
-            if self.data_event_occured(data, security.key):
+            if self.data_event_occurred(data, security.key):
                 return insights
 
         ## If Alpha and Beta haven't been calculated yet, then do so
@@ -123,7 +123,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
 
         return Insight.group(insights)
 
-    def data_event_occured(self, data, symbol):
+    def data_event_occurred(self, data, symbol):
         ## Helper function to check to see if data slice will contain a symbol
         if data.splits.contains_key(symbol) or \
            data.dividends.contains_key(symbol) or \

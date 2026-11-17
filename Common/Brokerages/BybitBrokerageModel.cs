@@ -172,7 +172,6 @@ public class BybitBrokerageModel : DefaultBrokerageModel
             return false;
         }
 
-        message = null;
         bool quantityIsValid;
 
         switch (order)

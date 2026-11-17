@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Common.Orders
             {
                 Contingency = manager.WithLinks([new(1, ContingencyType.OneUpdatesOther)]), Status = OrderStatus.Submitted, Id = 1
             });
-            var second = Add(new StopMarketOrder(Symbols.BTCUSD, -1m, 50, Time)
+            Add(new StopMarketOrder(Symbols.BTCUSD, -1m, 50, Time)
             {
                 Contingency = manager.WithLinks([new(1, ContingencyType.OneUpdatesOther)]), Status = OrderStatus.Submitted, Id = 2
             });

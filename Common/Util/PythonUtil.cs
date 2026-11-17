@@ -214,13 +214,13 @@ namespace QuantConnect.Util
             var blocks = neededStackTrace.Split("  File ", StringSplitOptions.RemoveEmptyEntries)
                 .Select(fileTrace =>
                 {
-                    var trimedTrace = fileTrace.Trim();
-                    if (string.IsNullOrWhiteSpace(trimedTrace))
+                    var trimmedTrace = fileTrace.Trim();
+                    if (string.IsNullOrWhiteSpace(trimmedTrace))
                     {
                         return string.Empty;
                     }
 
-                    var match = StackTraceFileLineRegex.Match(trimedTrace);
+                    var match = StackTraceFileLineRegex.Match(trimmedTrace);
                     if (!match.Success)
                     {
                         return string.Empty;

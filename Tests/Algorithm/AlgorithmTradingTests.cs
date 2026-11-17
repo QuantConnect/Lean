@@ -1495,11 +1495,11 @@ namespace QuantConnect.Tests.Algorithm
             algo.Transactions.SetOrderProcessor(mock.Object);
 
             // Make the initial orders
-            var order1 = algo.MarketOrder(Symbols.MSFT, 1);
-            var order2 = algo.MarketOrder(Symbols.MSFT, 2);
-            var order3 = algo.MarketOrder(Symbols.AAPL, 3);
-            var order4 = algo.MarketOrder(Symbols.AAPL, 4);
-            var order5 = algo.LimitOrder(Symbols.AAPL, 5, 10);
+            algo.MarketOrder(Symbols.MSFT, 1);
+            algo.MarketOrder(Symbols.MSFT, 2);
+            algo.MarketOrder(Symbols.AAPL, 3);
+            algo.MarketOrder(Symbols.AAPL, 4);
+            algo.LimitOrder(Symbols.AAPL, 5, 10);
 
             // Setup the transaction handler to get the open orders as well as the order tickets
             mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns<Func<Order, bool>>(filter => tickets.Values.Select(x => Order.CreateOrder(x.SubmitRequest)).Where(x => filter(x)).ToList());

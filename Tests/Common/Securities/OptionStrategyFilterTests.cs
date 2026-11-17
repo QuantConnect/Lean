@@ -851,7 +851,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(1, -5, 0, 5, 3, 85, 90, 95, 10, false)]
         [TestCase(100, -5, 0, 5, 3, 95, 100, 105, 40, true)]
         public void FiltersCallLadder(decimal underlyingPrice, decimal lowerStrikeFromAtm, decimal MiddleStrikeFromAtm, decimal higherStrikeFromAtm,
-            int expectedCount, decimal lowerExpectedStrike, decimal middeleExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry,
+            int expectedCount, decimal lowerExpectedStrike, decimal middleExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry,
             bool far = false)
         {
             var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
@@ -877,7 +877,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(OptionRight.Call, middleStrikeCall.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, middleStrikeCall.ID.Date);
-            Assert.AreEqual(middeleExpectedStrike, middleStrikeCall.ID.StrikePrice);
+            Assert.AreEqual(middleExpectedStrike, middleStrikeCall.ID.StrikePrice);
             Assert.Greater(middleStrikeCall.ID.StrikePrice, lowerStrikeCall.ID.StrikePrice);
 
             Assert.AreEqual(OptionRight.Call, higherStrikeCall.ID.OptionRight);
@@ -906,7 +906,7 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(1, -5, 0, 5, 3, 85, 90, 95, 10, false)]
         [TestCase(100, -5, 0, 5, 3, 95, 100, 105, 40, true)]
         public void FiltersPutLadder(decimal underlyingPrice, decimal lowerStrikeFromAtm, decimal MiddleStrikeFromAtm, decimal higherStrikeFromAtm,
-            int expectedCount, decimal lowerExpectedStrike, decimal middeleExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry,
+            int expectedCount, decimal lowerExpectedStrike, decimal middleExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry,
             bool far = false)
         {
             var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
@@ -932,7 +932,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(OptionRight.Put, middleStrikeCall.ID.OptionRight);
             Assert.AreEqual(expectedExpiry, middleStrikeCall.ID.Date);
-            Assert.AreEqual(middeleExpectedStrike, middleStrikeCall.ID.StrikePrice);
+            Assert.AreEqual(middleExpectedStrike, middleStrikeCall.ID.StrikePrice);
             Assert.Greater(middleStrikeCall.ID.StrikePrice, lowerStrikeCall.ID.StrikePrice);
 
             Assert.AreEqual(OptionRight.Put, higherStrikeCall.ID.OptionRight);

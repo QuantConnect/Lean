@@ -1131,7 +1131,7 @@ def check(symbol: Symbol, order: Order, config: SubscriptionDataConfig):
         }
 
         [Test]
-        public void ConvertsNegavtiveOneNumberDecimalFromString()
+        public void ConvertsNegativeOneNumberDecimalFromString()
         {
             const string input = "-1.45678";
             var value = input.ToDecimal();
@@ -1528,9 +1528,9 @@ class Test(PythonData):
             using (Py.GIL())
             {
                 var tradebarSelectorPyObject = Field.Volume.ToPython();
-                var quotebatSelectorPyObject = Field.BidClose.ToPython();
+                var quotebarSelectorPyObject = Field.BidClose.ToPython();
                 var tradebarResult = tradebarSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
-                var quotebarResult = quotebatSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
+                var quotebarResult = quotebarSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
                 Assert.IsTrue(tradebarResult);
                 Assert.IsTrue(quotebarResult);
                 Assert.IsTrue(ReferenceEquals(Field.Volume, tradebarCSharpSelector));
@@ -1565,14 +1565,12 @@ class Test(PythonData):
         [Test]
         public void PyObjectTryConvertToNonDelegateFail()
         {
-            int action;
-
             using (Py.GIL())
             {
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                Assert.IsFalse(pyObject.TryAs(out action));
+                Assert.IsFalse(pyObject.TryAs(out int _));
             }
         }
 

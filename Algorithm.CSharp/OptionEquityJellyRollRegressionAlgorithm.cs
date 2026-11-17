@@ -69,7 +69,6 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.JellyRoll.Name, 1);
 
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
-                    var undPrice = farPut.UnderlyingLastPrice;
                     var expectedMarginUsage = 17646.8m;
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {

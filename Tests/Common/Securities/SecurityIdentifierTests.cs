@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Common.Securities
             var eurusd = SecurityIdentifier.GenerateForex("EURUSD", Market.FXCM);
 
             // verify various values
-            Assert.Throws<InvalidOperationException>(() => { var x = eurusd.Date; });
+            Assert.Throws<InvalidOperationException>(() => { _ = eurusd.Date; });
             Assert.AreEqual(Market.FXCM, eurusd.Market);
             Assert.AreEqual(SecurityType.Forex, eurusd.SecurityType);
             Assert.AreEqual("EURUSD", eurusd.Symbol);
@@ -173,7 +173,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(SecurityType.Option, option.SecurityType); // security type
             Assert.AreEqual("SPY", option.Symbol); // SPY in base36
             Assert.IsFalse(option.HasUnderlying);
-            Assert.Throws<InvalidOperationException>(() => { var x = option.Underlying; });
+            Assert.Throws<InvalidOperationException>(() => { _ = option.Underlying; });
             var equity = SecurityIdentifier.Parse(parts[1]);
             Assert.AreEqual(SPY, equity);
         }
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var sid = new SecurityIdentifier("some-symbol", 0357960000000009915);
+                new SecurityIdentifier("some-symbol", 0357960000000009915);
             }, $"The provided properties do not match with a valid {nameof(SecurityType)}");
         }
 
@@ -205,7 +205,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.DoesNotThrow(() =>
             {
-                var sid = new SecurityIdentifier("some-symbol", properties);
+                new SecurityIdentifier("some-symbol", properties);
             });
         }
 
@@ -220,7 +220,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var OptionRight = SPY.OptionRight;
+                _ = SPY.OptionRight;
             }, "OptionRight is only defined for SecurityType.Option");
         }
 
@@ -261,7 +261,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var optionStyle = SPY.OptionStyle;
+                _ = SPY.OptionStyle;
             }, "OptionStyle is only defined for SecurityType.Option");
         }
 
@@ -354,8 +354,7 @@ namespace QuantConnect.Tests.Common.Securities
             var stopwatch = Stopwatch.StartNew();
             for (var i = 0; i < 1000000; i++)
             {
-                SecurityIdentifier sid;
-                SecurityIdentifier.TryParse(value, out sid);
+                SecurityIdentifier.TryParse(value, out _);
             }
             stopwatch.Stop();
             Log.Trace("Elapsed: " + stopwatch.Elapsed);
@@ -519,7 +518,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() =>
             {
                 var equity = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-                var option = Symbol.CreateOption(
+                Symbol.CreateOption(
                     equity,
                     Market.USA,
                     OptionStyle.American,
@@ -654,7 +653,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ReturnsExpectedCustomDataType(string symbol, Type expectedDataType)
         {
             SecurityIdentifier.GenerateBaseSymbol(expectedDataType, symbol.Split(".")[0]);
-            var result = SecurityIdentifier.TryGetCustomDataTypeInstance(symbol, out var obtainedDataType);
+            SecurityIdentifier.TryGetCustomDataTypeInstance(symbol, out var obtainedDataType);
 
             Assert.AreEqual(expectedDataType, obtainedDataType);
         }

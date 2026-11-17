@@ -105,8 +105,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            message = default;
-
             if (!_supportedOrderTypesBySecurityType.TryGetValue(security.Type, out var supportedOrderTypes))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",

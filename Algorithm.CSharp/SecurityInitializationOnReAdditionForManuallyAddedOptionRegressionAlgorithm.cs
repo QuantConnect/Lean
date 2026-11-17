@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             return AddOptionContract(_optionContractSymbol, Resolution.Daily);
         }
 
-        protected override void AssertSecurityInitializationCount(Dictionary<Security, int> securityInializationCounts, Security security)
+        protected override void AssertSecurityInitializationCount(Dictionary<Security, int> securityInitializationCounts, Security security)
         {
             // The first time the contract is added, the underlying equity will be added and initialized as well.
             // The following times the contract is added, the underlying equity will not be added again.
@@ -60,20 +60,20 @@ namespace QuantConnect.Algorithm.CSharp
                 expectedSecuritiesInitialized = 2;
             }
 
-            if (securityInializationCounts.Count != expectedSecuritiesInitialized)
+            if (securityInitializationCounts.Count != expectedSecuritiesInitialized)
             {
                 throw new RegressionTestException($"Expected {expectedSecuritiesInitialized} security to be initialized. " +
-                    $"Got {securityInializationCounts.Count}");
+                    $"Got {securityInitializationCounts.Count}");
             }
 
-            if (!securityInializationCounts.TryGetValue(security, out var count) || count != 1)
+            if (!securityInitializationCounts.TryGetValue(security, out var count) || count != 1)
             {
                 throw new RegressionTestException($"Expected the option contract to be initialized once and once only, " +
                     $"but was initialized {count} times");
             }
 
             if (expectedSecuritiesInitialized == 2 &&
-                !securityInializationCounts.TryGetValue(Securities[security.Symbol.Underlying], out count) || count != 1)
+                !securityInitializationCounts.TryGetValue(Securities[security.Symbol.Underlying], out count) || count != 1)
             {
                 throw new RegressionTestException($"Expected the underlying security to be initialized once and once only, " +
                     $"but was initialized {count} times");

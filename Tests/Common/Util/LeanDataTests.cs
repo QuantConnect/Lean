@@ -354,27 +354,23 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void IncorrectPaths_CannotBeParsed()
         {
-            DateTime date;
-            Symbol symbol;
-            Resolution resolution;
-
             var invalidPath = "forex/fxcm/eurusd/20160101_quote.zip";
-            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(invalidPath, out _, out _, out _));
 
-            var nonExistantPath = "Data/f/fxcm/eurusd/20160101_quote.zip";
-            Assert.IsFalse(LeanData.TryParsePath(nonExistantPath, out symbol, out date, out resolution));
+            var nonExistentPath = "Data/f/fxcm/eurusd/20160101_quote.zip";
+            Assert.IsFalse(LeanData.TryParsePath(nonExistentPath, out _, out _, out _));
 
             var notAPath = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
-            Assert.IsFalse(LeanData.TryParsePath(notAPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(notAPath, out _, out _, out _));
 
             var  emptyPath = "";
-            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(emptyPath, out _, out _, out _));
 
             string nullPath = null;
-            Assert.IsFalse(LeanData.TryParsePath(nullPath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(nullPath, out _, out _, out _));
 
             var optionsTradePath = "Data/option/u sa/minute/aapl/20140606_trade_american.zip";
-            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out symbol, out date, out resolution));
+            Assert.IsFalse(LeanData.TryParsePath(optionsTradePath, out _, out _, out _));
         }
 
         [Test]
@@ -392,8 +388,8 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
             Assert.AreEqual(date.Date, Parse.DateTime("2017-01-04").Date);
 
-            var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution));
+            var mixedPathSeparators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
+            Assert.IsTrue(LeanData.TryParsePath(mixedPathSeparators, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
@@ -444,7 +440,7 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("Data\\indexoption\\usa\\minute\\spx\\20210104_quote_european.zip", "SPX", "SPX")]
         [TestCase("Data\\indexoption\\usa\\minute\\spxw\\20210104_quote_european.zip", "SPXW", "SPX")]
         [TestCase("Data\\futureoption\\comex\\minute\\og\\20210428\\20210104_quote_american.zip", "OG", "GC")]
-        public void MappedTickersCorreclty(string path, string expectedSymbol, string expectedUnderlying)
+        public void MappedTickersCorrectly(string path, string expectedSymbol, string expectedUnderlying)
         {
             Assert.IsTrue(LeanData.TryParsePath(path, out var symbol, out var date, out var resolution));
 
@@ -497,14 +493,14 @@ namespace QuantConnect.Tests.Common.Util
             Resolution resolution;
 
             var cryptoPath = "Data\\crypto\\coinbase\\daily\\btcusd_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out _, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Daily);
             Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\coinbase\\hour\\btcusd_quote.zip";
-            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
+            Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out _, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.Coinbase);
             Assert.AreEqual(resolution, Resolution.Hour);

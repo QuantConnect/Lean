@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void BackwardsCompatility()
+        public void BackwardsCompatibility()
         {
             var dateTime = new DateTime(2023, 08, 01, 12, 11, 10);
             var chartPoint = new ChartPoint(dateTime, 100);

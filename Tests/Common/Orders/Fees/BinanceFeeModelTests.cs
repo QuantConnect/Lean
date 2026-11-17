@@ -75,7 +75,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             IFeeModel feeModel = new BinanceFeeModel();
 
             var order = parameters.CreateLongOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
@@ -91,7 +90,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             IFeeModel feeModel = new BinanceFeeModel();
 
             var order = parameters.CreateLongOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
@@ -139,7 +137,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
             var order = parameters.CreateLongOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
@@ -155,7 +152,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
 
             var order = parameters.CreateLongOrder(Quantity);
-            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(

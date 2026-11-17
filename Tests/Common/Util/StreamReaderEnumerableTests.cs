@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Util
             using var enumerable = new StreamReaderEnumerable(streamReader, disposable);
 
             // complete enumeration
-            var lines = enumerable.ToList();
+            enumerable.ToList();
 
             Assert.IsTrue(streamReader.DisposeCalled);
             Assert.IsTrue(streamReader.DisposeCalledDisposingValue);

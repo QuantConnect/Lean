@@ -1078,8 +1078,7 @@ namespace QuantConnect
         /// <param name="queue">queue object</param>
         public static void Clear<T>(this ConcurrentQueue<T> queue)
         {
-            T item;
-            while (queue.TryDequeue(out item))
+            while (queue.TryDequeue(out _))
             {
                 // NOP
             }
@@ -1766,7 +1765,6 @@ namespace QuantConnect
             var csv = new List<string>(size);
 
             var last = -1;
-            var count = 0;
             var textDataField = false;
 
             for (var i = 0; i < str.Length; i++)
@@ -1780,7 +1778,6 @@ namespace QuantConnect
                 {
                     csv.Add(str.Substring(last + 1, (i - last)).Trim(' ', ','));
                     last = i;
-                    count++;
                 }
             }
 
@@ -3354,7 +3351,7 @@ namespace QuantConnect
         [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this Enum value, PyObject pyObject)
         {
-            var type = GetType(pyObject);
+            GetType(pyObject);
             return value.ToString();
         }
 

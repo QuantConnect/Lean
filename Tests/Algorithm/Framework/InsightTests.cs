@@ -440,30 +440,30 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.Multiple(() =>
             {
                 var insight1 = new Insight(Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, tag);
-                AssertInsigthValues(insight1, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
+                AssertInsightValues(insight1, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
                     default(DateTime), default(DateTime));
 
                 var insight2 = new Insight(Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight2, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
+                AssertInsightValues(insight2, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
                     default(DateTime), default(DateTime));
 
                 var insight3 = new Insight(Symbols.SPY, time => time.AddDays(1), InsightType.Price, InsightDirection.Up, tag);
-                AssertInsigthValues(insight3, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
+                AssertInsightValues(insight3, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, null, null, null, null, tag,
                                    default(DateTime), default(DateTime));
 
                 var insight4 = new Insight(Symbols.SPY, time => time.AddDays(1), InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight4, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
+                AssertInsightValues(insight4, Symbols.SPY, new TimeSpan(0), InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
                     default(DateTime), default(DateTime));
 
                 var generatedTime = new DateTime(2024, 05, 23);
                 var insight5 = new Insight(generatedTime, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag);
-                AssertInsigthValues(insight5, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
+                AssertInsightValues(insight5, Symbols.SPY, Time.OneDay, InsightType.Price, InsightDirection.Up, 1.0, 0.5, "Model", 0.25, tag,
                     generatedTime, generatedTime + Time.OneDay);
 
             });
         }
 
-        private static void AssertInsigthValues(Insight insight, Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction,
+        private static void AssertInsightValues(Insight insight, Symbol symbol, TimeSpan period, InsightType type, InsightDirection direction,
             double? magnitude, double? confidence, string sourceModel, double? weight, string tag, DateTime generatedTimeUtc, DateTime closeTimeUtc)
         {
             Assert.AreEqual(symbol, insight.Symbol);

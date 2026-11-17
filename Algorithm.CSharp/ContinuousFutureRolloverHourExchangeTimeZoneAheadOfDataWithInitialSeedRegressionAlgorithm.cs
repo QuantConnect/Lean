@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ContinuousFutureRolloverHourExchangeTimeZoneAheadOfDataWithInitialSeedRegressionAlgorithm
         : ContinuousFutureRolloverHourExchangeTimeZoneAheadOfDataRegressionAlgorithm
     {
-        protected override bool SeedIntialPrices => true;
+        protected override bool SeedInitialPrices => true;
 
         /// <summary>
         /// Data Points count of the algorithm history

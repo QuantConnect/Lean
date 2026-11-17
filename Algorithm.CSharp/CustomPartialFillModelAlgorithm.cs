@@ -99,8 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     fill.Status = OrderStatus.PartiallyFilled;
                     _absoluteRemainingByOrderId[order.Id] = absoluteRemaining - Math.Abs(fill.FillQuantity);
-                    var price = fill.FillPrice;
-                    //_algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {_absoluteRemainingByOrderId[order.Id]} Price - {price}");
+                    //_algorithm.Debug($"{_algorithm.Time} - Partial Fill - Remaining {_absoluteRemainingByOrderId[order.Id]} Price - {fill.FillPrice}");
                 }
                 return fill;
             }

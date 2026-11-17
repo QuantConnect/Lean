@@ -237,7 +237,6 @@ namespace QuantConnect.Orders.Fees
                 case OrderType.MarketOnOpen:
                 case OrderType.MarketOnClose:
                 case OrderType.Market:
-                    decimal securityPrice;
                     if (order.Direction == OrderDirection.Buy)
                     {
                         price = security.BidPrice;

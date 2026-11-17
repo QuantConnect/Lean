@@ -391,16 +391,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic paramenter = null)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic parameter = null)
         {
-            paramenter = paramenter ?? Resolution.Daily;
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(paramenter));
+            parameter = parameter ?? Resolution.Daily;
+            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(parameter));
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)parameter).ToPython());
                     var model = new PortfolioConstructionModelPythonWrapper(instance);
                     algorithm.SetPortfolioConstruction(model);
                 }

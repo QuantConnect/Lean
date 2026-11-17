@@ -66,7 +66,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             base.Setup(algorithm, job, resultHandler, api, isolatorLimitProvider);
 
             var utcNow = TimeProvider.GetUtcNow();
-            var todayInAlgorithmTimeZone = utcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
             // set up an scheduled event to refresh market hours and symbol properties every certain period of time
             var times = Time.DateTimeRange(utcNow.Date, Time.EndOfTime, Algorithm.Settings.DatabasesRefreshPeriod).Where(date => date > utcNow);

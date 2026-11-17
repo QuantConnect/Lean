@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _selectSingle;
         private int _selectionsCount;
 
-        private Dictionary<Security, int> _securityInializationCounts = new();
+        private Dictionary<Security, int> _securityInitializationCounts = new();
 
         public override void Initialize()
         {
@@ -50,13 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             var seeder = new FuncSecuritySeeder((security) =>
             {
-                if (security is Option option)
+                if (security is Option)
                 {
-                    if (!_securityInializationCounts.TryGetValue(security, out var count))
+                    if (!_securityInitializationCounts.TryGetValue(security, out var count))
                     {
                         count = 0;
                     }
-                    _securityInializationCounts[security] = count + 1;
+                    _securityInitializationCounts[security] = count + 1;
                 }
 
                 Debug($"[{Time}] Seeding {security.Symbol}");
@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.Contracts(contracts =>
             {
                 _selectionsCount++;
-                _securityInializationCounts.Clear();
+                _securityInitializationCounts.Clear();
 
                 List<Symbol> selected;
                 if (_selectSingle)
@@ -132,9 +132,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var addedContracts = changes.AddedSecurities.OfType<Option>().ToList();
-            if (addedContracts.Any(x => !_securityInializationCounts.TryGetValue(x, out var count) || count != 1))
+            if (addedContracts.Any(x => !_securityInitializationCounts.TryGetValue(x, out var count) || count != 1))
             {
-                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _securityInializationCounts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
+                throw new RegressionTestException($"Expected all contracts to be initialized. Added: {string.Join(", ", addedContracts.Select(x => x.Symbol.Value))}, Initialized: {string.Join(", ", _securityInitializationCounts.Select(x => $"{x.Key.Symbol.Value} - {x.Value}"))}");
             }
 
             // The first contract will be selected always, so we expect it to be added only once

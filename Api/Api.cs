@@ -1341,10 +1341,10 @@ namespace QuantConnect.Api
         /// <returns><see cref="RestResponse"/></returns>
         public RestResponse UpdateOptimization(string optimizationId, string name = null)
         {
-            object paylaod = !string.IsNullOrEmpty(name)
+            object payload = !string.IsNullOrEmpty(name)
                 ? new { optimizationId, name }
                 : new { optimizationId };
-            TryJsonPost("optimizations/update", out RestResponse result, paylaod);
+            TryJsonPost("optimizations/update", out RestResponse result, payload);
             return result;
         }
 

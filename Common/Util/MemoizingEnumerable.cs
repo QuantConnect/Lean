@@ -49,7 +49,7 @@ namespace QuantConnect.Util
                 }
                 if (_buffer == null)
                 {
-                    foreach (var item in this) {}
+                    foreach (var _ in this) {}
                 }
                 return _buffer.Count;
             }

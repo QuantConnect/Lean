@@ -384,13 +384,13 @@ namespace QuantConnect.Tests.Common
                 using (var stream = new MemoryStream(serialized))
                 {
                     // verify its correct
-                    var result = Serializer.Deserialize<List<Tick>>(stream);
+                    Serializer.Deserialize<List<Tick>>(stream);
                 }
 
                 var start = DateTime.UtcNow;
                 for (var i = 0; i < 10; i++)
                 {
-                    serialized = ticks.ProtobufSerialize(guid);
+                    ticks.ProtobufSerialize(guid);
                 }
                 var end = DateTime.UtcNow;
                 Log.Trace($"PROTO BUF TOOK {end - start}");
@@ -398,12 +398,12 @@ namespace QuantConnect.Tests.Common
 
             {
                 // warmup
-                var serialized = JsonConvert.SerializeObject(ticks);
+                JsonConvert.SerializeObject(ticks);
 
                 var start = DateTime.UtcNow;
                 for (var i = 0; i < 10; i++)
                 {
-                    serialized = JsonConvert.SerializeObject(ticks);
+                    JsonConvert.SerializeObject(ticks);
                 }
                 var end = DateTime.UtcNow;
 

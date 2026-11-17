@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.StartDateToUse = new DateTime(2014, 05, 03);
             _algorithm.EndDateToUse = new DateTime(2014, 05, 04);
 
-            var results = AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
+            AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
                 new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "0" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,
@@ -210,7 +210,7 @@ def set_benchmark(algorithm):
             algorithm.StartDateToUse = new DateTime(2013, 10, 07);
             algorithm.EndDateToUse = new DateTime(2013, 10, 11);
 
-            var results = AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
+            AlgorithmRunner.RunLocalBacktest(nameof(TestBenchmarkAlgorithm),
                 new Dictionary<string, string> { { PerformanceMetrics.TotalOrders, "0" } },
                 Language.CSharp,
                 AlgorithmStatus.Completed,

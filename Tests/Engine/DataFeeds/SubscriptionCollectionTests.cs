@@ -83,8 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 while (DateTime.UtcNow < end)
                 {
-                    Subscription removed;
-                    subscriptions.TryRemove(config, out removed);
+                    subscriptions.TryRemove(config, out _);
 
                     Thread.Sleep(1);
                 }
@@ -98,7 +97,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 while (DateTime.UtcNow < end)
                 {
-                    foreach (var sub in subscriptions) { }
+                    foreach (var _ in subscriptions) { }
 
                     Thread.Sleep(1);
                 }
@@ -112,65 +111,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DefaultFillForwardResolution()
         {
-            var subscriptionColletion = new SubscriptionCollection();
-            var defaultFillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution();
-            Assert.AreEqual(defaultFillForwardResolutio.Value, new TimeSpan(0, 1, 0));
+            var subscriptionCollection = new SubscriptionCollection();
+            var defaultFillForwardResolution = subscriptionCollection.UpdateAndGetFillForwardResolution();
+            Assert.AreEqual(defaultFillForwardResolution.Value, new TimeSpan(0, 1, 0));
         }
 
         [Test]
         public void UpdatesFillForwardResolutionOverridesDefaultWhenNotAdding()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Daily);
 
-            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
-            Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(1, 0, 0, 0));
+            var fillForwardResolution = subscriptionCollection.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            Assert.AreEqual(fillForwardResolution.Value, new TimeSpan(1, 0, 0, 0));
             subscription.Dispose();
         }
 
         [Test]
         public void UpdatesFillForwardResolutionSuccessfullyWhenNotAdding()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second);
 
-            var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
-            Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(0, 0, 1));
+            var fillForwardResolution = subscriptionCollection.UpdateAndGetFillForwardResolution(subscription.Configuration);
+            Assert.AreEqual(fillForwardResolution.Value, new TimeSpan(0, 0, 1));
             subscription.Dispose();
         }
 
         [Test]
         public void UpdatesFillForwardResolutionSuccessfullyWhenAdding()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             using var subscription = CreateSubscription(Resolution.Second);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
         }
 
         [Test]
         public void UpdatesFillForwardResolutionSuccessfullyOverridesDefaultWhenAdding()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Daily);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
             subscription.Dispose();
         }
 
         [Test]
         public void DoesNotUpdateFillForwardResolutionWhenAddingBiggerResolution()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second);
             var subscription2 = CreateSubscription(Resolution.Minute);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
             subscription.Dispose();
             subscription2.Dispose();
         }
@@ -178,17 +177,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void UpdatesFillForwardResolutionWhenRemoving()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             using var subscription = CreateSubscription(Resolution.Second);
             using var subscription2 = CreateSubscription(Resolution.Daily);
 
-            subscriptionColletion.TryAdd(subscription);
-            subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
-            subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryAdd(subscription);
+            subscriptionCollection.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryRemove(subscription.Configuration, out var outSubscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            subscriptionCollection.TryRemove(subscription2.Configuration, out var outSubscription2);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             outSubscription.Dispose();
             outSubscription2.Dispose();
         }
@@ -196,44 +195,44 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void FillForwardResolutionIgnoresTick()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             using var subscription = CreateSubscription(Resolution.Tick);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryRemove(subscription.Configuration, out var outSubscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             outSubscription.Dispose();
         }
 
         [Test]
         public void FillForwardResolutionIgnoresInternalFeed()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             using var subscription = CreateSubscription(Resolution.Second, "AAPL", true);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
-            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryRemove(subscription.Configuration, out var outSubscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             outSubscription.Dispose();
         }
 
         [Test]
         public void DoesNotUpdateFillForwardResolutionWhenRemovingDuplicateResolution()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             using var subscription = CreateSubscription(Resolution.Second);
             using var subscription2 = CreateSubscription(Resolution.Second, "SPY");
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription.Configuration, out var outSubscription);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
-            subscriptionColletion.TryRemove(subscription2.Configuration, out var outSubscription2);
-            Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryRemove(subscription.Configuration, out var outSubscription);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscriptionCollection.TryRemove(subscription2.Configuration, out var outSubscription2);
+            Assert.AreEqual(subscriptionCollection.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             outSubscription.Dispose();
             outSubscription2.Dispose();
         }
@@ -241,7 +240,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscriptionsAreSortedWhenAdding()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
             var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
@@ -249,21 +248,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
             var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription });
-            subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
-            subscriptionColletion.TryAdd(subscription3);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
-            subscriptionColletion.TryAdd(subscription4);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
-            subscriptionColletion.TryAdd(subscription5);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription5, subscription });
-            subscriptionColletion.TryAdd(subscription6);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription });
+            subscriptionCollection.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription2, subscription });
+            subscriptionCollection.TryAdd(subscription3);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription2, subscription3, subscription });
+            subscriptionCollection.TryAdd(subscription4);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
+            subscriptionCollection.TryAdd(subscription5);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription2, subscription3, subscription5, subscription });
+            subscriptionCollection.TryAdd(subscription6);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
 
 
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
                 SecurityType.Option, SecurityType.Option, SecurityType.Future });
 
             subscription.Dispose();
@@ -277,22 +276,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscriptionsAreSortedWhenAdding2()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
             var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
             var subscription4 = CreateSubscription(Resolution.Second, "EURGBP");
 
-            subscriptionColletion.TryAdd(subscription);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription });
-            subscriptionColletion.TryAdd(subscription2);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription });
-            subscriptionColletion.TryAdd(subscription3);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription2, subscription3, subscription });
-            subscriptionColletion.TryAdd(subscription4);
+            subscriptionCollection.TryAdd(subscription);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription });
+            subscriptionCollection.TryAdd(subscription2);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription2, subscription });
+            subscriptionCollection.TryAdd(subscription3);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription2, subscription3, subscription });
+            subscriptionCollection.TryAdd(subscription4);
 
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
 
             subscription.Dispose();
             subscription2.Dispose();
@@ -303,7 +302,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void SubscriptionsAreSortedWhenRemoving()
         {
-            var subscriptionColletion = new SubscriptionCollection();
+            var subscriptionCollection = new SubscriptionCollection();
             var subscription = CreateSubscription(Resolution.Second, Futures.Metals.Gold, false, SecurityType.Future);
             var subscription2 = CreateSubscription(Resolution.Second, "SPY");
             var subscription3 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option);
@@ -311,34 +310,34 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var subscription5 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.OpenInterest);
             var subscription6 = CreateSubscription(Resolution.Second, "AAPL", false, SecurityType.Option, TickType.Quote);
 
-            subscriptionColletion.TryAdd(subscription);
-            subscriptionColletion.TryAdd(subscription2);
-            subscriptionColletion.TryAdd(subscription3);
-            subscriptionColletion.TryAdd(subscription4);
-            subscriptionColletion.TryAdd(subscription5);
-            subscriptionColletion.TryAdd(subscription6);
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
+            subscriptionCollection.TryAdd(subscription);
+            subscriptionCollection.TryAdd(subscription2);
+            subscriptionCollection.TryAdd(subscription3);
+            subscriptionCollection.TryAdd(subscription4);
+            subscriptionCollection.TryAdd(subscription5);
+            subscriptionCollection.TryAdd(subscription6);
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription2, subscription3, subscription6, subscription5, subscription });
 
-            subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
+            subscriptionCollection.TryRemove(subscription2.Configuration, out subscription2);
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option,
                             SecurityType.Option, SecurityType.Option, SecurityType.Future });
 
-            subscriptionColletion.TryRemove(subscription3.Configuration, out subscription3);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
+            subscriptionCollection.TryRemove(subscription3.Configuration, out subscription3);
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option, SecurityType.Future });
 
-            subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription6, subscription5 });
+            subscriptionCollection.TryRemove(subscription.Configuration, out subscription);
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option, SecurityType.Option });
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription6, subscription5 });
 
-            subscriptionColletion.TryRemove(subscription6.Configuration, out subscription6);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
-            Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription5 });
+            subscriptionCollection.TryRemove(subscription6.Configuration, out subscription6);
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Option });
+            Assert.AreEqual(subscriptionCollection.ToList(), new[] { subscription4, subscription5 });
 
-            subscriptionColletion.TryRemove(subscription5.Configuration, out subscription5);
-            Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] {SecurityType.Equity});
+            subscriptionCollection.TryRemove(subscription5.Configuration, out subscription5);
+            Assert.AreEqual(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList(), new[] {SecurityType.Equity});
 
-            subscriptionColletion.TryRemove(subscription4.Configuration, out subscription4);
-            Assert.IsTrue(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList().IsNullOrEmpty());
+            subscriptionCollection.TryRemove(subscription4.Configuration, out subscription4);
+            Assert.IsTrue(subscriptionCollection.Select(x => x.Configuration.SecurityType).ToList().IsNullOrEmpty());
 
             subscription.Dispose();
             subscription2.Dispose();

@@ -159,7 +159,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
                 // call the create_universes method
                 var universes = model.CreateUniverses(algorithm).ToList();
                 var universe = universes.First();
-                var selectedSymbols = universe.SelectSymbols(DateTime.Now, new BaseDataCollection()).ToList();
+                universe.SelectSymbols(DateTime.Now, new BaseDataCollection()).ToList();
                 int selectCount = pyModelInstance.GetAttr("select_call_count").As<int>();
                 Assert.Greater(selectCount, 0);
 
@@ -205,7 +205,6 @@ class MockPairsTradingAlphaModel(BasePairsTradingAlphaModel):
                 var pyModel = PyModule.FromString("test", code).GetAttr("MockPairsTradingAlphaModel");
                 var pyInstance = pyModel.Invoke();
 
-                var algorithm = new QCAlgorithm();
                 var model = new BasePairsTradingAlphaModel();
                 model.SetPythonInstance(pyInstance);
 

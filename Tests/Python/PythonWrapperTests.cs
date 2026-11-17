@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Python
             [Test]
             public void SettlementModelPythonWrapperWorks()
             {
-                var results = AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
+                AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
                     new Dictionary<string, string>()
                     {
                         {PerformanceMetrics.TotalOrders, "0"},
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Python
             [Test]
             public void BenchmarkModelPythonWrapperWorks()
             {
-                var results = AlgorithmRunner.RunLocalBacktest("CustomBenchmarkRegressionAlgorithm",
+                AlgorithmRunner.RunLocalBacktest("CustomBenchmarkRegressionAlgorithm",
                     new Dictionary<string, string>()
                     {
                         {PerformanceMetrics.TotalOrders, "0"},

@@ -297,8 +297,6 @@ namespace QuantConnect.Data
         /// </summary>
         private IEnumerable<BaseData> FromCorporateFactorRows(IEnumerable<CorporateFactorRow> corporateFactors, Symbol symbol)
         {
-            var dividends = new List<Dividend>();
-
             // Get all dividends from the corporate actions
             var rows = corporateFactors.OrderBy(corporateFactor => corporateFactor.Date).ToArray();
             for (var i = 0; i < rows.Length - 1; i++)

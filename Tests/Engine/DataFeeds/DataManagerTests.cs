@@ -142,9 +142,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DateTime(2019, 1, 1),
                 new DateTime(2019, 1, 1));
 
-            using var enquableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
+            using var enqueueableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
             dataFeed.Subscription = new Subscription(request,
-                enquableEnumerator,
+                enqueueableEnumerator,
                 null);
 
             Assert.IsTrue(dataManager.AddSubscription(request));
@@ -197,9 +197,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DateTime(2019, 1, 1),
                 new DateTime(2019, 1, 1));
 
-            using var enquableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
+            using var enqueueableEnumerator = new EnqueueableEnumerator<SubscriptionData>();
             dataFeed.Subscription = new Subscription(request,
-                enquableEnumerator,
+                enqueueableEnumerator,
                 null);
 
             // Universe A: adds the subscription

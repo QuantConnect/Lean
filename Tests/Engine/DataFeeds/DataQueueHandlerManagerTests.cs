@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
+            compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
 
             Assert.DoesNotThrow(() => compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => { }));
             compositeDataQueueHandler.Dispose();
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             compositeDataQueueHandler.SetJob(new LiveNodePacket { DataQueueHandler = "[ \"TestDataHandler\" ]" });
 
             var dataConfig = GetConfig();
-            var enumerator = compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
+            compositeDataQueueHandler.Subscribe(dataConfig, (_, _) => {});
 
             compositeDataQueueHandler.Unsubscribe(dataConfig);
             compositeDataQueueHandler.Unsubscribe(dataConfig);

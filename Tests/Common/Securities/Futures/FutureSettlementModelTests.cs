@@ -231,12 +231,12 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             _portfolio.InvalidateTotalPortfolioValue();
 
             // settled profit was reset because we closed the position
-            var currentlyStettledProfit = profit * ((fillQuantityA + fillQuantityC) / fillQuantityA);
-            Assert.AreEqual(currentlyStettledProfit, _futureHoldings.SettledProfit);
+            var currentlySettledProfit = profit * ((fillQuantityA + fillQuantityC) / fillQuantityA);
+            Assert.AreEqual(currentlySettledProfit, _futureHoldings.SettledProfit);
             var closeProfit = new CashAmount(_future.Holdings.TotalCloseProfit(includeFees: false, exitPrice: exitFillPrice, entryPrice: averagePrice, -fillQuantityC), Currencies.USD);
-            Assert.AreEqual(startCash + closeProfit.Amount + currentlyStettledProfit, _portfolio.CashBook[Currencies.USD].Amount);
-            Assert.AreEqual(startTpv + closeProfit.Amount + _futureHoldings.UnsettledProfit + currentlyStettledProfit, _portfolio.TotalPortfolioValue);
-            Assert.AreEqual(_futureHoldings.UnsettledProfit + currentlyStettledProfit, _future.Holdings.TotalCloseProfit(includeFees: false, exitPrice: _future.Price, averagePrice, _future.Holdings.Quantity));
+            Assert.AreEqual(startCash + closeProfit.Amount + currentlySettledProfit, _portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(startTpv + closeProfit.Amount + _futureHoldings.UnsettledProfit + currentlySettledProfit, _portfolio.TotalPortfolioValue);
+            Assert.AreEqual(_futureHoldings.UnsettledProfit + currentlySettledProfit, _future.Holdings.TotalCloseProfit(includeFees: false, exitPrice: _future.Price, averagePrice, _future.Holdings.Quantity));
 
             // finally let's close the entire position
             averagePrice = _futureHoldings.AveragePrice;

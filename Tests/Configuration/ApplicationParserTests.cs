@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Configuration
             Assert.Throws<UnrecognizedCommandParsingException>(
                 () =>
                 {
-                    var options = ApplicationParser.Parse(
+                    ApplicationParser.Parse(
                         "Test AppName",
                         "Test Description",
                         "Test Help Text",
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Configuration
         }
 
         [Test]
-        public void PaserNoValueArg()
+        public void ParserNoValueArg()
         {
             var args = new[] { "--force-exchange-always-open" };
 

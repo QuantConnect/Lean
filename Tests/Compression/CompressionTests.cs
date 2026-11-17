@@ -136,7 +136,7 @@ namespace QuantConnect.Tests.Compression
             {
                 root.Create();
                 File.WriteAllText(testPath, "string contents");
-                var sub = root.CreateSubdirectory("sub");
+                root.CreateSubdirectory("sub");
                 File.WriteAllText(test2Path, "string contents 2");
                 QuantConnect.Compression.ZipDirectory(root.FullName, zipFile);
                 Directory.Delete(root.FullName, true);
@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Compression
             {
                 root.Create();
                 File.WriteAllText(testPath, "string contents");
-                var sub = root.CreateSubdirectory("sub");
+                root.CreateSubdirectory("sub");
                 File.WriteAllText(test2Path, "string contents 2");
                 QuantConnect.Compression.ZipDirectory(root.FullName, zipFile);
                 Directory.Delete(root.FullName, true);
@@ -199,7 +199,7 @@ namespace QuantConnect.Tests.Compression
                 Directory.CreateDirectory("./jo\\se");
                 root.Create();
                 File.WriteAllText(testPath, "string contents");
-                var sub = root.CreateSubdirectory("sub");
+                root.CreateSubdirectory("sub");
                 File.WriteAllText(test2Path, "string contents 2");
                 QuantConnect.Compression.ZipDirectory(root.FullName, zipFile);
                 Directory.Delete(root.FullName, true);

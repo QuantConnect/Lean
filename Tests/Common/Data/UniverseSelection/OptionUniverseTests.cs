@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             foreach (var data in _optionUniverseFile)
             {
-                string csv = null;
+                string csv;
                 if (data.Symbol.SecurityType.IsOption())
                 {
                     csv = OptionUniverse.ToCsv(data.Symbol, data.Open, data.High, data.Low, data.Close, data.Volume, data.OpenInterest,

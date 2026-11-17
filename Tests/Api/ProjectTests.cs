@@ -272,7 +272,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Test creating, compiling and backtesting a C# project via the Api
         /// </summary>
         [Test]
-        public void CSharpProject_CreatedCompiledAndBacktested_Successully()
+        public void CSharpProject_CreatedCompiledAndBacktested_Successfully()
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
@@ -286,7 +286,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// Test creating, compiling and backtesting a Python project via the Api
         /// </summary>
         [Test]
-        public void PythonProject_CreatedCompiledAndBacktested_Successully()
+        public void PythonProject_CreatedCompiledAndBacktested_Successfully()
         {
             var language = Language.Python;
             var code = File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py");
@@ -643,7 +643,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(backtestRead.Success);
 
             // Now wait until the backtest is completed and request the orders again
-            backtestRead = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId);
+            WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId);
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId);
             string stringRepresentation;
             foreach (var backtestOrder in backtestOrdersRead.Orders)
@@ -1000,7 +1000,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             var finish = DateTime.UtcNow.AddMinutes(5);
-            var readOptimization = ApiClient.ReadOptimization(optimization.OptimizationId);
+            Optimization readOptimization;
             do
             {
                 Thread.Sleep(5000);
@@ -1348,7 +1348,7 @@ namespace QuantConnect.Algorithm.CSharp
         [TestCase("Initialize")]
         [TestCase("OnData")]
 
-        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessully(string section)
+        public void CSharpProject_CreatedCompiledAndBacktested_Unsuccessfully(string section)
         {
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
@@ -1379,7 +1379,7 @@ namespace QuantConnect.Algorithm.CSharp
         [TestCase("Initialize")]
         [TestCase("OnData")]
 
-        public void PythonProject_CreatedCompiledAndBacktested_Unsuccessully(string section)
+        public void PythonProject_CreatedCompiledAndBacktested_Unsuccessfully(string section)
         {
             var language = Language.Python;
             var code = File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py");

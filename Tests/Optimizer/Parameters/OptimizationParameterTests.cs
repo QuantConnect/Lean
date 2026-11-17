@@ -56,7 +56,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
+                    new OptimizationStepParameter("ema-fast", 1, 100, new decimal(step));
                 });
             }
 
@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                    new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
                 });
             }
 
@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var optimizationParameter = new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
+                    new OptimizationStepParameter("ema-fast", 1, 100, step, minStep);
                 });
             }
 
@@ -350,7 +350,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             {
                 Assert.Throws<ArgumentException>(() =>
                 {
-                    var param = new OptimizationStepParameter("ema-fast", min, max, step);
+                    new OptimizationStepParameter("ema-fast", min, max, step);
                 });
             }
         }

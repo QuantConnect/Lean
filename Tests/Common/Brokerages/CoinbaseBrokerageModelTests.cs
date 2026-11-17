@@ -52,16 +52,14 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void CanUpdateOrderTest()
         {
-            BrokerageMessageEvent message;
             Assert.AreEqual(false, _coinbaseBrokerageModel.CanUpdateOrder(TestsHelpers.GetSecurity(), Mock.Of<Order>(),
-                new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields()), out message));
+                new UpdateOrderRequest(DateTime.UtcNow, 1, new UpdateOrderFields()), out _));
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void CanSubmitOrder_WhenBrokerageIdIsCorrect(bool isUpdate)
         {
-            BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(10.0m);
 
@@ -70,18 +68,17 @@ namespace QuantConnect.Tests.Common.Brokerages
                 order.Object.BrokerId = new List<string>() {"abc123"};
             }
 
-            Assert.AreEqual(!isUpdate, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out message));
+            Assert.AreEqual(!isUpdate, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(), order.Object, out _));
         }
 
         [TestCase(0.01, true)]
         [TestCase(0.0000000015, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Coinbase), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Coinbase), order.Object, out _));
         }
 
         [TestCase(SecurityType.Crypto, true)]
@@ -92,11 +89,10 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Equity, false)]
         public void CanOnlySubmitCryptoOrders(SecurityType securityType, bool isValidSecurityType)
         {
-            BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(10.0m);
 
-            Assert.AreEqual(isValidSecurityType, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
+            Assert.AreEqual(isValidSecurityType, _coinbaseBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(1.0m, securityType), order.Object, out _));
         }
 
         [TestCase(OrderType.Market, 2019, 2, 1, 0, 0, 0, true)]
@@ -111,11 +107,10 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var utcTime = new DateTime(year, month, day, hour, minute, second);
 
-            BrokerageMessageEvent message;
             var security = TestsHelpers.GetSecurity();
             var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, utcTime, "Test Order"));
 
-            Assert.AreEqual(isValidOrderType, _coinbaseBrokerageModel.CanSubmitOrder(security, order, out message));
+            Assert.AreEqual(isValidOrderType, _coinbaseBrokerageModel.CanSubmitOrder(security, order, out _));
         }
 
         [Test]

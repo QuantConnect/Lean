@@ -391,7 +391,7 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
-        public void HasUnderlyingSymbolReturnsFalsWhenSpecifyingIncorrectUnderlying()
+        public void HasUnderlyingSymbolReturnsFalseWhenSpecifyingIncorrectUnderlying()
         {
             Assert.IsFalse(Symbols.SPY_C_192_Feb19_2016.HasUnderlyingSymbol(Symbols.AAPL));
         }
@@ -495,7 +495,7 @@ namespace QuantConnect.Tests.Common
             {
                 Assert.Throws<InvalidOperationException>(() =>
                 {
-                    var canonical = symbol.Canonical;
+                    _ = symbol.Canonical;
                 });
             }
         }

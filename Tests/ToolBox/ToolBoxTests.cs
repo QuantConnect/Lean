@@ -42,12 +42,12 @@ namespace QuantConnect.Tests.ToolBox
         [TestCase("--app=RDG --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 0)]
         [TestCase("--app=RDG --tickers=AAPL,SPY,TSLA --resolution=Daily --from-date=20200820-00:00:00 --to-date=20200830-00:00:00", 3)]
         [TestCase("--app=RDG --tickers=ES --security-type=Future --resolution=Minute --destination-dir=/Lean/Data", 1)]
-        public void CanParseTickersCorrectly(string args, int expectedTcikerCount)
+        public void CanParseTickersCorrectly(string args, int expectedTickerCount)
         {
             var options = ToolboxArgumentParser.ParseArguments(args.Split(' '));
             var tickers = ToolboxArgumentParser.GetTickers(options);
 
-            Assert.AreEqual(expectedTcikerCount, tickers.Count);
+            Assert.AreEqual(expectedTickerCount, tickers.Count);
         }
     }
 }

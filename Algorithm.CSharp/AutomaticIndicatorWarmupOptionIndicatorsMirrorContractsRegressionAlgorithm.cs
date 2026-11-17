@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expiration = new DateTime(2015, 12, 24);
             var strike = 650m;
 
-            var equity = AddEquity(underlying, resolution).Symbol;
+            AddEquity(underlying, resolution);
             var option = QuantConnect.Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put, strike, expiration);
             AddOptionContract(option, resolution);
             // add the call counter side of the mirrored pair

@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Indicators
             // Verify EndTime does not overflow when accessed before the first Update()
             Assert.DoesNotThrow(() =>
             {
-                var currentEndTime = session.EndTime;
+                _ = session.EndTime;
             });
 
             session.Update(new TradeBar(new DateTime(2025, 8, 25, 10, 0, 0), symbol, 100, 101, 99, 100, 1000, TimeSpan.FromHours(1)));

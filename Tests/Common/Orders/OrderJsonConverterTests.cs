@@ -358,7 +358,6 @@ namespace QuantConnect.Tests.Common.Orders
 }";
 
             var time = DateTime.SpecifyKind(new DateTime(2019, 12, 24, 14, 31, 0), DateTimeKind.Utc);
-            var fillTime = DateTime.SpecifyKind(new DateTime(2019, 12, 26, 14, 31, 0), DateTimeKind.Utc);
             var updateTime = DateTime.SpecifyKind(new DateTime(2019, 12, 25, 14, 31, 0), DateTimeKind.Utc);
 
             var expected1 = new MarketOnOpenOrder(Symbol.Create("SPY", SecurityType.Equity, Market.USA), 1m, time)

@@ -656,7 +656,7 @@ namespace QuantConnect.Orders.Fills
                         order.TriggerTouched = true;
 
                         //-> 1.1 Limit surpassed: Sell.
-                        if (GetAskPrice(asset, out pricesEndTime) >= order.LimitPrice)
+                        if (GetAskPrice(asset, out _) >= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice;
@@ -672,7 +672,7 @@ namespace QuantConnect.Orders.Fills
                         order.TriggerTouched = true;
 
                         //-> 1.2 Limit surpassed: Buy.
-                        if (GetBidPrice(asset, out pricesEndTime) <= order.LimitPrice)
+                        if (GetBidPrice(asset, out _) <= order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = order.LimitPrice;

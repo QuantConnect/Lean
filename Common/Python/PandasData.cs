@@ -54,7 +54,7 @@ namespace QuantConnect.Python
 
         private static readonly string[] _nonLeanDataTypeForcedMemberNames = new[] { nameof(BaseData.Value) };
 
-        private readonly static string[] _quoteTickOnlyPropertes = new[] {
+        private readonly static string[] _quoteTickOnlyProperties = new[] {
             nameof(Tick.AskPrice),
             nameof(Tick.AskSize),
             nameof(Tick.BidPrice),
@@ -245,7 +245,7 @@ namespace QuantConnect.Python
                 }
                 else if (member.IsTickProperty && tick != null)
                 {
-                    if (tick.TickType != TickType.Quote && _quoteTickOnlyPropertes.Contains(member.Member.Name))
+                    if (tick.TickType != TickType.Quote && _quoteTickOnlyProperties.Contains(member.Member.Name))
                     {
                         value = null;
                     }
@@ -506,7 +506,7 @@ namespace QuantConnect.Python
             {
                 HashSet<string> columnNames;
 
-                if (data is DynamicData dynamicData)
+                if (data is DynamicData)
                 {
                     columnNames = (data as DynamicData)?.GetStorageDictionary()
                         // if this is a PythonData instance we add in '__typename' which we don't want into the data frame

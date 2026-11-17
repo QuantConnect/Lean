@@ -414,7 +414,7 @@ namespace QuantConnect.Securities
 
             // Use the following loop to converge on a value that places us under our target allocation when adjusted for fees
             var lastOrderQuantity = 0m;     // For safety check
-            decimal orderFees = 0m;
+            decimal orderFees;
             decimal signedTargetHoldingsMargin;
             decimal orderQuantity;
 

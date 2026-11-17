@@ -446,7 +446,6 @@ def get_length(universe):
         public void FilterTypeDoesNotBreakOnMissingExpiryFunction()
         {
             var time = new DateTime(2016, 02, 17, 13, 0, 0);
-            var underlying = new Tick { Value = 10m, Time = time };
 
             // By Default only includes standards
             Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe => universe;

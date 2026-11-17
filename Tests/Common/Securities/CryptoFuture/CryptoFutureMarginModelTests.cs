@@ -108,7 +108,6 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
         public void MarginRemainingWithUsdtOnlyCollateral()
         {
             var algo = GetBinanceFuturesAlgorithm();
-            var algoCash = algo.Portfolio.Cash;
             var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
             SetPrice(cryptoFuture, 16000);
 

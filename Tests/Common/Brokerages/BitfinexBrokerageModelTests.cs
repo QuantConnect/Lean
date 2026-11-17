@@ -183,11 +183,10 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(0.00003, false)]
         public void CanSubmitOrder_WhenQuantityIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
-            BrokerageMessageEvent message;
             var order = new Mock<Order>();
             order.Setup(x => x.Quantity).Returns(orderQuantity);
 
-            Assert.AreEqual(isValidOrderQuantity, _bitfinexBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Bitfinex), order.Object, out message));
+            Assert.AreEqual(isValidOrderQuantity, _bitfinexBrokerageModel.CanSubmitOrder(TestsHelpers.GetSecurity(market: Market.Bitfinex), order.Object, out _));
         }
 
         [TestCase(OrderType.Limit, true)]
@@ -208,7 +207,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             var order = new Mock<Order>();
             order.Setup(o => o.Type).Returns(orderType);
             order.Setup(o => o.Quantity).Returns(0.01m);
-            var result = _bitfinexBrokerageModel.CanSubmitOrder(security, order.Object, out var message);
+            var result = _bitfinexBrokerageModel.CanSubmitOrder(security, order.Object, out _);
 
             // Verify correct handling of each order type
             Assert.AreEqual(isSupported, result);

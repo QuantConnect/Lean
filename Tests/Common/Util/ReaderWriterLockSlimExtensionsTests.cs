@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var slim = new ReaderWriterLockSlim();
 
-            var token = slim.Read();
+            slim.Read();
 
             Assert.IsTrue(slim.IsReadLockHeld);
             slim.ExitReadLock();
@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var slim = new ReaderWriterLockSlim();
 
-            var token = slim.Write();
+            slim.Write();
             Assert.IsTrue(slim.IsWriteLockHeld);
             slim.ExitWriteLock();
 

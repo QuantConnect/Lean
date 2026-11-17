@@ -119,7 +119,7 @@ namespace QuantConnect.Data.Auxiliary
                 // previously these cases were not handled causing an exception and returning an empty factor file
                 return new CorporateFactorProvider(permtick, CorporateFactorRow.Parse(contents, out minimumDate), minimumDate);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (securityType == SecurityType.Future)
                 {

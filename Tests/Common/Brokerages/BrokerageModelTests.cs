@@ -83,8 +83,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
-                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, _order.Object, out message));
+                Assert.Throws<ArgumentException>(() => model.CanSubmitOrder(security, _order.Object, out _));
             }
         }
 
@@ -130,8 +129,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var security = GetSecurity(Symbols.SPY);
                 var model = new BrokerageModelPythonWrapper(PyCustomBrokerageModel());
                 var updateRequest = new UpdateOrderRequest(DateTime.Now, 1, new UpdateOrderFields());
-                var message = new BrokerageMessageEvent(BrokerageMessageType.Information, "", "");
-                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out message));
+                Assert.Throws<ArgumentException>(() => model.CanUpdateOrder(security, _order.Object, updateRequest, out _));
             }
         }
 
@@ -162,7 +160,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
         }
 
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void CustomPythonBrokerageCanSubmitOrderMethodDoesNotFailWhenIsNotOverridden(IBrokerageModel brokerage, BrokerageName brokerageName)
         {
             using (Py.GIL())
             {
@@ -187,7 +185,7 @@ class CustomBrokerageModel({brokerage.GetType().Name}):
         }
 
         [TestCaseSource(nameof(GetBrokerageNameTestCases))]
-        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenIsNotOverriden(IBrokerageModel brokerage, BrokerageName brokerageName)
+        public void CustomPythonBrokerageCanUpdateOrderMethodDoesNotFailWhenIsNotOverridden(IBrokerageModel brokerage, BrokerageName brokerageName)
         {
             using (Py.GIL())
             {
@@ -330,7 +328,6 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var subscriptionManager = new SubscriptionManager(timeKeeper);
                 var dataManager = new DataManagerStub();
                 subscriptionManager.SetDataManager(dataManager);
-                var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
                 var securityService = dataManager.SecurityService;
                 var securityManager = new SecurityManager(timeKeeper);
                 securityManager.SetSecurityService((SecurityService)securityService);
@@ -425,8 +422,8 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var algorithm = new AlgorithmStub();
                 algorithm.SetDateTime(DateTime.Now);
                 var portfolio = algorithm.Portfolio;
-                var appyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
-                var ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
+                var applyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
+                var ex = Assert.Throws<PythonException>(() => ((dynamic)settlementModel).ApplyFunds(applyFundsParameters));
                 Assert.AreEqual("ValueError", ex.Type.Name);
                 Assert.AreEqual("Pepe", ex.Message);
                 var scanParameters = new ScanSettlementModelParameters(portfolio, security, DateTime.UtcNow);
@@ -458,8 +455,8 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 var algorithm = new AlgorithmStub();
                 algorithm.SetDateTime(DateTime.Now);
                 var portfolio = algorithm.Portfolio;
-                var appyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
-                Assert.DoesNotThrow(() => ((dynamic)settlementModel).ApplyFunds(appyFundsParameters));
+                var applyFundsParameters = new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.Now, new CashAmount(1000, Currencies.USD), null);
+                Assert.DoesNotThrow(() => ((dynamic)settlementModel).ApplyFunds(applyFundsParameters));
                 var scanParameters = new ScanSettlementModelParameters(portfolio, security, DateTime.UtcNow);
                 Assert.DoesNotThrow(() => ((dynamic)settlementModel).Scan(scanParameters));
             }
@@ -721,7 +718,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             algorithm.AddEquity(AAPL.Value).Holdings.SetHoldings(209m, holdingQuantity);
             var security = algorithm.Securities[AAPL];
 
-            var isPossibleUpdate = brokerageModel.CanSubmitOrder(security, order, out var message);
+            var isPossibleUpdate = brokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldSubmitOrder));
         }
@@ -805,7 +802,7 @@ class CustomBrokerageModel(DefaultBrokerageModel):
 
             var order = new MarketOnOpenOrder(security.Symbol, 1, DateTime.UtcNow);
 
-            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out _);
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }

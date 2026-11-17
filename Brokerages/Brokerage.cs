@@ -640,7 +640,7 @@ namespace QuantConnect.Brokerages
                     }
                 }
 
-                var totalPorfolioValueThreshold = algorithm.Portfolio.TotalPortfolioValue * 0.02m;
+                var totalPortfolioValueThreshold = algorithm.Portfolio.TotalPortfolioValue * 0.02m;
                 // if we were returned our balances, update everything and flip our flag as having performed sync today
                 foreach (var kvp in algorithm.Portfolio.CashBook)
                 {
@@ -652,7 +652,7 @@ namespace QuantConnect.Brokerages
                     {
                         // compare in account currency
                         var delta = cash.Amount - balanceCash.Amount;
-                        if (cash.ConversionRate == 0 || Math.Abs(algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > totalPorfolioValueThreshold)
+                        if (cash.ConversionRate == 0 || Math.Abs(algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > totalPortfolioValueThreshold)
                         {
                             // log the delta between
                             Log.Trace($"Brokerage.PerformCashSync(): {balanceCash.Currency} Delta: {delta:0.00}", true);
@@ -984,7 +984,7 @@ namespace QuantConnect.Brokerages
         /// </item>
         /// </list>
         /// </returns>
-        private static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        private static (decimal closePositionQuantity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
         {
             // first we need an order to close out the current position
             var firstOrderQuantity = -holdingQuantity;

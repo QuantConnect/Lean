@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Common.Util
             string testKey,
             string specificEntryKey)
         {
-            var datesWereOverriden = false;
+            var datesWereOverridden = false;
 
             foreach (var date in commonDateTimes.Keys)
             {
@@ -84,11 +84,11 @@ namespace QuantConnect.Tests.Common.Util
                     var time = TimeSpan.Parse(timeStr, CultureInfo.InvariantCulture);
                     Assert.AreEqual(time, specificDateTimes[date]);
 
-                    datesWereOverriden = true;
+                    datesWereOverridden = true;
                 }
             }
 
-            Assert.IsTrue(datesWereOverriden);
+            Assert.IsTrue(datesWereOverridden);
         }
 
         [Test]

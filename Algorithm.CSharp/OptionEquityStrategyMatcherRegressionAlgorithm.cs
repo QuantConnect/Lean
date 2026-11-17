@@ -57,17 +57,14 @@ namespace QuantConnect.Algorithm.CSharp
                     var middleCall = contracts.First(contract => contract.Expiry == lowerCall.Expiry && contract.Strike == lowerCall.Strike + distanceBetweenStrikes);
                     var highestCall = contracts.First(contract => contract.Expiry == lowerCall.Expiry && contract.Strike == middleCall.Strike + distanceBetweenStrikes);
 
-                    var initialMargin = Portfolio.MarginRemaining;
                     MarketOrder(lowerCall.Symbol, 10);
                     MarketOrder(middleCall.Symbol, -20);
                     MarketOrder(highestCall.Symbol, 10);
-                    var freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
 
                     // let's make some trades to add some noise
                     MarketOrder(_optionSymbol.Underlying, 490);
-                    freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
@@ -78,7 +75,6 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
 
                     MarketOrder(lowerCall.Symbol, 5);
-                    freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertDefaultGroup(_optionSymbol.Underlying, 490);
@@ -86,7 +82,6 @@ namespace QuantConnect.Algorithm.CSharp
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.NakedCall.Name, 5);
 
                     MarketOrder(middleCall.Symbol, -5);
-                    freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 4);
@@ -97,7 +92,6 @@ namespace QuantConnect.Algorithm.CSharp
 
                     // trade some other asset
                     MarketOrder("SPY", 200);
-                    freeMarginPostTrade = Portfolio.MarginRemaining;
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ButterflyCall.Name, 10);
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.CoveredCall.Name, 4);

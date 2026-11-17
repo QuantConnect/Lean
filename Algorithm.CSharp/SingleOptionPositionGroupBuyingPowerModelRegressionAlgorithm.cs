@@ -99,16 +99,16 @@ namespace QuantConnect.Algorithm.CSharp
                 // but then GetMaximumLotsForTargetBuyingPower will work with initial margin requirement so we make sure the resulting quantity
                 // can be ordered. In order to match this, we need to adjust the delta buying power by the difference between the initial margin
                 // requirement  and maintenance margin.
-                PerfomQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower, increasing: true);
+                PerformQuantityCalculations(positionGroup, security, expectedQuantity, deltaBuyingPower, increasing: true);
 
                 // Test going towards the opposite side until liquidated:
                 // negative delta and expected quantity to reduce the position
                 deltaBuyingPower = -initialMarginPerUnit * expectedQuantity * 0.95m;
-                PerfomQuantityCalculations(positionGroup, security, -expectedQuantity, deltaBuyingPower, increasing: false);
+                PerformQuantityCalculations(positionGroup, security, -expectedQuantity, deltaBuyingPower, increasing: false);
             }
         }
 
-        private void PerfomQuantityCalculations(IPositionGroup positionGroup, Security security, int expectedQuantity,
+        private void PerformQuantityCalculations(IPositionGroup positionGroup, Security security, int expectedQuantity,
             decimal deltaBuyingPower, bool increasing)
         {
             var absQuantity = Math.Abs(positionGroup.Quantity);

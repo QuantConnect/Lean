@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Util
             var stopwatch = Stopwatch.StartNew();
             for (int i = 0; i < count; i++)
             {
-                var clone = Clone(data);
+                Clone(data);
             }
             stopwatch.Stop();
             var elapsed1 = stopwatch.Elapsed;
@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Util
             stopwatch.Start();
             for (int i = 0; i < count; i++)
             {
-                var clone = ObjectActivator.Clone(data);
+                ObjectActivator.Clone(data);
             }
             stopwatch.Stop();
             var elapsed2 = stopwatch.Elapsed;

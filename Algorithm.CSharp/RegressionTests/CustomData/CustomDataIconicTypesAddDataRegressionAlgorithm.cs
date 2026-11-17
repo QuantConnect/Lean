@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             try
             {
-                var customDataNoCache = AddData<LinkedData>("AAPL", Resolution.Daily);
+                AddData<LinkedData>("AAPL", Resolution.Daily);
                 throw new RegressionTestException("AAPL was found in the SymbolCache, though it should be missing");
             }
             catch (InvalidOperationException)

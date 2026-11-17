@@ -139,7 +139,6 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             foreach (var symbolData in _symbolDataBySymbol.Values)
             {
-                var range = symbolData.Range;
                 var symbol = symbolData.Symbol;
                 var security = algorithm.Securities[symbol];
 
@@ -178,11 +177,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // added
             foreach (var added in changes.AddedSecurities)
             {
-                SymbolData symbolData;
-                if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
+                if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out _))
                 {
                     // add symbol/symbolData pair to collection
-                    symbolData = new SymbolData(_rangePeriod, _consolidatorTimeSpan)
+                    var symbolData = new SymbolData(_rangePeriod, _consolidatorTimeSpan)
                     {
                         Symbol = added.Symbol,
                         K1 = _k1,

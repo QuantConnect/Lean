@@ -240,7 +240,7 @@ class IndicatorExtensionsTests(unittest.TestCase):
         right.Update(datetime.today(), 4)
         self.assertEqual(-1, composite.Current.Value)
 
-    def test_OverDivdesLeftAndRightAfterBothUpdated(self):
+    def test_OverDividesLeftAndRightAfterBothUpdated(self):
         left = Identity("left")
         right = Identity("right")
         composite = IndicatorExtensions.Over(left, right)

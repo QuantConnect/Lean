@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws<ArgumentException>(() =>
             {
                 var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(QuoteBar), symbol, Resolution.Minute, false, false, false);
-                var actual = _securityService.CreateSecurity(symbol, configs, 1.0m, false);
+                _securityService.CreateSecurity(symbol, configs, 1.0m, false);
             }, "Symbol can't be found in the Symbol Properties Database");
         }
 
@@ -308,7 +308,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.DoesNotThrow(() =>
             {
                 var symbol = Symbol.Create("TEST", SecurityType.Equity, Market.USA);
-                var security = securityManager.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), underlying: null);
+                securityManager.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), underlying: null);
             });
         }
     }

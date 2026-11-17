@@ -909,9 +909,9 @@ namespace QuantConnect.Tests.Common.Securities
             var longUnitGroup = positionGroup.CreateUnitGroup(_portfolio.Positions);
             var longUnitMargin = Math.Abs(longUnitGroup.BuyingPowerModel.GetInitialMarginRequirement(_portfolio, longUnitGroup));
 
-            var expectedQuantity = 0m;
-            var finalPositionQuantity = 0m;
-            var targetFinalMargin = 0m;
+            decimal expectedQuantity;
+            decimal finalPositionQuantity;
+            decimal targetFinalMargin;
             // Going to the opposite side
             if (targetMarginPercent > 1 && targetMarginDirection == -1)
             {
@@ -2957,7 +2957,6 @@ namespace QuantConnect.Tests.Common.Securities
         public void ReservedBuyingPowerImpactCalculation(OptionStrategyDefinition optionStrategyDefinition, int initialPositionQuantity,
             int newGroupQuantity)
         {
-            var initialMargin = _portfolio.MarginRemaining;
             var initialPositionGroup = SetUpOptionStrategy(optionStrategyDefinition, initialPositionQuantity);
 
             var finalQuantity = initialPositionQuantity + newGroupQuantity;

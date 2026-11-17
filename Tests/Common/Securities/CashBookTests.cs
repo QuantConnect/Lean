@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var symbol = new CashBook()[Currencies.NullCurrency].Symbol;
+                _ = new CashBook()[Currencies.NullCurrency].Symbol;
             });
         }
 

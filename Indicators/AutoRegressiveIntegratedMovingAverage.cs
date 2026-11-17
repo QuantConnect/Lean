@@ -280,7 +280,7 @@ namespace QuantConnect.Indicators
                 appendedData.Add(doubles.ToArray());
             }
 
-            double[] maFits = default;
+            double[] maFits;
             if (HandleExceptions)
             {
                 try

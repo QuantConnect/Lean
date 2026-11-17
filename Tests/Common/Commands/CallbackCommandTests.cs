@@ -15,7 +15,6 @@
 
 using System;
 using System.IO;
-using System.Web;
 using NUnit.Framework;
 using Newtonsoft.Json;
 using QuantConnect.Commands;
@@ -46,7 +45,6 @@ namespace QuantConnect.Tests.Common.Commands
             };
             var link = algorithmStub.Link(commandInstance);
 
-            var parse = HttpUtility.ParseQueryString(link);
             Assert.IsFalse(string.IsNullOrEmpty(link));
         }
 
@@ -65,7 +63,6 @@ namespace QuantConnect.Tests.Common.Commands
             };
             var link = algorithmStub.Link(commandInstance);
 
-            var parse = HttpUtility.ParseQueryString(link);
             Assert.IsFalse(string.IsNullOrEmpty(link));
         }
 
@@ -78,13 +75,12 @@ namespace QuantConnect.Tests.Common.Commands
             };
             var link = algorithmStub.Link(new { quantity = -0.1, target = "BTCUSD" });
 
-            var parse = HttpUtility.ParseQueryString(link);
             Assert.IsFalse(string.IsNullOrEmpty(link));
         }
 
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
-        public void CommanCallback(Language language)
+        public void CommandCallback(Language language)
         {
             var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(typeof(CallbackCommandRegressionAlgorithm).Name,
                 new Dictionary<string, string> {
@@ -118,7 +114,7 @@ namespace QuantConnect.Tests.Common.Commands
 
             Config.Set("lean-manager-type", typeof(TestLocalLeanManager).Name);
 
-            var result = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);

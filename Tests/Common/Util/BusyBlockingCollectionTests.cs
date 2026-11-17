@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common.Util
             collection.Add(3);
             collection.CompleteAdding();
             Assert.IsFalse(collection.WaitHandle.WaitOne(0));
-            foreach (var item in collection.GetConsumingEnumerable())
+            foreach (var _ in collection.GetConsumingEnumerable())
             {
                 Assert.IsFalse(collection.WaitHandle.WaitOne(0));
             }

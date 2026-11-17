@@ -84,8 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (enumerators.Count == 1)
                 {
-                    List<KeyValuePair<SubscriptionDataConfig, ScannableEnumerator<BaseData>>> output;
-                    return _enumerators.TryRemove(dataConfig.Symbol.ID, out output);
+                    return _enumerators.TryRemove(dataConfig.Symbol.ID, out _);
                 }
                 else
                 {

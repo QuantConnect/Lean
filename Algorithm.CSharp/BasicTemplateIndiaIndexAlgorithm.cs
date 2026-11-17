@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Portfolio.Invested)
                 {
-                    var marketTicket = MarketOrder(NiftyETF, 1);
+                    MarketOrder(NiftyETF, 1);
                 }
             }
             else

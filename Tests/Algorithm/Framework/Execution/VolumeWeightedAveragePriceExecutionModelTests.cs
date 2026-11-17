@@ -78,8 +78,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             int expectedOrdersSubmitted,
             decimal expectedTotalQuantity)
         {
-            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
-
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))

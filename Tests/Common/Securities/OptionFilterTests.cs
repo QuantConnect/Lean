@@ -34,7 +34,6 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCaseSource(nameof(FiltersStrikeRangeTests))]
         public void FiltersStrikeRange(decimal underlyingPrice, Symbol[] symbols, int filteredNumber)
         {
-            var expiry = new DateTime(2016, 03, 04);
             var underlying = new Tick { Value = underlyingPrice, Time = new DateTime(2016, 02, 26) };
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe

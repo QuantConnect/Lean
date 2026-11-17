@@ -142,7 +142,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            message = null;
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",

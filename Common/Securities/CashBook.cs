@@ -101,7 +101,7 @@ namespace QuantConnect.Securities
         {
             var cash = new Cash(symbol, quantity, conversionRate);
             // let's return the cash instance we are using
-            return AddIternal(symbol, cash);
+            return AddInternal(symbol, cash);
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace QuantConnect.Securities
         /// <param name="value">Value.</param>
         public void Add(string symbol, Cash value)
         {
-            AddIternal(symbol, value);
+            AddInternal(symbol, value);
         }
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace QuantConnect.Securities
 
         #endregion
 
-        private Cash AddIternal(string symbol, Cash value)
+        private Cash AddInternal(string symbol, Cash value)
         {
             if (symbol == Currencies.NullCurrency)
             {

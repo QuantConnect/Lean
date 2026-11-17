@@ -232,7 +232,6 @@ namespace QuantConnect.Tests.Common.Data
                 renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
-            var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
 
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.0m));
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.5m));
@@ -291,7 +290,6 @@ namespace QuantConnect.Tests.Common.Data
                 renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
-            var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
 
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.0m));
             consolidator.Update(new IndicatorDataPoint(tickOn1, 9.6m));
@@ -458,7 +456,6 @@ namespace QuantConnect.Tests.Common.Data
                 renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
-            var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
 
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.0m));
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.5m));
@@ -531,7 +528,6 @@ namespace QuantConnect.Tests.Common.Data
                 renkos.Add(renko);
 
             var tickOn1 = new DateTime(2016, 1, 1, 17, 0, 0, 0);
-            var tickOn2 = new DateTime(2016, 1, 1, 17, 0, 0, 1);
 
             consolidator.Update(new IndicatorDataPoint(tickOn1, 10.0m));
             consolidator.Update(new IndicatorDataPoint(tickOn1, 9.6m));
