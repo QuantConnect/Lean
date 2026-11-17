@@ -94343,7 +94343,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBEU50": {
       "dataTimeZone": "UTC",
@@ -94386,7 +94387,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBDE40": {
       "dataTimeZone": "UTC",
@@ -94429,7 +94431,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBFR40": {
       "dataTimeZone": "UTC",
@@ -94472,7 +94475,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBES35": {
       "dataTimeZone": "UTC",
@@ -94515,7 +94519,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBNL25": {
       "dataTimeZone": "UTC",
@@ -94558,7 +94563,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBCH20": {
       "dataTimeZone": "UTC",
@@ -94601,7 +94607,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBJP225": {
       "dataTimeZone": "UTC",
@@ -94670,7 +94677,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBHK50": {
       "dataTimeZone": "UTC",
@@ -94763,7 +94771,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-IBAU200": {
       "dataTimeZone": "UTC",
@@ -94857,7 +94866,8 @@
       ],
       "saturday": [],
       "holidays": [],
-      "earlyCloses": {}
+      "earlyCloses": {},
+      "ignoreMarketWideCalendar": true
     },
     "Cfd-interactivebrokers-XAUUSD": {
       "dataTimeZone": "UTC",

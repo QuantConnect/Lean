@@ -290,6 +290,10 @@ namespace QuantConnect.Securities
             /// </summary>
             public SecurityExchangeHours ExchangeHours { get; init; }
             /// <summary>
+            /// True if this entry doesn't inherit the calendar of its market-wide entry, so that serializing it keeps it that way
+            /// </summary>
+            internal bool IgnoreMarketWideCalendar { get; set; }
+            /// <summary>
             /// Initializes a new instance of the <see cref="Entry"/> class
             /// </summary>
             /// <param name="dataTimeZone">The raw data time zone</param>
@@ -303,6 +307,7 @@ namespace QuantConnect.Securities
             internal void Update(Entry other)
             {
                 DataTimeZone = other.DataTimeZone;
+                IgnoreMarketWideCalendar = other.IgnoreMarketWideCalendar;
                 ExchangeHours.Update(other.ExchangeHours);
             }
         }

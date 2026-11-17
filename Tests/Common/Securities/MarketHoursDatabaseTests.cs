@@ -555,6 +555,78 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new TimeSpan(21, 30, 0), losAngeles.EarlyCloses[new DateTime(2025, 12, 24)]);
         }
 
+        [TestCase("IBGB100", false)]
+        [TestCase("IBEU50", false)]
+        [TestCase("IBDE40", false)]
+        [TestCase("IBFR40", false)]
+        [TestCase("IBES35", false)]
+        [TestCase("IBNL25", false)]
+        [TestCase("IBCH20", false)]
+        [TestCase("IBJP225", false)]
+        [TestCase("IBHK50", false)]
+        [TestCase("IBAU200", false)]
+        [TestCase("IBUS500", true)]
+        [TestCase("IBUS30", true)]
+        [TestCase("IBUST100", true)]
+        [TestCase("XAUUSD", true)]
+        [TestCase("XAGUSD", true)]
+        // a CFD the database doesn't list, such as a US stock CFD, gets the market-wide entry
+        [TestCase("AAPL", true)]
+        public void InteractiveBrokersCfdsFollowTheUSCalendarOnlyWhenTheyTrackAUSMarket(string ticker, bool usCalendar)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            // Martin Luther King Jr. Day, Juneteenth and Thanksgiving
+            foreach (var usHoliday in new[] { new DateTime(2025, 1, 20), new DateTime(2025, 6, 19), new DateTime(2025, 11, 27) })
+            {
+                Assert.AreEqual(!usCalendar, exchangeHours.IsDateOpen(usHoliday), $"{usHoliday:d}");
+            }
+            Assert.AreEqual(usCalendar, exchangeHours.EarlyCloses.ContainsKey(new DateTime(2025, 11, 28)));
+        }
+
+        [Test]
+        public void EntriesCanIgnoreTheMarketWideCalendar()
+        {
+            var json = @"{
+  ""entries"": {
+    ""Cfd-interactivebrokers-[*]"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""11/27/2025"" ],
+      ""bankHolidays"": [ ""11/11/2025"" ],
+      ""earlyCloses"": { ""11/28/2025"": ""13:00:00"" },
+      ""lateOpens"": { ""12/26/2025"": ""10:00:00"" }
+    },
+    ""Cfd-interactivebrokers-INHERITS"": {
+      ""dataTimeZone"": ""UTC"", ""exchangeTimeZone"": ""UTC"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""12/25/2025"" ]
+    },
+    ""Cfd-interactivebrokers-IGNORES"": {
+      ""dataTimeZone"": ""UTC"", ""exchangeTimeZone"": ""UTC"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""12/25/2025"" ],
+      ""earlyCloses"": { ""12/24/2025"": ""12:00:00"" },
+      ""ignoreMarketWideCalendar"": true
+    }
+  }
+}";
+            var database = JsonConvert.DeserializeObject<MarketHoursDatabase>(json);
+
+            var inherits = database.GetExchangeHours(Market.InteractiveBrokers, Symbol.Create("INHERITS", SecurityType.Cfd, Market.InteractiveBrokers), SecurityType.Cfd);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 11, 27), new DateTime(2025, 12, 25) }, inherits.Holidays);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 11, 11) }, inherits.BankHolidays);
+            Assert.AreEqual(new TimeSpan(18, 0, 0), inherits.EarlyCloses[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(15, 0, 0), inherits.LateOpens[new DateTime(2025, 12, 26)]);
+
+            var ignores = database.GetExchangeHours(Market.InteractiveBrokers, Symbol.Create("IGNORES", SecurityType.Cfd, Market.InteractiveBrokers), SecurityType.Cfd);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 12, 25) }, ignores.Holidays);
+            CollectionAssert.IsEmpty(ignores.BankHolidays);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 12, 24) }, ignores.EarlyCloses.Keys);
+            CollectionAssert.IsEmpty(ignores.LateOpens);
+        }
+
         [TestCase("GC", Market.COMEX, "OG")]
         [TestCase("SI", Market.COMEX, "SO")]
         [TestCase("HG", Market.COMEX, "HXE")]
