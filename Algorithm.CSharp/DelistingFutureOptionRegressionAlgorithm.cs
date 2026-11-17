@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             _lastMonth = -1;
 
             // This is required to prevent the algorithm from automatically delisting the underlying. Without this, future options will be subscribed
-            // with resolution default to Minute insted of this.Resolution. This could be replaced after GH issue #6491 is implemented.
+            // with resolution default to Minute instead of this.Resolution. This could be replaced after GH issue #6491 is implemented.
             UniverseSettings.Resolution = Resolution;
         }
 

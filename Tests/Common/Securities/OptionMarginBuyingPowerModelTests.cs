@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Securities
             var option = CreateOption(Symbols.SPY_P_192_Feb19_2016);
             var buyingPowerModel = new OptionMarginModel();
 
-            // we test that options dont have leverage (100%) and it cannot be changed
+            // we test that options don't have leverage (100%) and it cannot be changed
             Assert.AreEqual(1m, buyingPowerModel.GetLeverage(option));
             Assert.Throws<InvalidOperationException>(() => buyingPowerModel.SetLeverage(option, 10m));
             Assert.AreEqual(1m, buyingPowerModel.GetLeverage(option));

@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * 2 * (decimal)DefaultPercent) };
             AssertTargets(expectedTargets, targets);
 
-            // One minute later, emit empty insights array, should return to nomral after the long expires
+            // One minute later, emit empty insights array, should return to normal after the long expires
             SetUtcTime(_algorithm.UtcTime.AddMinutes(1.1));
 
             expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * (decimal)DefaultPercent) };

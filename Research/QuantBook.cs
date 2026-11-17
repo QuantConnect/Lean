@@ -240,7 +240,7 @@ namespace QuantConnect.Research
         [Obsolete("Please use the 'UniverseHistory()' API")]
         public PyObject GetFundamental(PyObject input, string selector = null, DateTime? start = null, DateTime? end = null)
         {
-            //Covert to symbols
+            //Convert to symbols
             var symbols = PythonUtil.ConvertToSymbols(input);
 
             //Fetch the data
@@ -835,7 +835,7 @@ namespace QuantConnect.Research
                 var listBenchmark = CalculateDailyRateOfChange(dictBenchmark);
                 var listPerformance = CalculateDailyRateOfChange(dictEquity);
 
-                // Gets the startting capital
+                // Gets the starting capital
                 var startingCapital = Convert.ToDecimal(dictEquity.FirstOrDefault().Value);
 
                 // call method to set tradingDayPerYear for Algorithm (use: backwards compatibility)

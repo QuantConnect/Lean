@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2017, 1, 1);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Softs.Coffee;
             var symbol = Symbol.CreateFuture(ticker, Market.ICE, expDate);
 
@@ -176,7 +176,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2017, 1, 1);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history at all
+            // For this symbol we don't have any history at all
             var ticker = "NOT-A-SYMBOL";
             var symbol = Symbol.CreateFuture(ticker, Market.USA, expDate);
 
@@ -203,7 +203,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2017, 1, 1);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have history
+            // For this symbol we don't have history
             var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
             var symbol = Symbol.CreateFuture(ticker, Market.CME, expDate);
 

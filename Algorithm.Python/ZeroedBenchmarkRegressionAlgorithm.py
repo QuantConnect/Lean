@@ -27,7 +27,7 @@ class ZeroedBenchmarkRegressionAlgorithm(QCAlgorithm):
         # Add Equity
         self.add_equity("SPY", Resolution.HOUR)
 
-        # Use our Test Brokerage Model with zerod default benchmark
+        # Use our Test Brokerage Model with zeroed default benchmark
         self.set_brokerage_model(TestBrokerageModel())
 
     def on_data(self, data):

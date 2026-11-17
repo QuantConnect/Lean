@@ -58,7 +58,7 @@ namespace QuantConnect.Scheduling
             {
                 // we ignore the given date and just use the current time, why? if the algorithm used 'DateRules.Today'
                 // we get the algorithms first 'Date', which during warmup might not be a complete date, depending on the warmup period
-                // and since Today returns dates we might get a time in the past which get's ignored. See 'WarmupTrainRegressionAlgorithm'
+                // and since Today returns dates we might get a time in the past which gets ignored. See 'WarmupTrainRegressionAlgorithm'
                 // which reproduces GH issue #6410
                 return Securities.UtcTime;
             });

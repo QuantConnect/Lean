@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm for asserting that tick history that includes multiple tick types (trade, quote) is correctly converted to a pandas
-### dataframe without raising exceptions. The main exception in this case was a "non-unique multi-index" error due to trades adn quote ticks with
+### dataframe without raising exceptions. The main exception in this case was a "non-unique multi-index" error due to trades and quote ticks with
 ### duplicated timestamps.
 ### </summary>
 class PandasDataFrameFromMultipleTickTypeTickHistoryRegressionAlgorithm(QCAlgorithm):

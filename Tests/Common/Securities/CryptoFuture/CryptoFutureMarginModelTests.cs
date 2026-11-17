@@ -56,12 +56,12 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             decimal marginRequirement;
             if (ticker == "BTCUSD")
             {
-                // ((quantity * contract mutiplier * price) / leverage) * conversion rate (BTC -> USD)
+                // ((quantity * contract multiplier * price) / leverage) * conversion rate (BTC -> USD)
                 marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m) * 1 / cryptoFuture.Price;
             }
             else
             {
-                // ((quantity * contract mutiplier * price) / leverage) * conversion rate (USDT ~= USD)
+                // ((quantity * contract multiplier * price) / leverage) * conversion rate (USDT ~= USD)
                 marginRequirement = ((parameters.Quantity * 1m * cryptoFuture.Price) / 25m) * 1;
             }
 

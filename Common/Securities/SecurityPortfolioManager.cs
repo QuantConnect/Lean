@@ -839,7 +839,7 @@ namespace QuantConnect.Securities
                 return;
             }
 
-            // we need to modify our holdings in lght of the split factor
+            // we need to modify our holdings in light of the split factor
             var quantity = security.Holdings.Quantity / split.SplitFactor;
             var avgPrice = security.Holdings.AveragePrice * split.SplitFactor;
 

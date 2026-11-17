@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException("Unexpect margin used!");
                     }
 
-                    // we payed the ask and value using the assets price
+                    // we paid the ask and value using the assets price
                     var priceSpreadDifference = GetPriceSpreadDifference(longPut.Symbol, shortPut.Symbol);
                     if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceSpreadDifference))
                     {

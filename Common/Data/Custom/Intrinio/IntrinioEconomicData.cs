@@ -128,13 +128,13 @@ namespace QuantConnect.Data.Custom.Intrinio
             SubscriptionDataSource subscription;
 
             // We want to make just one call with all the data in backtesting mode.
-            // Also we want to make one call per second becasue of the API limit.
+            // Also we want to make one call per second because of the API limit.
             if (_backtestingFirstTimeCallOrLiveMode)
             {
                 // Force the engine to wait at least 1000 ms between API calls.
                 IntrinioConfig.RateGate.WaitToProceed();
 
-                // In backtesting mode, there is only one call at the beggining with all the data 
+                // In backtesting mode, there is only one call at the beginning with all the data 
                 _backtestingFirstTimeCallOrLiveMode = false || isLiveMode;
                 subscription = GetIntrinioSubscription(config, isLiveMode);
             }
@@ -211,7 +211,7 @@ namespace QuantConnect.Data.Custom.Intrinio
 
         private SubscriptionDataSource GetIntrinioSubscription(SubscriptionDataConfig config, bool isLiveMode)
         {
-            // In Live mode, we only want the last observation, in backtesitng we need the data in ascending order.
+            // In Live mode, we only want the last observation, in backtesting we need the data in ascending order.
             var order = isLiveMode ? "desc" : "asc";
             var item = GetStringForDataTransformation(_dataTransformation);
             var url = $"{_baseUrl}identifier={config.Symbol.Value}&item={item}&sort_order={order}";

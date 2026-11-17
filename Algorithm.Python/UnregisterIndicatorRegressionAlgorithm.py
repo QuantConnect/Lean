@@ -39,7 +39,7 @@ class UnregisterIndicatorRegressionAlgorithm(QCAlgorithm):
             self._trin.reset()
             self.unregister_indicator(self._trin)
 
-            # let's create a new one with a differente resolution
+            # let's create a new one with a different resolution
             self._trin2 = self.trin(self._symbols, Resolution.HOUR)
 
         if not self._trin2 is None and self._trin2.is_ready:

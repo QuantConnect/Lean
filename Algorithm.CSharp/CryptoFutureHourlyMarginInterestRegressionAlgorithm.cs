@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _adaUsdt = AddCryptoFuture("ADAUSDT", resolution);
 
-            // Default USD cash, set 1M but it wont be used
+            // Default USD cash, set 1M but it won't be used
             SetCash(1000000);
 
             // the amount of USDT we need to hold to trade 'ADAUSDT'

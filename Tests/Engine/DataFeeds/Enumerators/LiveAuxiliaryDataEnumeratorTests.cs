@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             IEnumerator<BaseData> enumerator;
             Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
 
-            // get's mapped right away!
+            // gets mapped right away!
             Assert.AreEqual(futureTicker1.ToUpper(), config.MappedSymbol);
 
             Assert.AreEqual(1, symbolMaps.Count);
@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             IEnumerator<BaseData> enumerator;
             Assert.IsTrue(LiveAuxiliaryDataEnumerator.TryCreate(config, timeProvider, cache, new TestMapFileProvider(), TestGlobals.FactorFileProvider, time, out enumerator));
 
-            // get's mapped right away!
+            // gets mapped right away!
             Assert.AreEqual("SPY", config.MappedSymbol);
 
             Assert.IsTrue(enumerator.MoveNext());

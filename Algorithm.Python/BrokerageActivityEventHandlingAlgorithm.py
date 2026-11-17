@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Example algorithm to demostrate the event handlers of Brokerage activities
+### Example algorithm to demonstrate the event handlers of Brokerage activities
 ### </summary>
 ### <meta name="tag" content="using quantconnect" />
 class BrokerageActivityEventHandlingAlgorithm(QCAlgorithm):

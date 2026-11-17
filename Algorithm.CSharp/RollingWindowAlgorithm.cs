@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            // Add SPY TradeBar in rollling window
+            // Add SPY TradeBar in rolling window
             _window.Add(slice["SPY"]);
 
             // Wait for windows to be ready.

@@ -95,7 +95,7 @@ namespace QuantConnect.Data.UniverseSelection
             _selector = time =>
             {
                 var selectSymbolsResult = selector(time.ConvertFromUtc(Configuration.ExchangeTimeZone));
-                // if we received an unchaged then short circuit the symbol creation and return it directly
+                // if we received an unchanged then short circuit the symbol creation and return it directly
                 if (ReferenceEquals(selectSymbolsResult, Unchanged)) return Unchanged;
                 return selectSymbolsResult.Select(sym => Symbol.Create(sym, Configuration.SecurityType, Configuration.Market));
             };

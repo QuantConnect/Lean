@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (!_customDataDownloadError)
                         {
                             _customDataDownloadError = true;
-                            // lean data writter doesn't support it
+                            // lean data writer doesn't support it
                             Log.Trace($"DownloaderDataProvider.Get(): custom data is not supported, requested: {symbol}");
                         }
                         return;

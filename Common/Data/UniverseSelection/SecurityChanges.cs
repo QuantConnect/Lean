@@ -203,13 +203,13 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Will return merged set</returns>
         private static HashSet<Security> Merge(IReadOnlyCollection<Security> left, IReadOnlyCollection<Security> right, Func<Security, bool> filter = null)
         {
-            // if right is emtpy we just use left
+            // if right is empty we just use left
             IEnumerable<Security> result = left;
             if (right.Count != 0)
             {
                 if (left.Count == 0)
                 {
-                    // left is emtpy so let's just use right
+                    // left is empty so let's just use right
                     result = right;
                 }
                 else

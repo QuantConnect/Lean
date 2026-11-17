@@ -246,7 +246,7 @@ logging.captureWarnings(True)"
                     assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
                 }
 
-                //Get the list of extention classes in the library:
+                //Get the list of extension classes in the library:
                 var types = GetExtendedTypeNames(assembly);
                 Log.Debug("Loader.TryCreateILAlgorithm(): Assembly types: " + string.Join(",", types));
 

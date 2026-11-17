@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm
 
             //Initialise Start Date:
             _startDate = new DateTime(1998, 01, 01);
-            // intialize our time keeper with only new york
+            // initialize our time keeper with only new york
             _timeKeeper = new TimeKeeper(_startDate, new[] { TimeZones.NewYork });
             // set our local time zone
             _localTimeKeeper = _timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
@@ -243,7 +243,7 @@ namespace QuantConnect.Algorithm
             Universe = new UniverseDefinitions(this);
             UniverseSettings = new UniverseSettings(Resolution.Minute, Security.NullLeverage, true, false, TimeSpan.FromDays(1));
 
-            // initialize our scheduler, this acts as a liason to the real time handler
+            // initialize our scheduler, this acts as a liaison to the real time handler
             Schedule = new ScheduleManager(this, Securities, TimeZone, MarketHoursDatabase);
 
             // initialize the trade builder

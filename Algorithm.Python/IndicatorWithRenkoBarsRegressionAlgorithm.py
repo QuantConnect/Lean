@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regrssion algorithm to assert we can update indicators that inherit from IndicatorBase<TradeBar> with RenkoBar's
+### Regression algorithm to assert we can update indicators that inherit from IndicatorBase<TradeBar> with RenkoBar's
 ### </summary>
 ### <meta name="tag" content="renko" />
 ### <meta name="tag" content="indicators" />

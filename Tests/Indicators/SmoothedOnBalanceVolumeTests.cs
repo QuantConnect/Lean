@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             RenkoBarSize = 1m;
-            // VolumeRenkoBarSize = 0.5m;  // uncomment this and AcceptsVolumeRenkoBarsAsInput hangle infinitely
+            // VolumeRenkoBarSize = 0.5m;  // uncomment this and AcceptsVolumeRenkoBarsAsInput hangs infinitely
             return new SmoothedOnBalanceVolume(20);
         }
 

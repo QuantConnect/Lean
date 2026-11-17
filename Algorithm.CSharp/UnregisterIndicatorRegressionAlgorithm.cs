@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _trin.Reset();
                 UnregisterIndicator(_trin);
 
-                // let's create a new one with a differente resolution
+                // let's create a new one with a different resolution
                 _trin2 = TRIN(_symbols, Resolution.Hour);
             }
 

@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (_universeSelectionDone)
             {
                 // manually added securities are added right away, the etf universe selection happens a few days later when data available
-                // AAPL was already added so it wont be counted
+                // AAPL was already added so it won't be counted
                 _universeAdded |= changes.AddedSecurities.Count == (expectedChangesCount - 1);
             }
 

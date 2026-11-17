@@ -82,7 +82,7 @@ namespace QuantConnect.Securities
                 {
                     if (lastConversionRate != 0m)
                     {
-                        // If a user adds cash with an initial conversion rate and then this is overriden to a SecurityCurrencyConversion,
+                        // If a user adds cash with an initial conversion rate and then this is overridden to a SecurityCurrencyConversion,
                         // we want to keep the previous rate until the new one is updated.
                         _currencyConversion.ConversionRate = lastConversionRate;
                     }
@@ -267,7 +267,7 @@ namespace QuantConnect.Securities
             {
                 // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
                 // Also need to add them first to give the priority
-                // TODO: remove once dydx SPOT market will be imlemented
+                // TODO: remove once dydx SPOT market will be implemented
                 cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets).Concat(cryptoEntries);
             }
 
@@ -276,7 +276,7 @@ namespace QuantConnect.Securities
                 .Concat(cryptoEntries)
                 .ToList();
 
-            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // Special case for crypto markets without direct pairs (They won't be found by the above)
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
             // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
             if (marketMap.TryGetValue(SecurityType.Crypto, out var market) && Currencies.IsStableCoinWithoutPair(accountCurrency, Symbol, market))

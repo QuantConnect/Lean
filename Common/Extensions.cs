@@ -1466,7 +1466,7 @@ namespace QuantConnect
         /// <returns>New instance with just 3 decimal places</returns>
         public static decimal TruncateTo3DecimalPlaces(this decimal value)
         {
-            // we will multiply by 1k bellow, if its bigger it will stack overflow
+            // we will multiply by 1k below, if its bigger it will stack overflow
             if (value >= decimal.MaxValue / 1000
                 || value <= decimal.MinValue / 1000
                 || value == 0)
@@ -2050,8 +2050,8 @@ namespace QuantConnect
             {
                 // Will subtract interval to 'dateTime' in the roundingTimeZone (using the same value type instance) to avoid issues with daylight saving time changes.
                 // GH issue 2368: subtracting interval to 'dateTime' in exchangeHours.TimeZone and converting back to roundingTimeZone
-                // caused the substraction to be neutralized by daylight saving time change, which caused an infinite loop situation in this loop.
-                // The issue also happens if substracting in roundingTimeZone and converting back to exchangeHours.TimeZone.
+                // caused the subtraction to be neutralized by daylight saving time change, which caused an infinite loop situation in this loop.
+                // The issue also happens if subtracting in roundingTimeZone and converting back to exchangeHours.TimeZone.
 
                 dateTimeInRoundingTimeZone -= interval;
                 roundedDateTimeInRoundingTimeZone = dateTimeInRoundingTimeZone.RoundDown(interval);
@@ -3226,7 +3226,7 @@ namespace QuantConnect
                 Exception exception = null;
                 if (!PyList.IsListType(pyObject))
                 {
-                    // it's not a pylist try to conver directly
+                    // it's not a pylist try to convert directly
                     Symbol result = null;
                     try
                     {
@@ -3916,7 +3916,7 @@ namespace QuantConnect
                 var priceScaleFrontier = data.Time;
                 if (data.Time.Date != data.EndTime.Date && data.EndTime.TimeOfDay > TimeSpan.Zero)
                 {
-                    // if the data point goes from one day to another after midnight we use EndTime, this is due to differences between 'data' and 'exchage' time zone,
+                    // if the data point goes from one day to another after midnight we use EndTime, this is due to differences between 'data' and 'exchange' time zone,
                     // for example: NYMEX future CL 'data' TZ is UTC while 'exchange' TZ is NY, so daily bars go from 8PM 'X day' to 8PM 'X+1 day'. Note that the data
                     // in the daily bar itself is filtered by exchange open, so it has data from 09:30 'X+1 day' to 17:00 'X+1 day' as expected.
                     // A potential solution to avoid the need of this check is to adjust the daily data time zone to match the exchange time zone, following this example above

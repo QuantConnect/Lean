@@ -200,7 +200,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new IndicatorDataPoint(reference.AddSeconds(6), 0m));
             Assert.IsNotNull(bar);
 
-            // ReSharper disable HeuristicUnreachableCode - ReSharper doesn't realiz this can be set via the event handler
+            // ReSharper disable HeuristicUnreachableCode - ReSharper doesn't realize this can be set via the event handler
             Assert.AreEqual(1m, bar.Open);
             Assert.AreEqual(0m, bar.Close);
             Assert.AreEqual(0, bar.Volume);

@@ -26,7 +26,7 @@ class FilteredIdentityAlgorithm(QCAlgorithm):
         
         self.set_start_date(2014,5,2)       # Set Start Date
         self.set_end_date(self.start_date)   # Set End Date
-        self.set_cash(100000)              # Set Stratgy Cash
+        self.set_cash(100000)              # Set Strategy Cash
  
         # Find more symbols here: http://quantconnect.com/data
         security = self.add_forex("EURUSD", Resolution.TICK)

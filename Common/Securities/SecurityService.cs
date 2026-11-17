@@ -245,7 +245,7 @@ namespace QuantConnect.Securities
             CheckCanonicalSecurityModels(security);
 
             // if leverage was specified then apply to security after the initializer has run, parameters of this
-            // method take precedence over the intializer
+            // method take precedence over the initializer
             if (leverage != Security.NullLeverage)
             {
                 security.SetLeverage(leverage);

@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
                         }
                         theoreticalPriceChecked = true;
                     }
-                    // We check for all greeks and IV together. e.g. IV could be zero if the model can't converge, say for instance if a contract is iliquid or deep ITM/OTM
+                    // We check for all greeks and IV together. e.g. IV could be zero if the model can't converge, say for instance if a contract is illiquid or deep ITM/OTM
                     if (greeks == null ||
                         (iv == 0 && greeks.Delta == 0 && greeks.Gamma == 0 && greeks.Vega== 0 && greeks.Theta == 0 && greeks.Rho == 0))
                     {

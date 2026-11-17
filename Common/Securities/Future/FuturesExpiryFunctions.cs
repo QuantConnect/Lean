@@ -505,7 +505,7 @@ namespace QuantConnect.Securities.Future
                     var market = Market.CME;
                     var symbol = Futures.Indices.Russell1000EMini;
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
-                    //Quarterly contracts (Mar, Jun, Sep, Dec) lisrted for 5 consecutive quarters
+                    //Quarterly contracts (Mar, Jun, Sep, Dec) listed for 5 consecutive quarters
                     while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
                     {
                         time = time.AddMonths(1);
@@ -690,7 +690,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
 
-            // JPY-Denominated Nikkie 225 Index Futures: https://www2.sgx.com/derivatives/products/nikkei225futuresoptions?cc=NK#Contract%20Specifications
+            // JPY-Denominated Nikkei 225 Index Futures: https://www2.sgx.com/derivatives/products/nikkei225futuresoptions?cc=NK#Contract%20Specifications
             {Symbol.Create(Futures.Indices.Nikkei225Yen, SecurityType.Future, Market.SGX), (time =>
                 {
                     // 6 nearest serial months & 32 nearest quarterly months
@@ -1254,7 +1254,7 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Currencies.RUB;
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
                     // Monthly contacts listed for 12 consecutive months and quarterly contracts (Mar, Jun, Sep, Dec) listed for16 additional quarters
-                    // 11:00 a.m. Mosccow time on the fifteenth day of the month, or, if not a business day, on the next business day for the Moscow interbank foreign exchange market.
+                    // 11:00 a.m. Moscow time on the fifteenth day of the month, or, if not a business day, on the next business day for the Moscow interbank foreign exchange market.
                     var fifteenth = new DateTime(time.Year, time.Month, 15);
 
                     while (!FuturesExpiryUtilityFunctions.NotHoliday(fifteenth, holidays))
@@ -1754,7 +1754,7 @@ namespace QuantConnect.Securities.Future
                     var symbol = Futures.Energy.ArgusPropaneFarEastIndexBALMO;
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
 
-                    // Monthly BALMO contracts listed for three cconsecutive months
+                    // Monthly BALMO contracts listed for three consecutive months
                     // Trading shall cease on the last business day of the contract month. Business days are based on the Singapore Public Holiday calendar.
                     // TODO: Might need singapore calendar
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1, holidays);
@@ -2324,7 +2324,7 @@ namespace QuantConnect.Securities.Future
                     var businessDays = -3;
                     if(!FuturesExpiryUtilityFunctions.NotHoliday(twentyFifth, holidays))
                     {
-                        // if the 25th is a holiday we substract 1 extra bussiness day
+                        // if the 25th is a holiday we subtract 1 extra business day
                         businessDays -= 1;
                     }
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth, businessDays, holidays);
@@ -3106,7 +3106,7 @@ namespace QuantConnect.Securities.Future
                         time = time.AddMonths(1);
                     }
 
-                    // Trading terminates at 9:16 a.m. CT 2 business day prior to the 3rd Wednesday of the contract quqrter.
+                    // Trading terminates at 9:16 a.m. CT 2 business day prior to the 3rd Wednesday of the contract quarter.
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2, holidays);
                     secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(secondBusinessDayPrecedingThirdWednesday, -1, holidays);
@@ -3382,7 +3382,7 @@ namespace QuantConnect.Securities.Future
                     var businessDays = -4;
                     if(!FuturesExpiryUtilityFunctions.NotHoliday(twentyFifthDay, holidays))
                     {
-                        // if the 25th is a holiday we substract 1 extra bussiness day
+                        // if the 25th is a holiday we subtract 1 extra business day
                         businessDays -= 1;
                     }
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, businessDays, holidays);

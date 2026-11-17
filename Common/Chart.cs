@@ -98,7 +98,7 @@ namespace QuantConnect
         /// <param name="series">Chart series class object</param>
         public void AddSeries(BaseSeries series)
         {
-            //If we dont already have this series, add to the chrt:
+            //If we don't already have this series, add to the chart:
             if (!Series.TryAdd(series.Name, series))
             {
                 throw new DuplicateNameException($"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}");

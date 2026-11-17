@@ -386,12 +386,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.AreEqual(_referenceLocal.AddDays(1), _enumerator.Current.EndTime);
                 VerifyGetSourceInvocation(0);
 
-                // this call exhaused the enumerator stack and yields a null result
+                // this call exhausted the enumerator stack and yields a null result
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
                 VerifyGetSourceInvocation(0);
 
-                // this call refrshes the enumerator stack but finds no data ahead of the frontier
+                // this call refreshes the enumerator stack but finds no data ahead of the frontier
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
                 VerifyGetSourceInvocation(1);
@@ -421,7 +421,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
                 _timeProvider.Advance(TimeSpan.FromHours(1));
 
-                // time advanced so we'll try to refresh the souce again, but exhaust the stack because no data
+                // time advanced so we'll try to refresh the source again, but exhaust the stack because no data
                 Assert.IsTrue(_enumerator.MoveNext());
                 Assert.IsNull(_enumerator.Current);
                 VerifyGetSourceInvocation(1);

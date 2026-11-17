@@ -29,7 +29,7 @@ class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithm):
         self.set_cash(100000)           #Set Strategy Cash
 
         # even though we're using a framework algorithm, we can still add our securities
-        # using the AddEquity/Forex/Crypto/ect methods and then pass them into a manual
+        # using the AddEquity/Forex/Crypto/etc methods and then pass them into a manual
         # universe selection model using securities.keys()
         self.add_equity("SPY")
         self.add_equity("IBM")

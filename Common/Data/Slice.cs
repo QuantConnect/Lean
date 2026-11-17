@@ -582,7 +582,7 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    // Should keep this._rawDataList last so that selected data points are not overriden
+                    // Should keep this._rawDataList last so that selected data points are not overridden
                     // while creating _data
                     othersDataList.AddRange(ourDataList);
                     AllData = othersDataList;
@@ -732,7 +732,7 @@ namespace QuantConnect.Data
 
         private IEnumerable<KeyValuePair<Symbol, BaseData>> GetKeyValuePairEnumerable()
         {
-            // this will not enumerate auxilliary data!
+            // this will not enumerate auxiliary data!
 
             foreach (var kvp in _data.Value)
             {

@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            // 13:30 and 21:00 UTC are 9:30 and 17 New york, which are the regular market hours litimits for this security
+            // 13:30 and 21:00 UTC are 9:30 and 17 New york, which are the regular market hours limits for this security
             if (orderEvent.Status == OrderStatus.Filled && !Securities[orderEvent.Symbol].Exchange.DateTimeIsOpen(orderEvent.UtcTime) &&
                 (orderEvent.UtcTime.TimeOfDay >= new TimeSpan(13, 30, 0) && orderEvent.UtcTime.TimeOfDay < new TimeSpan(21, 0, 0)))
             {

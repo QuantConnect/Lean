@@ -276,18 +276,18 @@ namespace QuantConnect.Tests.Algorithm
             }
             else if (testCase == 3)
             {
-                // account for 2 weeknds
+                // account for 2 weekends
                 algo.SetWarmUp(TimeSpan.FromDays(11), Resolution.Daily);
             }
             else if (testCase == 4)
             {
-                // account for 2 weeknds
+                // account for 2 weekends
                 algo.SetWarmUp(TimeSpan.FromDays(11));
                 algo.Settings.WarmupResolution = Resolution.Daily;
             }
             else if (testCase == 5)
             {
-                // account for 2 weeknds
+                // account for 2 weekends
                 algo.SetWarmUp(TimeSpan.FromDays(11));
             }
             algo.PostInitialize();

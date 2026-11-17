@@ -285,7 +285,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 {
                     Assert.IsNull(fillForwardEnumerator.Current);
 
-                    // Advance the time, including the expected timout, we expect a fill-forward bar.
+                    // Advance the time, including the expected timeout, we expect a fill-forward bar.
                     timeProvider.Advance(LiveFillForwardEnumerator.GetMaximumDataTimeout(resolution));
 
                     Assert.IsTrue(fillForwardEnumerator.MoveNext());
@@ -343,7 +343,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 {
                     Assert.IsNull(fillForwardEnumerator.Current, $"Previous: {previous.EndTime}");
 
-                    // Advance the time, including the expected timout, we expect a fill-forward bar.
+                    // Advance the time, including the expected timeout, we expect a fill-forward bar.
                     timeProvider.Advance(LiveFillForwardEnumerator.GetMaximumDataTimeout(resolution));
                     Assert.IsTrue(fillForwardEnumerator.MoveNext(), $"Previous: {previous.EndTime}");
                 }
@@ -441,7 +441,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.IsTrue(fillForwardEnumerator.MoveNext());
                 Assert.IsNull(fillForwardEnumerator.Current);
 
-                // Advance the time, including the expected timout, we expect a fill-forward bar.
+                // Advance the time, including the expected timeout, we expect a fill-forward bar.
                 timeProvider.Advance(LiveFillForwardEnumerator.GetMaximumDataTimeout(resolution));
                 Assert.IsTrue(fillForwardEnumerator.MoveNext());
                 Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);

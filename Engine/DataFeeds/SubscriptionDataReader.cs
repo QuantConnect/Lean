@@ -396,7 +396,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return false;
                     }
 
-                    // we've made it past all of our filters, we're withing the requested start/end of the subscription,
+                    // we've made it past all of our filters, we're within the requested start/end of the subscription,
                     // we've satisfied user and market hour filters, so this data is good to go as current
                     Current = instance;
 

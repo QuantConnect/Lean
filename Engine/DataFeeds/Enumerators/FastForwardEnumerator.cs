@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     continue;
                 }
 
-                // comute the age of the data, if within limits we're done
+                // compute the age of the data, if within limits we're done
                 var age = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone) - _enumerator.Current.EndTime;
                 if (age <= _maximumDataAge)
                 {

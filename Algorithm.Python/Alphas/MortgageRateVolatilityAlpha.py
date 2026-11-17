@@ -71,7 +71,7 @@ class MortgageRateVolatilityAlphaModel(AlphaModel):
     def update(self, algorithm, data):
         insights = []
         
-        ## Return empty list if data slice doesn't contain monrtgage rate data
+        ## Return empty list if data slice doesn't contain mortgage rate data
         if self.mortgage_rate not in data.keys():
             return []
 

@@ -77,7 +77,7 @@ class HistoryAuxiliaryDataRegressionAlgorithm(QCAlgorithm):
         if delistings.iloc[1].type != DelistingType.DELISTED:
             raise ValueError(f"Unexpected delisting: {delistings.iloc[1]}")
 
-        # get's remapped:
+        # gets remapped:
         # 2008-09-30 spwr -> spwra
         # 2011-11-17 spwra -> spwr
         remapped_symbol = Symbol.create("SPWR", SecurityType.EQUITY, Market.USA)

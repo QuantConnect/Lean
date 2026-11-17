@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                 Assert.AreEqual(--insightCount, collection.Count);
             }
 
-            // readd the first insight
+            // re-add the first insight
             var firstInsight = insights[0];
             collection.Add(firstInsight);
             Assert.AreEqual(1, collection.Count);

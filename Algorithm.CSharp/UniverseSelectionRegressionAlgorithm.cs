@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            // can access the current set of active securitie through UniverseManager.ActiveSecurities
+            // can access the current set of active securities through UniverseManager.ActiveSecurities
             Log(Time + ": Active Securities: " + string.Join(", ", UniverseManager.ActiveSecurities.Keys));
 
             // verify we don't receive data for inactive securities

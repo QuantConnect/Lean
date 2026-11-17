@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             // Give us two tradable days before and after expiration
             var tradableDays = new List<DateTime> { new DateTime(2021, 01, 01), new DateTime(2021, 01, 04) };
 
-            // Set expiration as 1/2/21 a Saturday, not included in our tradble days
+            // Set expiration as 1/2/21 a Saturday, not included in our tradable days
             var expiration = new DateTime(2021, 01, 02);
             var symbol = Symbol.CreateFuture("ASD", Market.USA, expiration);
             var config = new SubscriptionDataConfig(typeof(TradeBar),

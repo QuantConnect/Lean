@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [OneTimeTearDown]
         public void TearDown()
         {
-            // Restore intial Log Handler
+            // Restore initial Log Handler
             Log.LogHandler = _logHandler;
         }
 

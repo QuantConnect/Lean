@@ -139,7 +139,7 @@ namespace QuantConnect.Data
                 if(ContractDepthOffset == 0 && oldMappedValue == value)
                 {
                     // Do less if we can.
-                    // We can only do this for sure if 'ContractDepthOffset' is 0 else the value we got might be outdated and will change bellow
+                    // We can only do this for sure if 'ContractDepthOffset' is 0 else the value we got might be outdated and will change below
                     return;
                 }
                 var oldSymbol = Symbol;

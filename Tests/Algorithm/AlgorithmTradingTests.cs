@@ -1637,7 +1637,7 @@ namespace QuantConnect.Tests.Algorithm
                 testOrders(new DateTime(2013, 10, i, 5, 0, 0));
             }
 
-            // October 6 to 10 (sunday to thrusday). Testing post-market hours
+            // October 6 to 10 (sunday to Thursday). Testing post-market hours
             for (var i = 6; i <= 10; i++)
             {
                 testOrders(new DateTime(2013, 10, i, 23, 0, 0));

@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (_subscriptions.TryRemove(configuration, out subscription))
             {
-                // for user friendlyness only look at removals triggerd by the user not those that are due to a data feed ending because of no more data,
+                // for user friendliness only look at removals triggered by the user not those that are due to a data feed ending because of no more data,
                 // let's try to respect the users original FF enumerator request
                 if (!subscription.EndOfStream)
                 {

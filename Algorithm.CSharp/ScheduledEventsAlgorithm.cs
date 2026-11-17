@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // events are scheduled using date and time rules
             // date rules specify on what dates and event will fire
-            // time rules specify at what time on thos dates the event will fire
+            // time rules specify at what time on those dates the event will fire
 
             // schedule an event to fire at a specific date/time
             Schedule.On(DateRules.On(2013, 10, 7), TimeRules.At(13, 0), () =>

@@ -48,7 +48,7 @@ namespace QuantConnect.Securities.Future
                 var factor = quantityClosedSettled / _settledFutureQuantity;
                 _settledFutureQuantity -= quantityClosedSettled;
 
-                // the passed in cash amount will hold the complete profit/loss of the trade in the quote currency, so we need to substract the settled profit we were given or taken from
+                // the passed in cash amount will hold the complete profit/loss of the trade in the quote currency, so we need to subtract the settled profit we were given or taken from
                 var removedSettledProfit = factor * futureHolding.GetSettledProfitAmount().Amount;
                 futureHolding.AddSettledProfit(-removedSettledProfit);
 

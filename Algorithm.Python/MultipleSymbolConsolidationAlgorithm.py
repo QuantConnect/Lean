@@ -113,7 +113,7 @@ class SymbolData(object):
         # The simple moving average indicator for our symbol
         self.sma = None
 
-    # Returns true if all the data in this instance is ready (indicators, rolling windows, ect...)
+    # Returns true if all the data in this instance is ready (indicators, rolling windows, etc...)
     def is_ready(self) -> bool:
         return self.bars.is_ready and self.sma.is_ready
 

@@ -188,14 +188,14 @@ namespace QuantConnect.Indicators
             // Switch to short if the low penetrates the SAR value.
             if (currentBar.Low <= _sar)
             {
-                // Switch and Overide the SAR with the ep
+                // Switch and Override the SAR with the ep
                 _isLong = false;
                 _sar = _extremepoint;
 
-                // Make sure the overide SAR is within yesterday's and today's range.
+                // Make sure the override SAR is within yesterday's and today's range.
                 _sar = AdjustSARForHighs(_sar, _previousBar.High, currentBar.High);
 
-                // Output the overide SAR 
+                // Output the override SAR 
                 if (_offsetOnReverse != 0.0m)
                     _sar += _sar * _offsetOnReverse;
                 _outputSar = -_sar;
@@ -241,14 +241,14 @@ namespace QuantConnect.Indicators
             // Switch to long if the high penetrates the SAR value.
             if (currentBar.High >= _sar)
             {
-                // Switch and overide the SAR with the ep
+                // Switch and override the SAR with the ep
                 _isLong = true;
                 _sar = _extremepoint;
 
-                // Make sure the overide SAR is within yesterday's and today's range. 
+                // Make sure the override SAR is within yesterday's and today's range. 
                 _sar = AdjustSARForLows(_sar, _previousBar.Low, currentBar.Low);
 
-                // Output the overide SAR 
+                // Output the override SAR 
                 if (_offsetOnReverse != 0.0m)
                     _sar -= _sar * _offsetOnReverse;
                 _outputSar = _sar;

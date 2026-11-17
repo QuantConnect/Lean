@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
             var allHistory = History(TimeSpan.FromDays(365));
             AssertHistoryCount("History(TimeSpan.FromDays(365))", allHistory, 250 * 2, SPY, IBM);
 
-            // request the last days's worth of history at the minute resolution
+            // request the last day's worth of history at the minute resolution
             allHistory = History(TimeSpan.FromDays(1), Resolution.Minute);
             AssertHistoryCount("History(TimeSpan.FromDays(1), Resolution.Minute)", allHistory, 390, SPY, IBM);
 
@@ -175,7 +175,7 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (Slice slice in allHistory)
             {
                 // do something with each slice, these will come in time order
-                // and will NOT have auxilliary data, just price data and your custom data
+                // and will NOT have auxiliary data, just price data and your custom data
                 // if those symbols were specified
             }
 

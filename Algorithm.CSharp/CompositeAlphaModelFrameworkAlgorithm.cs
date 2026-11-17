@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
 
             // even though we're using a framework algorithm, we can still add our securities
-            // using the AddEquity/Forex/Crypto/ect methods and then pass them into a manual
+            // using the AddEquity/Forex/Crypto/etc methods and then pass them into a manual
             // universe selection model using Securities.Keys
             AddEquity("SPY");
             AddEquity("IBM");

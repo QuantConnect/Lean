@@ -149,7 +149,7 @@ namespace QuantConnect.Tests
 
                     lines.AddRange(expectedOutputLines);
 
-                    // now we skip the old expected ouptut in file
+                    // now we skip the old expected output in file
                     while (file.MoveNext())
                     {
                         line = file.Current;
@@ -181,7 +181,7 @@ namespace QuantConnect.Tests
             {
                 var chunk = longInput.Substring(i, Math.Min(maxChunkSize, longInput.Length - i));
                 i += maxChunkSize;
-                // Can't split if last charcter is "\"
+                // Can't split if last character is "\"
                 while (chunk.EndsWith("\\") && i < longInput.Length)
                 {
                     chunk += longInput[i];

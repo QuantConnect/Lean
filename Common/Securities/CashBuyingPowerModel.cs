@@ -270,7 +270,7 @@ namespace QuantConnect.Securities
                     var amountOfOrdersToRemove = (currentOrderValue - targetOrderValue) / currentOrderValuePerUnit;
                     if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
                     {
-                        // we will always substract at leat 1 LotSize
+                        // we will always subtract at least 1 LotSize
                         amountOfOrdersToRemove = parameters.Security.SymbolProperties.LotSize;
                     }
                     orderQuantity -= amountOfOrdersToRemove;

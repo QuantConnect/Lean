@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
 
                 if (shouldLiquidate || parameters.ChangePosition[i])
                 {
-                    // Go from long to short or viceversa
+                    // Go from long to short or vice-versa
                     holding.SetHoldings(price, quantity = -quantity);
                 }
             }

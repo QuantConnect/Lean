@@ -46,7 +46,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         {
             var model = new FutureFillModel();
             var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
-            var time = extendedMarketHours ? Noon.AddHours(-12) : Noon; // Midgnight (extended hours) or Noon (regular hours)
+            var time = extendedMarketHours ? Noon.AddHours(-12) : Noon; // Midnight (extended hours) or Noon (regular hours)
             var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, time);
             var config = CreateTradeBarConfig(Symbols.ES_Future_Chain, isInternal, extendedMarketHours);
             var security = GetSecurity(config);

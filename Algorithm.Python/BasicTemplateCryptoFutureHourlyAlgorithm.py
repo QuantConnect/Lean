@@ -42,7 +42,7 @@ class BasicTemplateCryptoFutureHourlyAlgorithm(QCAlgorithm):
 
         self.interest_per_symbol = {self.ada_usdt.symbol: 0}
 
-        # Default USD cash, set 1M but it wont be used
+        # Default USD cash, set 1M but it won't be used
         self.set_cash(1000000)
 
         # the amount of USDT we need to hold to trade 'ADAUSDT'

@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Purchased Stock");
 
                 // Here we will show how to correctly change an order, we will then verify at End of Algorithm!
-                // First get the order as it is now, should be a copy, so it wont be updated!
+                // First get the order as it is now, should be a copy, so it won't be updated!
                 _originalOrder = Transactions.GetOrderById(_ticket.OrderId);
 
                 // Create an UpdateOrderRequest and send it to the ticket

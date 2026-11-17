@@ -76,7 +76,7 @@ class FundamentalRegressionAlgorithm(QCAlgorithm):
         universe_data_per_time = self.history(self._universe, timedelta(days=2), flatten=True)
         self.assert_fundamental_history(universe_data_per_time, "B")
 
-        # Case C: Passing through the unvierse type and symbol
+        # Case C: Passing through the universe type and symbol
         enumerable_of_data_dictionary = self.history[self._universe.data_type]([self._universe.symbol], 100)
         for selection_collection_for_a_day in enumerable_of_data_dictionary:
             self.assert_fundamental_enumerator(selection_collection_for_a_day[self._universe.symbol], "C")
