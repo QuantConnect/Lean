@@ -108,8 +108,8 @@ namespace QuantConnect.Securities.Option
             // it's negative THEIR holdings. holding.Quantity is negative, so if counter-party exercises, they would reduce holdings
             var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
-            // Scenario 1 (base): we just close option position
-            var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
+            // Scenario 1 (base): we just close option position, selling the counter-party's long contracts
+            var marketOrder1 = new MarketOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var orderFee1 = option.FeeModel.GetOrderFee(
                 new OrderFeeParameters(option, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
 
