@@ -73,10 +73,8 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
                     algorithm.subscription_manager.remove_consolidator(removed.symbol, data.consolidator)
 
         for added in changes.added_securities:
-            # a security removed while it still had a position loses its data subscription later, without another
-            # removal notification, so when selected again our cached consolidator no longer receives data
             data = self.symbol_data.get(added.symbol, None)
-            if data and not any(data.consolidator in subscription.consolidators for subscription in added.subscriptions):
+            if data and not ExecutionModel.is_consolidator_receiving_data(algorithm, added.symbol, data.consolidator):
                 self.symbol_data.pop(added.symbol)
                 algorithm.subscription_manager.remove_consolidator(added.symbol, data.consolidator)
 
@@ -104,8 +102,10 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
 class SymbolData:
     def __init__(self, algorithm, security):
         self.security = security
-        self.consolidator = algorithm.resolve_consolidator(security.symbol, security.resolution)
-        name = algorithm.create_indicator_name(security.symbol, "VWAP", security.resolution)
+        # use the resolution of the subscription the consolidator is attached to: the security keeps the subscriptions
+        # of a universe that no longer selects it, so its resolution can be finer than the data it still receives
+        self.consolidator = algorithm.resolve_consolidator(security.symbol, None)
+        name = algorithm.create_indicator_name(security.symbol, "VWAP", None)
         self._vwap = IntradayVwap(name)
         algorithm.register_indicator(security.symbol, self._vwap, self.consolidator)
 

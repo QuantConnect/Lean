@@ -25,7 +25,9 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -194,6 +196,88 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
 
                 // ask price of $50.01 is above the new VWAP of $50, so selling is favorable
+                model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(-10, orders[0].Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage?.Dispose();
+            }
+        }
+
+        [TestCase(Language.CSharp, Resolution.Minute, false)]
+        [TestCase(Language.Python, Resolution.Minute, false)]
+        [TestCase(Language.CSharp, Resolution.Hour, false)]
+        [TestCase(Language.Python, Resolution.Hour, false)]
+        [TestCase(Language.CSharp, Resolution.Minute, true)]
+        [TestCase(Language.Python, Resolution.Minute, true)]
+        [TestCase(Language.CSharp, Resolution.Hour, true)]
+        [TestCase(Language.Python, Resolution.Hour, true)]
+        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language, Resolution otherResolution,
+            bool firstUniverseSubscribesAgain)
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+            try
+            {
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // VWAP is around $100 and the quote sits below it, so selling is not favorable
+                SetMarketData(security, time, 100m, 1000m, 99.98m, 99.99m);
+
+                // another universe selects the symbol with a different subscription, which keeps the security in the algorithm
+                var otherSubscription = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), Symbols.AAPL,
+                    otherResolution, extendedMarketHours: true);
+                security.AddData(otherSubscription);
+
+                // the first universe deselects the symbol: its subscriptions, one feeding the model's consolidator, are taken down,
+                // but the security keeps them, with the consolidator, because it is still selected by the other universe
+                var removedSubscriptions = security.Subscriptions.Where(config => config != otherSubscription).ToList();
+                foreach (var removedSubscription in removedSubscriptions)
+                {
+                    Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, removedSubscription, time, time.AddDays(1))));
+                    Assert.IsTrue(dataManager.RemoveSubscription(removedSubscription));
+                }
+                CollectionAssert.AreEqual(new[] { otherSubscription },
+                    algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL));
+
+                if (firstUniverseSubscribesAgain)
+                {
+                    // another symbol takes the freed slots, so the first universe's new minute subscription comes after the other one
+                    algorithm.AddEquity(Symbols.MSFT.Value);
+                    var returningSubscription = new SubscriptionDataConfig(typeof(TradeBar), Symbols.AAPL, Resolution.Minute,
+                        security.Exchange.TimeZone, security.Exchange.TimeZone, true, false, false);
+                    Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, returningSubscription, time, time.AddDays(1))));
+                    CollectionAssert.AreEqual(new[] { otherSubscription, returningSubscription },
+                        algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL));
+                }
+
+                // the first universe selects the symbol again: the security still reports the removed subscription's resolution,
+                // so the new consolidator has to follow the data the other universe's subscription receives
+                Assert.AreEqual(Resolution.Minute, security.Resolution);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+                Assert.AreEqual(1, otherSubscription.Consolidators.Count);
+
+                // the price is now far below the VWAP computed from the removed subscription
+                SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
+
+                // ask price of $50.01 is above the fresh VWAP, at most $50, while the stale one of around $100 kept selling unfavorable
                 model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
                 orderProcessor.ProcessSynchronousEvents();
 
