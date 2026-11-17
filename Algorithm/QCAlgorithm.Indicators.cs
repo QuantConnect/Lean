@@ -1069,7 +1069,7 @@ namespace QuantConnect.Algorithm
         public HilbertTransform HT(Symbol symbol, int length, decimal inPhaseMultiplicationFactor, decimal quadratureMultiplicationFactor, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"HT({length}, {inPhaseMultiplicationFactor}, {quadratureMultiplicationFactor})", resolution);
-            var hilbertTransform = new HilbertTransform(length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor);
+            var hilbertTransform = new HilbertTransform(name, length, inPhaseMultiplicationFactor, quadratureMultiplicationFactor);
             InitializeIndicator(hilbertTransform, resolution, selector, symbol);
 
             return hilbertTransform;
