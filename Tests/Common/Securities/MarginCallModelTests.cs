@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -701,7 +702,7 @@ namespace QuantConnect.Tests.Common.Securities
             var orderProcessor = new FakeOrderProcessor
             {
                 RejectedOrderStatus = failedOrderStatus,
-                RejectsOrder = request => request.Symbol == Symbols.IBM || request.Symbol == Symbols.MSFT
+                RejectsOrder = requests => requests.Any(request => request.Symbol == Symbols.IBM || request.Symbol == Symbols.MSFT)
             };
             // each position can cover the $4000 deficit on its own, losers first: IBM, MSFT and then SPY
             var portfolio = GetStocksPortfolio(orderProcessor, -19000, (Symbols.IBM, 120m, null), (Symbols.MSFT, 110m, null),
@@ -711,7 +712,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(3, marginCallOrders.Count);
             Assert.IsTrue(marginCallOrders.All(request => request.Quantity == -81));
 
-            // a failed order releases no margin: SPY is liquidated for the whole deficit, 80 shares at $50 of margin each
+            // a failed order releases no margin: SPY is liquidated as generated for the whole deficit
             var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
             Assert.AreEqual(3, tickets.Count);
             Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
@@ -719,14 +720,96 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Symbols.MSFT, tickets[1].Symbol);
             Assert.AreEqual(failedOrderStatus, tickets[1].Status);
             Assert.AreEqual(Symbols.SPY, tickets[2].Symbol);
-            Assert.AreEqual(-80, tickets[2].Quantity);
+            Assert.AreEqual(-81, tickets[2].Quantity);
+            Assert.IsTrue(tickets[2].Status.IsOpen());
+        }
+
+        [Test]
+        public void ExecutesTheRequestedOrderWhenTheScaledDownOneHasNotEnoughBuyingPower()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            // the orders are checked for buying power, as the transaction handler does before submitting them
+            orderProcessor.RejectsOrder = requests =>
+                !portfolio.HasSufficientBuyingPowerForOrder(requests.Select(request => Order.CreateOrder(request)).ToList()).IsSufficient;
+
+            // 10 protective puts (+1000 SPY / +10 puts at the money) and 100 IBM, the loser
+            var time = DateTime.Now;
+            var spy = GetSecurity(Symbols.SPY, portfolio.CashBook);
+            var putSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 100m, new DateTime(2016, 2, 19));
+            var put = GetOption(putSymbol, portfolio.CashBook);
+            put.Underlying = spy;
+            var ibm = GetSecurity(Symbols.IBM, portfolio.CashBook);
+            foreach (var (security, price, averagePrice, quantity) in new[] { (spy, 100m, 100m, 1000m), (put, 1m, 1m, 10m), (ibm, 100m, 200m, 100m) })
+            {
+                portfolio.Securities.Add(security);
+                security.SetLeverage(2);
+                security.SetMarketPrice(new Tick(time, security.Symbol, price, price));
+                security.Holdings.SetHoldings(averagePrice, quantity);
+            }
+            portfolio.CashBook[Currencies.USD].SetAmount(-102500);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(10, marginCallOrders.Single(request => request.Symbol == putSymbol).GroupOrderManager.Quantity);
+
+            // IBM's order releases $5000 of the $6500 deficit: 2 protective puts would cover the rest, but the 8 left would need more
+            // initial margin than the 10 held use, so that order is rejected and the 10 requested are liquidated instead
+            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+            Assert.AreEqual(5, tickets.Count);
+            Assert.AreEqual(Symbols.IBM, tickets[0].Symbol);
+            Assert.IsTrue(tickets.Skip(1).Take(2).All(ticket => ticket.Status == OrderStatus.Invalid && ticket.SubmitRequest.GroupOrderManager.Quantity == 2));
+            Assert.IsTrue(tickets.Skip(3).All(ticket => ticket.Status.IsOpen() && ticket.SubmitRequest.GroupOrderManager.Quantity == 10));
+            Assert.AreEqual(-1000, tickets.Skip(3).Single(ticket => ticket.Symbol == Symbols.SPY).Quantity);
+        }
+
+        [Test]
+        public void ExecutesTheRequestedOrderWhenTheScaledDownOneIsBelowTheMinimumOrderSize()
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+            // the orders are checked for the minimum order size, as brokerage models do before submitting them
+            orderProcessor.RejectsOrder = requests =>
+                requests.Any(request => !DefaultBrokerageModel.IsValidOrderSize(portfolio.Securities[request.Symbol], request.Quantity, out _));
+
+            // 100 IBM at $10, the loser, and 100 MSFT at $100, whose orders must be of at least 25 shares
+            var time = DateTime.Now;
+            var ibm = GetSecurity(Symbols.IBM, portfolio.CashBook);
+            var msft = GetSecurity(Symbols.MSFT, portfolio.CashBook,
+                symbolProperties: new SymbolProperties("", Currencies.USD, 1, 0.01m, 1, "", minimumOrderSize: 25));
+            foreach (var (security, price, averagePrice) in new[] { (ibm, 10m, 20m), (msft, 100m, 100m) })
+            {
+                portfolio.Securities.Add(security);
+                security.SetLeverage(2);
+                security.SetMarketPrice(new Tick(time, security.Symbol, price, price));
+                security.Holdings.SetHoldings(averagePrice, 100);
+            }
+            portfolio.CashBook[Currencies.USD].SetAmount(-7000);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            var requestedMsftQuantity = marginCallOrders.Single(request => request.Symbol == Symbols.MSFT).Quantity;
+            Assert.LessOrEqual(requestedMsftQuantity, -25);
+
+            // selling all of IBM leaves $1000 of the $1500 deficit: the 20 MSFT shares that cover it are fewer than the minimum,
+            // so that order is rejected and the requested one is executed instead
+            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+            Assert.AreEqual(3, tickets.Count);
+            Assert.AreEqual(-100, tickets[0].Quantity);
+            Assert.AreEqual(-20, tickets[1].Quantity);
+            Assert.AreEqual(OrderStatus.Invalid, tickets[1].Status);
+            Assert.AreEqual(requestedMsftQuantity, tickets[2].Quantity);
             Assert.IsTrue(tickets[2].Status.IsOpen());
         }
 
         [Test]
         public void ExecutesLaterMarginCallRequestsWithoutQuantityAsGiven()
         {
-            var orderProcessor = new FakeOrderProcessor { RejectsOrder = request => request.Symbol == Symbols.IBM };
+            var orderProcessor = new FakeOrderProcessor { RejectsOrder = requests => requests.Any(request => request.Symbol == Symbols.IBM) };
             var portfolio = GetStocksPortfolio(orderProcessor, -19000, (Symbols.IBM, 120m, null), (Symbols.MSFT, 110m, null));
 
             // like OnMarginCall replacing MSFT's order with one without quantity
@@ -742,7 +825,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void ExecutesThePositionGroupsWhoseMarginCallOrdersFailedLast()
         {
-            var orderProcessor = new FakeOrderProcessor { RejectsOrder = request => request.Symbol == Symbols.IBM };
+            var orderProcessor = new FakeOrderProcessor { RejectsOrder = requests => requests.Any(request => request.Symbol == Symbols.IBM) };
             // each position can cover the $4000 deficit on its own, losers first: IBM, MSFT and then SPY
             var portfolio = GetStocksPortfolio(orderProcessor, -19000, (Symbols.IBM, 120m, null), (Symbols.MSFT, 110m, null),
                 (Symbols.SPY, 100m, null));
@@ -784,7 +867,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void LiquidatesAStockGroupSharingTheUnderlyingOfARejectedComboOrder()
         {
             // the brokerage rejects combo orders but accepts stock orders
-            var orderProcessor = new FakeOrderProcessor { RejectsOrder = request => request.OrderType == OrderType.ComboMarket };
+            var orderProcessor = new FakeOrderProcessor { RejectsOrder = requests => requests[0].OrderType == OrderType.ComboMarket };
             // a covered call group (+100 SPY / -1 call) and a separate +200 SPY group, both holding SPY,
             // with the call sold at $0.50 so the covered call is the loser
             var portfolio = GetSpyPortfolio(orderProcessor, -19000, -1);
@@ -794,13 +877,13 @@ namespace QuantConnect.Tests.Common.Securities
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             Assert.AreEqual(3, marginCallOrders.Count);
 
-            // the combo order is rejected: the stock group is liquidated for the whole $4100 deficit, 82 shares at $50 of margin each
+            // the combo order is rejected: the stock group is liquidated as generated for the whole $4100 deficit
             var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
             Assert.AreEqual(3, tickets.Count);
             Assert.IsTrue(tickets.Take(2).All(ticket => ticket.Status == OrderStatus.Invalid && ticket.SubmitRequest.GroupOrderManager != null));
             Assert.AreEqual(Symbols.SPY, tickets[2].Symbol);
             Assert.IsNull(tickets[2].SubmitRequest.GroupOrderManager);
-            Assert.AreEqual(-82, tickets[2].Quantity);
+            Assert.AreEqual(-83, tickets[2].Quantity);
             Assert.IsTrue(tickets[2].Status.IsOpen());
         }
 
@@ -991,7 +1074,8 @@ namespace QuantConnect.Tests.Common.Securities
             return orders;
         }
 
-        private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null, SecurityExchangeHours exchangeHours = null)
+        private Security GetSecurity(Symbol symbol, ICurrencyConverter currencyConverter = null, SecurityExchangeHours exchangeHours = null,
+            SymbolProperties symbolProperties = null)
         {
             return new Security(
                 exchangeHours ?? SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -1006,7 +1090,7 @@ namespace QuantConnect.Tests.Common.Securities
                     true
                 ),
                 new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
+                symbolProperties ?? SymbolProperties.GetDefault(Currencies.USD),
                 currencyConverter ?? ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
