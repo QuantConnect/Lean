@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log($"Start training at {Time}");
             // Use the historical data to train the machine learning model
-            History("SPY", 200, Resolution.Daily);
+            var history = History("SPY", 200, Resolution.Daily);
 
             // ML code:
 

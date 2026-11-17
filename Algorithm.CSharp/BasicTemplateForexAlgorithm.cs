@@ -40,9 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
             AddForex("EURUSD");
             AddForex("NZDUSD");
 
-            History(5, Resolution.Daily);
-            History(5, Resolution.Hour);
-            History(5, Resolution.Minute);
+            var dailyHistory = History(5, Resolution.Daily);
+            var hourHistory = History(5, Resolution.Hour);
+            var minuteHistory = History(5, Resolution.Minute);
             var secondHistory = History(5, Resolution.Second);
 
             // Log values from history request of second-resolution data
