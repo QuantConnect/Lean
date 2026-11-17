@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Python;
@@ -67,6 +69,22 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="orderEvent">Order event to process</param>
         public virtual void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
+        }
+
+        /// <summary>
+        /// Determines whether the consolidator is still attached to one of the symbol's live subscriptions.
+        /// A security removed while it still had a position loses its data subscription later, without another
+        /// removal notification, and the security keeps a removed subscription while another universe still selects it,
+        /// so a cached consolidator can stop receiving data while the security's own subscriptions still hold it
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="symbol">The symbol the consolidator was registered for</param>
+        /// <param name="consolidator">The consolidator to look for</param>
+        /// <returns>True if a live subscription of the symbol holds the consolidator</returns>
+        protected static bool IsConsolidatorReceivingData(QCAlgorithm algorithm, Symbol symbol, IDataConsolidator consolidator)
+        {
+            return algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                .Any(subscription => subscription.Consolidators.Contains(consolidator));
         }
     }
 }
