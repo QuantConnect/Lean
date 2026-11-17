@@ -28,12 +28,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class SplitEventProvider : ITradableDateEventProvider
     {
-        // we set the split factor when we encounter a split in the factor file
-        // and on the next trading day we use this data to produce the split instance
-        private decimal? _splitFactor;
-        private decimal _referencePrice;
         private IFactorFileProvider _factorFileProvider;
         private MapFile _mapFile;
+
+        /// <summary>
+        /// The split factor of the split to emit on the next tradable date, set when we encounter a split in the factor file
+        /// </summary>
+        protected decimal? PendingSplitFactor { get; set; }
+
+        /// <summary>
+        /// The reference price of the split to emit on the next tradable date
+        /// </summary>
+        protected decimal PendingSplitReferencePrice { get; set; }
 
         /// <summary>
         /// The current instance being used
@@ -75,17 +81,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 && FactorFile != null
                 && _mapFile.HasData(eventArgs.Date))
             {
-                var factor = _splitFactor;
+                var factor = PendingSplitFactor;
                 if (factor != null)
                 {
-                    var close = _referencePrice;
+                    var close = PendingSplitReferencePrice;
                     if (close == 0)
                     {
                         throw new InvalidOperationException($"Zero reference price for {Config.Symbol} split at {eventArgs.Date}");
                     }
 
-                    _splitFactor = null;
-                    _referencePrice = 0;
+                    PendingSplitFactor = null;
+                    PendingSplitReferencePrice = 0;
                     yield return new Split(
                         eventArgs.Symbol,
                         eventArgs.Date,
@@ -98,8 +104,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 decimal referencePrice;
                 if (FactorFile.HasSplitEventOnNextTradingDay(eventArgs.Date, out splitFactor, out referencePrice))
                 {
-                    _splitFactor = splitFactor;
-                    _referencePrice = referencePrice;
+                    PendingSplitFactor = splitFactor;
+                    PendingSplitReferencePrice = referencePrice;
                     yield return new Split(
                         eventArgs.Symbol,
                         eventArgs.Date,

@@ -28,6 +28,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// <remarks>Only special behavior is that it will refresh factor file on each new tradable date event</remarks>
     public class LiveDividendEventProvider : DividendEventProvider
     {
+        private bool _receivedTradableDate;
+
         /// <summary>
         /// Check for dividends and returns them
         /// </summary>
@@ -49,6 +51,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 Log.Trace($"LiveDividendEventProvider({Config.ToString(symbol)}): new tradable date {eventArgs.Date:yyyyMMdd}. " +
                     $"New FactorFile: {!ReferenceEquals(currentInstance, newInstance)}. " +
                     $"FactorFile.Count Old: {currentInstance?.Count()} New: {newInstance?.Count()}");
+            }
+
+            // a dividend whose row arrived after its own date is emitted now if it hasn't taken effect yet
+            var previousInstance = _receivedTradableDate ? currentInstance : null;
+            _receivedTradableDate = true;
+            foreach (var date in LiveFactorFileEvents.GetMissedEventDates(Config, eventArgs.Date, previousInstance, newInstance,
+                (factorFile, rowDate) => factorFile.HasDividendEventOnNextTradingDay(rowDate, out _, out var referencePrice) ? referencePrice : null))
+            {
+                newInstance.HasDividendEventOnNextTradingDay(date, out var priceFactorRatio, out var referencePrice);
+                PendingDividendPriceFactorRatio = priceFactorRatio;
+                PendingDividendReferencePrice = referencePrice;
             }
 
             return base.GetEvents(eventArgs);

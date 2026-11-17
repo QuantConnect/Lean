@@ -28,12 +28,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     /// </summary>
     public class DividendEventProvider : ITradableDateEventProvider
     {
-        // we set the price factor ratio when we encounter a dividend in the factor file
-        // and on the next trading day we use this data to produce the dividend instance
-        private decimal? _priceFactorRatio;
-        private decimal _referencePrice;
         private IFactorFileProvider _factorFileProvider;
         private MapFile _mapFile;
+
+        /// <summary>
+        /// The price factor ratio of the dividend to emit on the next tradable date, set when we encounter a dividend in the factor file
+        /// </summary>
+        protected decimal? PendingDividendPriceFactorRatio { get; set; }
+
+        /// <summary>
+        /// The reference price of the dividend to emit on the next tradable date
+        /// </summary>
+        protected decimal PendingDividendReferencePrice { get; set; }
 
         /// <summary>
         /// The current instance being used
@@ -75,9 +81,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 && FactorFile != null
                 && _mapFile.HasData(eventArgs.Date))
             {
-                if (_priceFactorRatio != null)
+                if (PendingDividendPriceFactorRatio != null)
                 {
-                    if (_referencePrice == 0)
+                    if (PendingDividendReferencePrice == 0)
                     {
                         throw new InvalidOperationException($"Zero reference price for {Config.Symbol} dividend at {eventArgs.Date}");
                     }
@@ -85,13 +91,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     var baseData = Dividend.Create(
                         Config.Symbol,
                         eventArgs.Date,
-                        _referencePrice,
-                        _priceFactorRatio.Value
+                        PendingDividendReferencePrice,
+                        PendingDividendPriceFactorRatio.Value
                     );
                     // let the config know about it for normalization
                     Config.SumOfDividends += baseData.Distribution;
-                    _priceFactorRatio = null;
-                    _referencePrice = 0;
+                    PendingDividendPriceFactorRatio = null;
+                    PendingDividendReferencePrice = 0;
 
                     yield return baseData;
                 }
@@ -101,8 +107,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 decimal referencePrice;
                 if (FactorFile.HasDividendEventOnNextTradingDay(eventArgs.Date, out priceFactorRatio, out referencePrice))
                 {
-                    _priceFactorRatio = priceFactorRatio;
-                    _referencePrice = referencePrice;
+                    PendingDividendPriceFactorRatio = priceFactorRatio;
+                    PendingDividendReferencePrice = referencePrice;
                 }
             }
         }
