@@ -34,9 +34,9 @@ namespace QuantConnect.Tests.Common.Securities
         public SecurityTransactionManager TransactionManager { get; set; }
 
         /// <summary>
-        /// The symbols whose submitted orders are rejected, with <see cref="RejectedOrderStatus"/>
+        /// Whether a submitted order is rejected, with <see cref="RejectedOrderStatus"/>
         /// </summary>
-        public HashSet<Symbol> RejectedSymbols { get; } = new HashSet<Symbol>();
+        public Func<SubmitOrderRequest, bool> RejectsOrder { get; set; } = _ => false;
 
         /// <summary>
         /// The status of the rejected orders, invalid by default
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Common.Securities
                 case OrderRequestType.Submit:
                     ticket = new OrderTicket(TransactionManager, (SubmitOrderRequest) request);
                     AddTicket(ticket);
-                    if (RejectedSymbols.Contains(ticket.Symbol))
+                    if (RejectsOrder((SubmitOrderRequest)request))
                     {
                         var order = Order.CreateOrder((SubmitOrderRequest)request);
                         order.Status = RejectedOrderStatus;
