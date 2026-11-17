@@ -516,6 +516,37 @@ namespace QuantConnect.Tests.Common.Securities
                 new Dictionary<DateTime, TimeSpan>());
         }
 
+        [TestCase("2024-01-07 17:00:00", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-07 19:00:00", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-07 23:59:59", false, "2024-01-08 00:00:00")]
+        [TestCase("2024-01-08 00:00:00", false, "2024-01-08 16:00:00")]
+        [TestCase("2024-01-07 17:00:00", true, "2024-01-08 02:00:00")]
+        [TestCase("2024-01-07 19:00:00", true, "2024-01-08 02:00:00")]
+        [TestCase("2024-01-07 23:59:59", true, "2024-01-08 02:00:00")]
+        [TestCase("2024-01-08 00:00:00", true, "2024-01-08 02:00:00")]
+        [TestCase("2024-01-08 03:00:00", true, "2024-01-08 16:00:00")]
+        public void GetNextMarketCloseIgnoresExcludedExtendedHoursAfterMidnightClose(string startTime, bool extendedMarketHours, string expectedNextMarketClose)
+        {
+            var marketHours = Enum.GetValues<DayOfWeek>()
+                .Select(day => LocalMarketHours.ClosedAllDay(day))
+                .ToDictionary(x => x.DayOfWeek);
+            marketHours[DayOfWeek.Sunday] = new LocalMarketHours(DayOfWeek.Sunday,
+                new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(18), TimeSpan.FromHours(24)));
+            marketHours[DayOfWeek.Monday] = new LocalMarketHours(DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.PostMarket, TimeSpan.Zero, TimeSpan.FromHours(2)),
+                new MarketHoursSegment(MarketHoursState.Market, TimeSpan.FromHours(14), TimeSpan.FromHours(16)));
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                marketHours,
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>());
+
+            var nextMarketClose = exchangeHours.GetNextMarketClose(Parse.DateTime(startTime), extendedMarketHours);
+
+            Assert.AreEqual(Parse.DateTime(expectedNextMarketClose), nextMarketClose);
+        }
+
         [TestCase("2012-07-04 00:00:01", true, "2012-07-04 18:00:00")]
         [TestCase("2012-07-04 09:30:00", true, "2012-07-04 18:00:00")]
         [TestCase("2012-07-04 10:00:00", true, "2012-07-04 18:00:00")]
