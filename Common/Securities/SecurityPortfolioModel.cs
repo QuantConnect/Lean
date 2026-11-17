@@ -115,7 +115,7 @@ namespace QuantConnect.Securities
                     {
                         case OrderDirection.Buy:
                             //Update the Holding Average Price: Total Value / Total Quantity:
-                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice = security.Holdings.GetAveragePriceAfterIncrease(averageHoldingsPrice, quantityHoldings, fill.FillPrice, fill.FillQuantity);
                             //Add the new quantity:
                             quantityHoldings += fill.FillQuantity;
                             break;
@@ -157,7 +157,7 @@ namespace QuantConnect.Securities
                             //We are increasing a Short position:
                             //E.g.  -100 @ $5, adding -100 @ $10: Avg: $7.5
                             //      dAvg = (-500 + -1000) / -200 = 7.5
-                            averageHoldingsPrice = ((averageHoldingsPrice*quantityHoldings) + (fill.FillQuantity*fill.FillPrice))/(quantityHoldings + fill.FillQuantity);
+                            averageHoldingsPrice = security.Holdings.GetAveragePriceAfterIncrease(averageHoldingsPrice, quantityHoldings, fill.FillPrice, fill.FillQuantity);
                             quantityHoldings += fill.FillQuantity;
                             break;
                     }
