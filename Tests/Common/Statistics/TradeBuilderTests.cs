@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -218,6 +219,105 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2m, trade.ProfitLoss);
             Assert.AreEqual(0m, trade.MAE);
             Assert.AreEqual(0m, trade.EndTradeDrawdown);
+        }
+
+        [Test]
+        public void CommissionReportedAfterFirstExecutionIsAssignedToTrade(
+            [Values] FillGroupingMethod groupingMethod,
+            [Values] FillMatchingMethod matchingMethod,
+            [Values] bool commissionWithExecution,
+            [Values] bool commissionOnExitOrder)
+        {
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
+            var time = _startTime;
+            var commissionOrderId = commissionOnExitOrder ? 2 : 1;
+            var direction = commissionOnExitOrder ? -1 : 1;
+            var price = commissionOnExitOrder ? 301m : 300m;
+
+            if (commissionOnExitOrder)
+            {
+                builder.ProcessFill(
+                    new OrderEvent(1, Symbols.SPY, time, OrderStatus.Filled, OrderDirection.Buy,
+                        fillPrice: 300m, fillQuantity: 2, orderFee: OrderFee.Zero),
+                    ConversionRate, 0m);
+            }
+
+            builder.ProcessFill(
+                new OrderEvent(commissionOrderId, Symbols.SPY, time.AddMinutes(1), OrderStatus.PartiallyFilled,
+                    commissionOnExitOrder ? OrderDirection.Sell : OrderDirection.Buy,
+                    fillPrice: price, fillQuantity: direction, orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+
+            // the commission arrives with the order's last execution, or with an event closing the order without one
+            builder.ProcessFill(
+                new OrderEvent(commissionOrderId, Symbols.SPY, time.AddMinutes(2), OrderStatus.Filled,
+                    commissionOnExitOrder ? OrderDirection.Sell : OrderDirection.Buy,
+                    fillPrice: commissionWithExecution ? price : 0m, fillQuantity: commissionWithExecution ? direction : 0,
+                    orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            // a repeated report of the same commission is not counted again
+            builder.ProcessFill(
+                new OrderEvent(commissionOrderId, Symbols.SPY, time.AddMinutes(3), OrderStatus.Filled,
+                    commissionOnExitOrder ? OrderDirection.Sell : OrderDirection.Buy,
+                    fillPrice: 0m, fillQuantity: 0, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            var orderQuantity = commissionWithExecution ? 2 : 1;
+            var tradedQuantity = commissionOnExitOrder ? 2 : orderQuantity;
+            // closes what is left open
+            builder.ProcessFill(
+                new OrderEvent(3, Symbols.SPY, time.AddMinutes(4), OrderStatus.Filled, OrderDirection.Sell,
+                    fillPrice: 301m, fillQuantity: commissionOnExitOrder ? orderQuantity - 2 : -orderQuantity,
+                    orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.SPY));
+            var trades = builder.ClosedTrades;
+            Assert.AreEqual(_orderFee.Value.Amount, trades.Sum(trade => trade.TotalFees));
+            Assert.AreEqual(tradedQuantity, trades.Sum(trade => trade.Quantity));
+            Assert.AreEqual(tradedQuantity, trades.Sum(trade => trade.ProfitLoss));
+            // the event without an execution is no market price
+            Assert.IsTrue(trades.All(trade => trade.MAE == 0m));
+        }
+
+        [Test]
+        public void CommissionReportedAfterTradeClosedKeepsCapturedResultsConsistent(
+            [Values] FillGroupingMethod groupingMethod,
+            [Values] FillMatchingMethod matchingMethod)
+        {
+            var builder = new TradeBuilder(groupingMethod, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
+            var time = _startTime;
+
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time, OrderStatus.Filled, OrderDirection.Buy,
+                    fillPrice: 300m, fillQuantity: 2, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(1), OrderStatus.PartiallyFilled, OrderDirection.Sell,
+                    fillPrice: 301m, fillQuantity: -2, orderFee: OrderFee.Zero),
+                ConversionRate, 0m);
+
+            var capturedTrades = builder.ClosedTrades;
+            var capturedStatistics = new TradeStatistics(capturedTrades);
+
+            // the exit order's commission arrives once its trade is already closed
+            var lateCommission = new OrderFee(new CashAmount(0.01m, Currencies.USD));
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(2), OrderStatus.Filled, OrderDirection.Sell,
+                    fillPrice: 0m, fillQuantity: 0, orderFee: lateCommission),
+                ConversionRate, lateCommission.Value.Amount);
+
+            Assert.AreEqual(1m, capturedStatistics.TotalFees);
+            Assert.AreEqual(1m, capturedTrades.Sum(trade => trade.TotalFees));
+
+            var trades = builder.ClosedTrades;
+            Assert.AreEqual(1, trades.Count);
+            Assert.AreEqual(capturedTrades[0].Id, trades[0].Id);
+            Assert.AreEqual(1.01m, trades[0].TotalFees);
+            Assert.AreEqual(1.01m, new TradeStatistics(trades).TotalFees);
         }
 
         [Test]
