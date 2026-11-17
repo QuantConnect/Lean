@@ -598,8 +598,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("IBDE40", "2025-01-29", true)]
         // Eurex doesn't observe New Year's Day on the next Monday
         [TestCase("IBDE40", "2023-01-02", true)]
-        // missing from the Eurex calendar, but closed as in every market
+        // missing from the database's Eurex calendar, but closed in Eurex's published 2003 calendar
+        [TestCase("IBDE40", "2003-05-01", false)]
+        [TestCase("IBDE40", "2003-12-24", false)]
         [TestCase("IBDE40", "2003-12-25", false)]
+        [TestCase("IBDE40", "2003-12-26", false)]
+        [TestCase("IBDE40", "2003-12-31", false)]
+        [TestCase("IBEU50", "2003-12-24", false)]
+        [TestCase("IBEU50", "2003-12-26", false)]
         [TestCase("IBHK50", "2025-01-29", false)]
         [TestCase("IBHK50", "2025-10-01", false)]
         // observed holidays
