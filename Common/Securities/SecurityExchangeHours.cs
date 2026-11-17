@@ -415,6 +415,11 @@ namespace QuantConnect.Securities
                     // the next day first segment for the case in which the next market close is the last segment
                     // of the current day
                     var nextSegment = GetNextOrPreviousSegment(time, isNextDay: true);
+                    // an excluded extended hours segment can't make the current day's close a continuation
+                    if (!extendedMarketHours && nextSegment?.State != MarketHoursState.Market)
+                    {
+                        nextSegment = null;
+                    }
                     var marketCloseTimeOfDay = marketHours.GetMarketClose(time.TimeOfDay, extendedMarketHours, lastClose, nextSegment?.Start);
                     if (marketCloseTimeOfDay.HasValue)
                     {
