@@ -20,6 +20,8 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Tests.Common.Orders.Fees;
 using System;
 
 namespace QuantConnect.Tests.Brokerages.Exante
@@ -152,6 +154,50 @@ namespace QuantConnect.Tests.Brokerages.Exante
                 fee.Value.Amount
             );
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+        }
+
+        [TestCase("EURUSD", 1000000, 1100000)]
+        [TestCase("USDJPY", -1000000, 1000000)]
+        [TestCase("EURGBP", 1000000, 1100000)]
+        public void ForexFeeInUSDDoesNotDependOnTheAccountCurrency(string ticker, decimal quantity, decimal valueInUSD)
+        {
+            IFeeModel feeModel = new ExanteFeeModel();
+
+            foreach (var accountCurrency in new[] { Currencies.USD, Currencies.EUR, Currencies.GBP, Currencies.JPY })
+            {
+                var security = InteractiveBrokersFeeModelTests.GetForex(ticker, accountCurrency);
+
+                var fee = feeModel.GetOrderFee(
+                    new OrderFeeParameters(security, new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)));
+
+                Assert.AreEqual(Currencies.USD, fee.Value.Currency, accountCurrency);
+                Assert.That(fee.Value.Amount, Is.EqualTo(0.25m * valueInUSD).Within(0.0000001m), accountCurrency);
+            }
+        }
+
+        [Test]
+        public void ZeroRateForexFeeDoesNotNeedUSDInTheCashBook()
+        {
+            var cashBook = new CashBook { AccountCurrency = Currencies.EUR };
+            cashBook.Add(Currencies.GBP, 0, 1.14m);
+            var tz = TimeZones.NewYork;
+            var security = new Forex(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                cashBook[Currencies.GBP],
+                cashBook[Currencies.EUR],
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("EURGBP", Currencies.GBP, 1, 0.00001m, 1, string.Empty),
+                cashBook,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 0.877m, 0.877m));
+
+            var fee = new ExanteFeeModel(0).GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 25000, DateTime.UtcNow)));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(0m, fee.Value.Amount);
+            Assert.AreEqual(0m, cashBook.ConvertToAccountCurrency(fee.Value).Amount);
         }
     }
 }

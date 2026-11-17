@@ -36,5 +36,31 @@ namespace QuantConnect.Orders.Fees
                 0,
                 "USD"));
         }
+
+        /// <summary>
+        /// Gets the value of the order in the given currency, instead of the account currency of <see cref="Order.GetValue"/>
+        /// </summary>
+        /// <param name="order">The order to value</param>
+        /// <param name="security">The security matching the order's symbol</param>
+        /// <param name="currency">The currency to value the order in</param>
+        /// <returns>The value of the order in the given currency, or zero when it is the security's quote or base currency and has no conversion rate yet</returns>
+        internal static decimal GetOrderValue(Order order, Security security, string currency)
+        {
+            decimal conversionRate;
+            if (security.QuoteCurrency.Symbol == currency)
+            {
+                conversionRate = security.QuoteCurrency.ConversionRate;
+            }
+            else if (security is IBaseCurrencySymbol baseCurrencySymbol && baseCurrencySymbol.BaseCurrency.Symbol == currency)
+            {
+                conversionRate = baseCurrencySymbol.BaseCurrency.ConversionRate;
+            }
+            else
+            {
+                conversionRate = security.Holdings.CurrencyConverter.ConvertToAccountCurrency(new CashAmount(1, currency)).Amount;
+            }
+
+            return conversionRate == 0 ? 0 : order.GetValue(security) / conversionRate;
+        }
     }
 }
