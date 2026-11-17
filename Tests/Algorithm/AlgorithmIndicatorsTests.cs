@@ -376,6 +376,16 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreNotEqual(0m, indicator.Slope.Current.Value);
         }
 
+        [Test]
+        public void HilbertTransformHelperUsesIndicatorName()
+        {
+            var indicator = _algorithm.HT(_equity, 7, 0.635m, 0.338m, Resolution.Minute);
+
+            Assert.AreEqual("HT(7, 0.635, 0.338,SPY_min)", indicator.Name);
+            Assert.AreEqual("HT(7, 0.635, 0.338,SPY_min)_inPhase", indicator.InPhase.Name);
+            Assert.AreEqual("HT(7, 0.635, 0.338,SPY_min)_quad", indicator.Quadrature.Name);
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void IndicatorsPassingHistory(Language language)
