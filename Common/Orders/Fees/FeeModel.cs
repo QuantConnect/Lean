@@ -43,7 +43,7 @@ namespace QuantConnect.Orders.Fees
         /// <param name="order">The order to value</param>
         /// <param name="security">The security matching the order's symbol</param>
         /// <param name="currency">The currency to value the order in</param>
-        /// <returns>The value of the order in the given currency, or zero when the currency has no conversion rate yet</returns>
+        /// <returns>The value of the order in the given currency, or zero when it is the security's quote or base currency and has no conversion rate yet</returns>
         internal static decimal GetOrderValue(Order order, Security security, string currency)
         {
             decimal conversionRate;
