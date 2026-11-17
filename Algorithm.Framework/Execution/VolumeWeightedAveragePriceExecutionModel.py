@@ -77,8 +77,8 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
             # removal notification, so when selected again our cached consolidator no longer receives data. Check the
             # live subscriptions: the security keeps a removed one while another universe still selects it
             data = self.symbol_data.get(added.symbol, None)
-            subscriptions = algorithm.subscription_manager.subscription_data_config_service.get_subscription_data_configs(added.symbol)
-            if data and not any(data.consolidator in subscription.consolidators for subscription in subscriptions):
+            if data and not any(data.consolidator in subscription.consolidators for subscription in
+                                algorithm.subscription_manager.subscription_data_config_service.get_subscription_data_configs(added.symbol)):
                 self.symbol_data.pop(added.symbol)
                 algorithm.subscription_manager.remove_consolidator(added.symbol, data.consolidator)
 
@@ -106,8 +106,12 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
 class SymbolData:
     def __init__(self, algorithm, security):
         self.security = security
-        self.consolidator = algorithm.resolve_consolidator(security.symbol, security.resolution)
-        name = algorithm.create_indicator_name(security.symbol, "VWAP", security.resolution)
+        # the security keeps the subscriptions of a universe that no longer selects it, so its resolution can be finer
+        # than the data it still receives
+        configs = algorithm.subscription_manager.subscription_data_config_service.get_subscription_data_configs(security.symbol)
+        resolution = min((config.resolution for config in configs), default=Resolution.DAILY)
+        self.consolidator = algorithm.resolve_consolidator(security.symbol, resolution)
+        name = algorithm.create_indicator_name(security.symbol, "VWAP", resolution)
         self._vwap = IntradayVwap(name)
         algorithm.register_indicator(security.symbol, self._vwap, self.consolidator)
 

@@ -210,9 +210,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
         }
 
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language)
+        [TestCase(Language.CSharp, Resolution.Minute)]
+        [TestCase(Language.Python, Resolution.Minute)]
+        [TestCase(Language.CSharp, Resolution.Hour)]
+        [TestCase(Language.Python, Resolution.Hour)]
+        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language, Resolution otherResolution)
         {
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
 
@@ -236,23 +238,30 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
 
                 // another universe selects the symbol with a different subscription, which keeps the security in the algorithm
                 var otherSubscription = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), Symbols.AAPL,
-                    Resolution.Minute, extendedMarketHours: true);
+                    otherResolution, extendedMarketHours: true);
                 security.AddData(otherSubscription);
 
-                // the first universe deselects the symbol: the subscription feeding the model's consolidator is taken down,
-                // but the security keeps it, with the consolidator, because it is still selected by the other universe
-                var subscription = security.Subscriptions.Single(config => config.Consolidators.Count > 0);
-                Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, subscription, time, time.AddDays(1))));
-                Assert.IsTrue(dataManager.RemoveSubscription(subscription));
-                Assert.IsFalse(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL).Contains(subscription));
+                // the first universe deselects the symbol: its subscriptions, one feeding the model's consolidator, are taken down,
+                // but the security keeps them, with the consolidator, because it is still selected by the other universe
+                var removedSubscriptions = security.Subscriptions.Where(config => config != otherSubscription).ToList();
+                foreach (var removedSubscription in removedSubscriptions)
+                {
+                    Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, removedSubscription, time, time.AddDays(1))));
+                    Assert.IsTrue(dataManager.RemoveSubscription(removedSubscription));
+                }
+                CollectionAssert.AreEqual(new[] { otherSubscription },
+                    algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL));
 
-                // the first universe selects the symbol again
+                // the first universe selects the symbol again: the security still reports the removed subscription's resolution,
+                // so the new consolidator has to follow the data the other universe's subscription receives
+                Assert.AreEqual(Resolution.Minute, security.Resolution);
                 model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+                Assert.AreEqual(1, otherSubscription.Consolidators.Count);
 
                 // the price is now far below the VWAP computed from the removed subscription
                 SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
 
-                // ask price of $50.01 is above the new VWAP of $50, so selling is favorable
+                // ask price of $50.01 is above the fresh VWAP, at most $50, while the stale one of around $100 kept selling unfavorable
                 model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
                 orderProcessor.ProcessSynchronousEvents();
 

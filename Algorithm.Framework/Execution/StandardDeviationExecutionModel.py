@@ -82,8 +82,8 @@ class StandardDeviationExecutionModel(ExecutionModel):
             # removal notification, so when selected again our cached consolidator no longer receives data. Check the
             # live subscriptions: the security keeps a removed one while another universe still selects it
             data = self._symbol_data.get(added.symbol, None)
-            subscriptions = algorithm.subscription_manager.subscription_data_config_service.get_subscription_data_configs(added.symbol)
-            if data and not any(data.consolidator in subscription.consolidators for subscription in subscriptions):
+            if data and not any(data.consolidator in subscription.consolidators for subscription in
+                                algorithm.subscription_manager.subscription_data_config_service.get_subscription_data_configs(added.symbol)):
                 self._symbol_data.pop(added.symbol)
                 algorithm.subscription_manager.remove_consolidator(added.symbol, data.consolidator)
 

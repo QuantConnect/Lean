@@ -207,8 +207,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
             public SymbolData(QCAlgorithm algorithm, Security security)
             {
                 Security = security;
-                Consolidator = algorithm.ResolveConsolidator(security.Symbol, security.Resolution);
-                var name = algorithm.CreateIndicatorName(security.Symbol, "VWAP", security.Resolution);
+                // the security keeps the subscriptions of a universe that no longer selects it, so its resolution can be finer
+                // than the data it still receives
+                var resolution = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
+                    .Select(config => config.Resolution)
+                    .DefaultIfEmpty(Resolution.Daily)
+                    .Min();
+                Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+                var name = algorithm.CreateIndicatorName(security.Symbol, "VWAP", resolution);
                 VWAP = new IntradayVwap(name);
 
                 algorithm.RegisterIndicator(security.Symbol, VWAP, Consolidator, bd => (BaseData)bd);
