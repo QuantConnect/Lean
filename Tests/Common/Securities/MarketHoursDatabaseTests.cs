@@ -583,6 +583,39 @@ namespace QuantConnect.Tests.Common.Securities
                 Assert.AreEqual(!usCalendar, exchangeHours.IsDateOpen(usHoliday), $"{usHoliday:d}");
             }
             Assert.AreEqual(usCalendar, exchangeHours.EarlyCloses.ContainsKey(new DateTime(2025, 11, 28)));
+
+            // Good Friday, Christmas and New Year's Day close every one of their markets
+            foreach (var sharedHoliday in new[] { new DateTime(2025, 4, 18), new DateTime(2025, 12, 25), new DateTime(2026, 1, 1) })
+            {
+                Assert.IsFalse(exchangeHours.IsDateOpen(sharedHoliday), $"{sharedHoliday:d}");
+            }
+        }
+
+        [TestCase("IBDE40", "2025-05-01", false)]
+        [TestCase("IBEU50", "2025-05-01", false)]
+        [TestCase("IBDE40", "2025-12-24", false)]
+        [TestCase("IBGB100", "2025-05-01", true)]
+        [TestCase("IBHK50", "2025-01-29", false)]
+        [TestCase("IBHK50", "2025-10-01", false)]
+        [TestCase("IBDE40", "2025-01-29", true)]
+        public void NonUSInteractiveBrokersIndexCfdsFollowTheirExchangeCalendar(string ticker, string date, bool open)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            Assert.AreEqual(open, exchangeHours.IsDateOpen(DateTime.Parse(date, CultureInfo.InvariantCulture)));
+        }
+
+        [Test]
+        public void IBHK50ClosesEarlyWithTheHongKongFuturesExchange()
+        {
+            var symbol = Symbol.Create("IBHK50", SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            // 12:00 Hong Kong is 04:00 UTC, the CFD's exchange time zone
+            var date = new DateTime(2025, 12, 24);
+            Assert.AreEqual(new TimeSpan(4, 0, 0), exchangeHours.EarlyCloses[date]);
+            Assert.AreEqual(date.AddHours(4), exchangeHours.GetLastDailyMarketClose(date, false));
         }
 
         [Test]
