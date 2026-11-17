@@ -158,7 +158,7 @@ namespace QuantConnect.Algorithm.CSharp
                 else if (mappedFuturePrice != 0 || !RolloverHappened)
                 {
                     var mappedFutureData = mappedFuture.GetLastData();
-                    // We only do this check is default securities seeding is desabled, else the mapped contract will have historical data
+                    // We only do this check is default securities seeding is disabled, else the mapped contract will have historical data
                     if ((!Settings.SeedInitialPrices || !ReferenceEquals(MappedContractSeededData, mappedFutureData)) &&
                         continuousContractPrice != mappedFuturePrice)
                     {

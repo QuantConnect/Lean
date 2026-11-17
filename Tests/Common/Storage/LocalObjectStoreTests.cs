@@ -1293,7 +1293,7 @@ namespace QuantConnect.Tests.Common.Storage
                 // Write 1 more; should throw
                 Assert.IsFalse(store.SaveBytes("breaker", new byte[1]));
 
-                // cleaup
+                // cleanup
                 for (var i = start; i < 100; i++)
                 {
                     Assert.IsTrue(store.Delete($"{i}"));

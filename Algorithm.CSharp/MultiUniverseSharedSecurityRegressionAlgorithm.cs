@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddEquity("SPY", Resolution.Minute);
 
-            // the universe bellow will use 'Hour' resolution so that the data feed configuration is different that the above
+            // the universe below will use 'Hour' resolution so that the data feed configuration is different than the above
             UniverseSettings.Resolution = Resolution.Hour;
             AddUniverse("my-universe", x =>
             {

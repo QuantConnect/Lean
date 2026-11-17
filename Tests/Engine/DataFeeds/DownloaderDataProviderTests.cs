@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         {
                             var requestSymbol = Symbol.Create($"TEST{count + Math.Pow(10, myLockId)}", SecurityType.Equity, Market.USA);
                             var path = LeanData.GenerateZipFilePath(Globals.DataFolder, requestSymbol, date, Resolution.Daily, TickType.Trade);
-                            // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read bellow
+                            // we will get null back because the data is stored to another path, the 'dataSymbol' path which is read below
                             Assert.IsNull(dataProvider.Fetch(path));
                         }
                     }

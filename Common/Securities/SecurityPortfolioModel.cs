@@ -66,7 +66,7 @@ namespace QuantConnect.Securities
                 }
 
                 // apply the funds using the current settlement model
-                // we dont adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
+                // we don't adjust funds for futures and CFDs: it is zero upfront payment derivative (margin applies though)
                 // We do however apply funds for futures options, pay/gained premium, since they affect our cash balance the moment they are purchased/sold.
                 if (security.Type != SecurityType.Future && security.Type != SecurityType.Cfd && security.Type != SecurityType.CryptoFuture)
                 {

@@ -16,7 +16,7 @@ from AlgorithmImports import *
 ### <summary>
 ### Constructs a displaced moving average ribbon and buys when all are lined up, liquidates when they all line down
 ### Ribbons are great for visualizing trends
-### Signals are generated when they all line up in a paricular direction
+### Signals are generated when they all line up in a particular direction
 ### A buy signal is when the values of the indicators are increasing (from slowest to fastest).
 ### A sell signal is when the values of the indicators are decreasing (from slowest to fastest).
 ### </summary>

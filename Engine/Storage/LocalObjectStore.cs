@@ -489,7 +489,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             else
             {
-                // Persist to ensure pur files are up to date
+                // Persist to ensure our files are up to date
                 Persist();
             }
 

@@ -435,7 +435,7 @@ namespace QuantConnect.Configuration
                         {
                             current = setting;
                         }
-                        // allows nesting of environments, live.tradier, live.interactive, ect...
+                        // allows nesting of environments, live.tradier, live.interactive, etc...
                         return GetToken(environment, key, current);
                     }
                 }

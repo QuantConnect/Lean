@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // this is because when we auto-add the underlying we don't mark it as an internal security like we do with other auto adds
                 // so there's currently no good way to remove the underlying equity without invoking RemoveSecurity(underlying) manually
                 // from the algorithm, otherwise we may remove it incorrectly. Now, we could track MORE state, but it would likely be a duplication
-                // of the internal flag's purpose, so kicking this issue for now with a big fat note here about it :) to be considerd for any future
+                // of the internal flag's purpose, so kicking this issue for now with a big fat note here about it :) to be considered for any future
                 // refactorings of how we manage subscription/security data and track various aspects about the security (thinking a flags enum with
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
                 throw new RegressionTestException("The underlying equity data should NEVER be removed in this algorithm because it was manually added");

@@ -297,7 +297,7 @@ namespace QuantConnect.Indicators
                     }
 
                     // The method Fit.MultiDim takes the appendedData array of mxn(m rows, n columns), computes its
-                    // transpose of size nxm, and then multiplies the tranpose with the original matrix, so the
+                    // transpose of size nxm, and then multiplies the transpose with the original matrix, so the
                     // resultant matrix is of size nxn. Then a linear system Ax=b is solved where A is the
                     // aforementioned matrix and b is the data. Thus, the size of the response x is n
                     //
@@ -367,7 +367,7 @@ namespace QuantConnect.Indicators
                     }
 
                     // The method Fit.MultiDim takes the lags array of mxn(m rows, n columns), computes its
-                    // transpose of size nxm, and then multiplies the tranpose with the original matrix, so the
+                    // transpose of size nxm, and then multiplies the transpose with the original matrix, so the
                     // resultant matrix is of size nxn. Then a linear system Ax=b is solved where A is the
                     // aforementioned matrix and b is the data. Thus, the size of the response x is n
                     //

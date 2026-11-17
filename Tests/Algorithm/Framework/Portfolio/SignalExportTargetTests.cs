@@ -332,7 +332,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.IsTrue(result);
             var target = portfolioTargets[0];
             var targetQuantity = (int)PortfolioTarget.Percent(algorithm, target.Symbol, target.Quantity).Quantity;
-            // The quantites can differ by one because of the number of lots for certain securities
+            // The quantities can differ by one because of the number of lots for certain securities
             Assert.AreEqual(quantity, targetQuantity, 1);
         }
 

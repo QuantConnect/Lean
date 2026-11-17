@@ -119,7 +119,7 @@ namespace QuantConnect.Securities
             }
             protected set
             {
-                // avoid any small values, due to differences in lot size, to return invested true but lean not allowing us to trade sice it will be rounded down to 0
+                // avoid any small values, due to differences in lot size, to return invested true but lean not allowing us to trade since it will be rounded down to 0
                 // specially useful to crypto assets which take fees from the base or quote currency
                 _invested = Math.Abs(value) >= _security.SymbolProperties.LotSize;
                 _quantity = value;

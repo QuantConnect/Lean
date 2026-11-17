@@ -34,7 +34,7 @@ class HistoryWithCustomDataSourceRegressionAlgorithm(QCAlgorithm):
         if aapl_history.size == 0 or spy_history.size == 0:
             raise AssertionError("At least one of the history results is empty")
 
-        # Check that both resutls contain the same data, since CustomData fetches APPL data regardless of the symbol
+        # Check that both results contain the same data, since CustomData fetches APPL data regardless of the symbol
         if not aapl_history.equals(spy_history):
             raise AssertionError("Histories are not equal")
 

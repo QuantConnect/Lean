@@ -28,7 +28,7 @@ class AuxiliaryDataHandlersRegressionAlgorithm(QCAlgorithm):
         # will get delisted
         self.add_equity("AAA.1")
 
-        # get's remapped
+        # gets remapped
         self.add_equity("SPWR")
 
         # has a split & dividends

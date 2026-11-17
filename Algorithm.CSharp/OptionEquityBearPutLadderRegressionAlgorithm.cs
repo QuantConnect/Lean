@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception("Unexpect margin used!");
                     }
 
-                    // we payed the ask and value using the assets price
+                    // we paid the ask and value using the assets price
                     var priceLadderDifference = GetPriceSpreadDifference(lowStrikePut.Symbol, midStrikePut.Symbol, highStrikePut.Symbol);
                     if (initialMargin != (freeMarginPostTrade + expectedMarginUsage + _paidFees - priceLadderDifference))
                     {

@@ -14,7 +14,7 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Demostrates the use of <see cref="VolumeRenkoConsolidator"/> for creating constant volume bar
+### Demonstrates the use of <see cref="VolumeRenkoConsolidator"/> for creating constant volume bar
 ### </summary>
 ### <meta name="tag" content="renko" />
 ### <meta name="tag" content="using data" />

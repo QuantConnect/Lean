@@ -47,7 +47,7 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithm):
         self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Resolution.DAILY))
         # timedelta
         # self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(timedelta(2)))
-        # A lamdda datetime -> datetime. In this case, we can use the pre-defined func at Expiry helper class
+        # A lambda datetime -> datetime. In this case, we can use the pre-defined func at Expiry helper class
         # self.set_portfolio_construction(EqualWeightingPortfolioConstructionModel(Expiry.END_OF_WEEK))
 
         self.set_execution(ImmediateExecutionModel())

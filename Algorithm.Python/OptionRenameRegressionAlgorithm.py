@@ -48,7 +48,7 @@ class OptionRenameRegressionAlgorithm(QCAlgorithm):
                         # Buying option
                         contract = contracts[0]
                         self.buy(contract.symbol, 1)
-                        # Buy the undelying stock
+                        # Buy the underlying stock
                         underlying_symbol = contract.symbol.underlying
                         self.buy (underlying_symbol, 100)
                         # check

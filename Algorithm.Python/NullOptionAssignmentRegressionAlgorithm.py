@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from OptionAssignmentRegressionAlgorithm import *
 
 ### <summary>
-### Regression algorithm assering we can disable automatic option assignment
+### Regression algorithm asserting we can disable automatic option assignment
 ### </summary>
 class NullOptionAssignmentRegressionAlgorithm(OptionAssignmentRegressionAlgorithm):
     def initialize(self):

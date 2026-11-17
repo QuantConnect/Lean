@@ -61,7 +61,7 @@ class PandasDataFrameTests():
 
     def test_contains_user_defined_columns_with_spaces(self, column_name):
         # Adds a column, then try accessing it.
-        # If the colums has white spaces, it should not fail
+        # If the columns has white spaces, it should not fail
         df = self.spydf.copy()
         df[column_name] = 1
         try:

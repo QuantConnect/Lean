@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     Log.Debug($"ConcatEnumerator.MoveNext(): disposing enumerator at position: {_currentIndex} Name: {enumerator.GetType().Name}");
                 }
 
-                // we wont be using this enumerator again, dispose of it and clear reference
+                // we won't be using this enumerator again, dispose of it and clear reference
                 enumerator.DisposeSafely();
                 _enumerators[_currentIndex] = null;
             }

@@ -346,7 +346,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var message = GetShortableErrorMessage(request.Symbol, request.Quantity);
                 if (_algorithm.LiveMode)
                 {
-                    // in live mode we send a warning but we wont block the order being sent to the brokerage
+                    // in live mode we send a warning but we won't block the order being sent to the brokerage
                     _algorithm.Debug($"Warning: {message}");
                 }
                 else
@@ -1313,7 +1313,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     _cancelPendingOrders.UpdateOrRemove(order.Id, orderEvent.Status);
                     // set the status of our order object based on the fill event except if the order status is filled/cancelled and the event is invalid
-                    // in live trading it can happen that we submit an update which get's rejected by the brokerage because the order is already filled
+                    // in live trading it can happen that we submit an update which gets rejected by the brokerage because the order is already filled
                     // so we don't want the invalid update event to set the order status to invalid if it's already filled
                     if (order.Status != OrderStatus.Filled && order.Status != OrderStatus.Canceled || orderEvent.Status != OrderStatus.Invalid)
                     {

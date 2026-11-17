@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common
 
             contract.Time = new DateTime(2015, 02, 19);
             var results1 = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
-            // we need to get the greeks else they will calculated bellow after we change the static evaluation date
+            // we need to get the greeks else they will calculated below after we change the static evaluation date
             var gamma = results1.Greeks.Gamma;
             var delta = results1.Greeks.Delta;
             var vega = results1.Greeks.Delta;

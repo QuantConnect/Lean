@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common
             var offsetProvider = new TimeZoneOffsetProvider(TimeZones.NewYork, utcDate, utcDate.AddDays(1));
             var result = offsetProvider.ConvertToUtc(tzDate);
 
-            // We substract an hour due to the effect of DST
+            // We subtract an hour due to the effect of DST
             Assert.AreEqual(utcDate - TimeSpan.FromHours(1), result);
         }
     }

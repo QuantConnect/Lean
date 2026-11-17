@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                // Greeks should be valid if they were successfuly accessed for supported option style
+                // Greeks should be valid if they were successfully accessed for supported option style
                 if (_optionStyleIsSupported)
                 {
                     if (greeks == null ||

@@ -211,5 +211,5 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         sorted_by_combined_rank = sorted(top_fine, key=lambda x: (sorted_ev_to_ebitda.index(x.valuation_ratios.ev_to_ebitda)
                                                                   + sorted_roa.index(x.valuation_ratios.forward_roa), str(x.symbol.id)))
 
-        # retrieve list of securites in portfolio
+        # retrieve list of securities in portfolio
         return [x.symbol for x in sorted_by_combined_rank[:self.number_of_symbols_in_portfolio]]

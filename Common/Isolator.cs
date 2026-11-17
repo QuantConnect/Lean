@@ -111,7 +111,7 @@ namespace QuantConnect
                 // if over 80% allocation force GC then sample
                 var sample = Convert.ToDouble(GC.GetTotalMemory(forceFullCollection: false));
 
-                // find the EMA of the memory used to prevent spikes killing stategy
+                // find the EMA of the memory used to prevent spikes killing strategy
                 memoryUsed = Convert.ToInt64((emaPeriod-1)/emaPeriod * memoryUsed + (1/emaPeriod)*sample);
 
                 // if the rolling EMA > cap; or the spike is more than 2x the allocation.

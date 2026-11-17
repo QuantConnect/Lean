@@ -75,7 +75,7 @@ class CustomImpliedVolatility(ImpliedVolatility):
             print("ImpliedVolatility.calculate_i_v(): Fail to converge, returning 0.")
             return 0.0
 
-    # we demonstate put-call parity calculation here, but note that it is not suitable for American options
+    # we demonstrate put-call parity calculation here, but note that it is not suitable for American options
     def f(self, vol: float, time_till_expiry: float) -> float:
         call_black_price = OptionGreekIndicatorsHelper.black_theoretical_price(
             vol, self.underlying_price.current.value, self.strike, time_till_expiry, self.risk_free_rate.current.value, self.dividend_yield.current.value, OptionRight.CALL)

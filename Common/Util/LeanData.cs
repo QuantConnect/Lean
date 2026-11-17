@@ -1192,7 +1192,7 @@ namespace QuantConnect.Util
                             {
                                 Log.Debug($"LeanData.TryParsePath(): Failed to parse '{fileName}' unexpected Resolution");
                             }
-                            // only acept a failure to parse resolution if we are facing a universes path
+                            // only accept a failure to parse resolution if we are facing a universes path
                             return false;
                         }
 

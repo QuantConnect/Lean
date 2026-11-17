@@ -363,7 +363,7 @@ namespace QuantConnect
         {
             if (!y1.HasValue)
             {
-                // if the next point isn't there we wont interpolate the value, it means it's the end, unless the target time is the current time or close
+                // if the next point isn't there we won't interpolate the value, it means it's the end, unless the target time is the current time or close
                 if (xTarget - x0 <= step)
                 {
                     return y0;
@@ -373,7 +373,7 @@ namespace QuantConnect
 
             if (!y0.HasValue)
             {
-                // if the previous value isn't there, return null unlesss we reach the target end time or close enough
+                // if the previous value isn't there, return null unless we reach the target end time or close enough
                 if (x1 - xTarget <= step)
                 {
                     return y1;

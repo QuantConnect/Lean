@@ -231,8 +231,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // time pulse to align algorithm time with current frontier
                         yield return _timeSliceFactory.CreateTimePulse(frontierUtc);
 
-                        // trigger the smalled resolution first, so that FF res get's set once from the start correctly
-                        // while at it, let's make it determininstic and sort by universe sid later
+                        // trigger the smallest resolution first, so that FF res gets set once from the start correctly
+                        // while at it, let's make it deterministic and sort by universe sid later
                         foreach (var kvp in universeData.OrderBy(x => x.Key.Configuration.Resolution).ThenBy(x => x.Key.Symbol.ID))
                         {
                             var universe = kvp.Key;

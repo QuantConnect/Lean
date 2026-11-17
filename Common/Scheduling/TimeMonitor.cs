@@ -80,7 +80,7 @@ namespace QuantConnect.Scheduling
                     {
                         if (TimeConsumers.Count > 0)
                         {
-                            // there's some remaning and we are at the timer callback so let's re schedule
+                            // there's some remaining and we are at the timer callback so let's re schedule
                             TrySchedule();
                         }
                     }

@@ -487,7 +487,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ]
             );
 
-            // Friday, one tradeale day left before end date
+            // Friday, one tradeable day left before end date
             var dateTime = new DateTime(2023, 12, 29).ConvertToUtc(algorithm.TimeZone);
             var universeData = getUniverseData(dateTime);
 

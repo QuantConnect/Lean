@@ -1974,7 +1974,7 @@ def getOpenInterestHistory(algorithm, symbol, start, end):
         public void HistoryRequestWithFillForward(Language language, Resolution resolution, bool fillForward, int periods,
             int expectedHistoryCount, int expectedTradeBarOnlyHistoryCount)
         {
-            // Theres data only for 2013-10-07 to 2013-10-11 for SPY. Data should be fill forwarded till the 15th.
+            // There's data only for 2013-10-07 to 2013-10-11 for SPY. Data should be fill forwarded till the 15th.
             var start = new DateTime(2013, 10, 11);
             var end = resolution == Resolution.Minute ? new DateTime(2013, 10, 15) : new DateTime(2013, 10, 12);
             var timeSpan = end - start;

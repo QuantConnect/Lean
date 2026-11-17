@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var security = GetSecurity();
 
-            // Update securuty price with a TradeBar
+            // Update security price with a TradeBar
             security.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 101m, 103m, 100m, 102m, 100000));
 
             Assert.AreEqual(101m, security.Open);

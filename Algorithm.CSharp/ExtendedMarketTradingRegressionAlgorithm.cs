@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (_lastAction.Date == Time.Date) return;
             TradeBar spyBar = slice["SPY"];
 
-            //If it isnt during market hours, go ahead and buy ten!
+            //If it isn't during market hours, go ahead and buy ten!
             if (!InMarketHours())
             {
                 LimitOrder(_spy, 10, spyBar.Low);

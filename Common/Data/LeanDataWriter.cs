@@ -311,7 +311,7 @@ namespace QuantConnect.Data
             }
 
             // because we read & write the same file we need to take a lock per file path so we don't read something that might get outdated
-            // by someone writting to the same path at the same time
+            // by someone writing to the same path at the same time
             _keySynchronizer.Execute(filePath, singleExecution: false, () =>
             {
                 var date = data[0].Time.Date;
@@ -341,7 +341,7 @@ namespace QuantConnect.Data
                 }
                 else if (_writePolicy == WritePolicy.Merge && fileExists && TryLoadFile(filePath, entryName, date, out var rows))
                 {
-                    // Preform merge on loaded rows
+                    // Perform merge on loaded rows
                     foreach (var timedLine in data)
                     {
                         rows[timedLine.Time] = timedLine.Line;

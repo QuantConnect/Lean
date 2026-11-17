@@ -172,7 +172,7 @@ namespace QuantConnect.Indicators
 
             // wire up the Updated events such that when we get a new piece of data from both left and right
             // we'll call update on this indicator. It's important to note that the CompositeIndicator only uses
-            // the timestamp that gets passed into the Update function, his compuation is soley a function
+            // the timestamp that gets passed into the Update function, its computation is solely a function
             // of the left and right indicator via '_composer'
 
             IndicatorDataPoint newLeftData = null;

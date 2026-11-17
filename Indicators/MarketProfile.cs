@@ -276,7 +276,7 @@ namespace QuantConnect.Indicators
             var maxIndex = _pointOfControl;
 
             // When this loop ends we will have a more accurate value of ValueAreaVolume
-            // but mainly the prices that delimite this area, ValueAreaLow and ValueAreaHigh
+            // but mainly the prices that delimit this area, ValueAreaLow and ValueAreaHigh
             // so ValueArea, can also be seen as the range between ValueAreaLow and ValueAreaHigh
             while (currentVolume <= ValueAreaVolume && ValueAreaVolume != 0)
             {

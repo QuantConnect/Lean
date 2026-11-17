@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
         // these are the safety symbols we go to when things are looking bad for growth
         List<string> _safetySymbols = new List<string>
         {
-            "EDV", // Vangaurd TSY 25yr+
+            "EDV", // Vanguard TSY 25yr+
             "SHY"  // Barclays Low Duration TSY
         };
 

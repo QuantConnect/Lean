@@ -136,7 +136,7 @@ namespace QuantConnect.Algorithm.CSharp
             ATR14 = ATR(symbol, 14, resolution: Resolution.Daily);
             PSARMin = new ParabolicStopAndReverse(symbol, afStart: 0.0001m, afIncrement: 0.0001m);
 
-            // smooth our ATR over a week, we'll use this to determine if recent volatilty warrants entrance
+            // smooth our ATR over a week, we'll use this to determine if recent volatility warrants entrance
             var oneWeekInMarketHours = (int)(5*6.5);
             _smoothedATR14 = new ExponentialMovingAverage("Smoothed_" + ATR14.Name, oneWeekInMarketHours).Of(ATR14);
             // smooth our STD over a week as well
@@ -294,7 +294,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var shares = (int) (allowedDollarLoss/expectedCaptureRange);
 
-            // determine a position size based on an acceptable loss in proporton to our total portfolio value
+            // determine a position size based on an acceptable loss in proportion to our total portfolio value
             //var shares = (int) (MaximumLeverage*MaximumPorfolioRiskPercentPerPosition*Portfolio.TotalPortfolioValue/(0.4m*ATR14));
 
             // max out at a little below our stated max, prevents margin calls and such

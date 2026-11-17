@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             _securities = new List<Security>
             {
                 _algorithm.AddEquity("SPY", Resolution.Daily),                      // liquid stock
-                _algorithm.AddEquity("AIG", Resolution.Daily),                      // illquid stock
+                _algorithm.AddEquity("AIG", Resolution.Daily),                      // illiquid stock
                 _algorithm.AddCrypto("BTCUSD", Resolution.Daily, Market.Coinbase),      // crypto
                 _algorithm.AddOptionContract(optionContract, Resolution.Minute)     // equity options
             };
@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [TestCase(InsightDirection.Down)]
         public void SizeSlippageComparisonTests(InsightDirection direction)
         {
-            // Test on all liquid/illquid stocks/other asset classes
+            // Test on all liquid/illiquid stocks/other asset classes
             foreach (var asset in _securities)
             {
                 // A significantly large difference that noise cannot affect the result
@@ -123,7 +123,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             // set up another slippage model with much longer execution time
             var slowSlippageModel = new MarketImpactSlippageModel(_algorithm, latency: 10);
 
-            // Test on all liquid/illquid stocks/other asset classes
+            // Test on all liquid/illiquid stocks/other asset classes
             foreach (var asset in _securities)
             {
                 var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [TestCase(-1000000)]
         public void NonNegativeSlippageTests(decimal orderQuantity)
         {
-            // Test on all liquid/illquid stocks/other asset classes
+            // Test on all liquid/illiquid stocks/other asset classes
             foreach (var asset in _securities)
             {
                 var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));
@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [TestCase(-1000000000)]
         public void MaxSlippageValueTests(decimal orderQuantity)
         {
-            // Test on all liquid/illquid stocks/other asset classes
+            // Test on all liquid/illiquid stocks/other asset classes
             foreach (var asset in _securities)
             {
                 var order = new MarketOrder(asset.Symbol, orderQuantity, new DateTime(2015, 6, 10, 14, 00, 0));

@@ -672,7 +672,7 @@ namespace QuantConnect
                 if (
                     // Round down so that time in the current date (closed) is not accounted for when counting business days
                     !exchangeHours.IsDateOpen(current) ||
-                    // we round down, because data for today isn't ready/wont pass through current time.
+                    // we round down, because data for today isn't ready/won't pass through current time.
                     // for example, for equities, current time is 3pm, 1 bar in daily should be yesterdays, today does not count
                     // markets with a lunch break complete their daily bar at the last close
                     exchangeHours.GetLastDailyMarketClose(current.Date, extendedMarketHours) > current)
@@ -684,7 +684,7 @@ namespace QuantConnect
             {
                 // need to round down in data timezone because data is stored in this time zone but only if not doing daily resolution or
                 // dailyPreciseEndTime is disabled because if we round down we might include 2 bars when we want 1, for example: say
-                // current is monday 8pm NY, if we round down we get minight monday which will return false as open, so we will return
+                // current is monday 8pm NY, if we round down we get midnight monday which will return false as open, so we will return
                 // friday and monday data for daily equity, when we want only monday.
                 current = end.RoundDownInTimeZone(barSize, exchangeHours.TimeZone, dataTimeZone);
             }

@@ -32,7 +32,7 @@ class ScheduledEventsAlgorithm(QCAlgorithm):
 
         # events are scheduled using date and time rules
         # date rules specify on what dates and event will fire
-        # time rules specify at what time on thos dates the event will fire
+        # time rules specify at what time on those dates the event will fire
 
         # schedule an event to fire at a specific date/time
         self.schedule.on(self.date_rules.on(2013, 10, 7), self.time_rules.at(13, 0), self.specific_time)

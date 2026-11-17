@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Common.Securities
             return new[]
             {
                 // Next day's first segment continues from current day's last segment (see GetFutureWeekDayMarketHours, the last segment ends
-                // with 1.00:00:00, so starting next day at 00:00:00, it means the segments are continouous)
+                // with 1.00:00:00, so starting next day at 00:00:00, it means the segments are continuous)
                 new TestCaseData(new TimeSpan(0, 0, 0), false, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
                 new TestCaseData(new TimeSpan(12, 0, 0), false, new TimeSpan(0, 0, 0), new TimeSpan(16, 0, 0)),
                 new TestCaseData(new TimeSpan(16, 0, 0), false, new TimeSpan(0, 0, 0), null),

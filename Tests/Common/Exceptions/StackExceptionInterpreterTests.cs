@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new StackExceptionInterpreter(interpreters);
             interpreter.Interpret(new Exception(), null);
 
-            // can interpret called for 3nd and 2rd entry
+            // can interpret called for 3rd and 2nd entry
             Assert.Contains(2, canInterpretCalled);
             Assert.Contains(1, canInterpretCalled);
             Assert.That(canInterpretCalled, Is.Not.Contains(0));

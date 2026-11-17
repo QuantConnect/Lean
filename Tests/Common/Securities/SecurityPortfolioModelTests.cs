@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.ProcessFills(new List<OrderEvent> {fill});
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
-            // shares and opened a new for the second 100, so ony the frst 100 go into the calculation
+            // shares and opened a new for the second 100, so only the first 100 go into the calculation
             // bought @50 and sold @100 = (-50*100)+(100*100 - 1) = 4999
             // current implementation doesn't back out fees.
             Assert.AreEqual(5000m, security.Holdings.LastTradeProfit);
@@ -211,7 +211,7 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.ProcessFills(new List<OrderEvent> {fill});
 
             // we can only take 'profit' on the closing part of the position, so we closed 100
-            // shares and opened a new for the second 100, so ony the frst 100 go into the calculation
+            // shares and opened a new for the second 100, so only the first 100 go into the calculation
             // sold @50 and bought @100 = (50*100)+(-100*100 - 1) = -5001
             // current implementation doesn't back out fees.
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);

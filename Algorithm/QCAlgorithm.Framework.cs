@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        // this is so that later during 'UniverseSelection.CreateUniverses' we wont remove the user universes from the UniverseManager
+        // this is so that later during 'UniverseSelection.CreateUniverses' we won't remove the user universes from the UniverseManager
         private readonly HashSet<Symbol> _universeSelectionUniverses = new ();
         private bool _isEmitWarmupInsightWarningSent;
         private bool _isEmitDelistedInsightWarningSent;

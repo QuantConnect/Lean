@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // We exclude the UserDefinedUniverse because their selection already happens at the algorithm start time.
                             // For instance, ETFs universe selection depends its first trigger time to be before the equity universe
                             // (the UserDefinedUniverse), because the ETFs are EndTime-indexed and that would make their first selection
-                            // time to be before the algorithm start time, with the EndTime being the algorithms's start date,
+                            // time to be before the algorithm start time, with the EndTime being the algorithm's start date,
                             // and both the Equity and the ETFs constituents first selection to happen together.
                             !universeType.IsAssignableTo(typeof(UserDefinedUniverse)) &&
                             // We exclude the ScheduledUniverse because it's already scheduled to run at a specific time.

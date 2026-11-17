@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             // will get delisted
             AddEquity("AAA.1");
 
-            // get's remapped
+            // gets remapped
             AddEquity("SPWR");
 
             // has a split & dividends

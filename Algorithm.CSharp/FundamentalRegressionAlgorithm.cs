@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            // Passing through the unvierse type and symbol
+            // Passing through the universe type and symbol
             var enumerableOfDataDictionary = History<FundamentalUniverse>(new[] { _universe.Symbol }, 100);
             foreach (var selectionCollectionForADay in enumerableOfDataDictionary)
             {

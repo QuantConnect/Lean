@@ -67,7 +67,7 @@ namespace QuantConnect.Scheduling
         {
             foreach (var date in dates)
             {
-                // make unqiue times and order the events before yielding
+                // make unique times and order the events before yielding
                 var enumerable = new[] {date};
                 var times = Rules.SelectMany(time => time.CreateUtcEventTimes(enumerable)).ToHashSet().OrderBy(x => x);
                 foreach (var time in times)

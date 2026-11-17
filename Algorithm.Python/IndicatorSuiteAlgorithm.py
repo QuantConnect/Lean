@@ -101,7 +101,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         self.plot_indicator("Ratio", self.ratio)
 
         # The following methods will add multiple charts to the algorithm output.
-        # Those chatrs names will be used later to plot different series in a particular chart.
+        # Those charts names will be used later to plot different series in a particular chart.
         # For more information on Lean Charting see: https://www.quantconnect.com/docs#Charting
         Chart('BB')
         Chart('STD')
@@ -109,7 +109,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         Chart('AROON')
         Chart('MACD')
         Chart('Averages')
-        # Here we make use of the Schelude method to update the plots once per day at market close.
+        # Here we make use of the Schedule method to update the plots once per day at market close.
         self.schedule.on(self.date_rules.every_day(), self.time_rules.before_market_close(self._symbol), self.update_plots)
 
     def on_data(self, data: Slice):
@@ -143,7 +143,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         # Custom data indicator
         self.plot('RSI-FB', self.rsi_custom)
 
-        # Here we make use of the chats decalred in the Initialize method, plotting multiple series
+        # Here we make use of the charts declared in the Initialize method, plotting multiple series
         # in each chart.
         self.plot('STD', 'STD', self.indicators['STD'].current.value)
 

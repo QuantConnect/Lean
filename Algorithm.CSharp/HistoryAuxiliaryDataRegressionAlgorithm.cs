@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Unexpected delisting: {delistings[1]}");
             }
 
-            // get's remapped:
+            // gets remapped:
             // 2008-09-30 spwr -> spwra
             // 2011-11-17 spwra -> spwr
             var remappedSymbol = QuantConnect.Symbol.Create("SPWR", SecurityType.Equity, Market.USA);

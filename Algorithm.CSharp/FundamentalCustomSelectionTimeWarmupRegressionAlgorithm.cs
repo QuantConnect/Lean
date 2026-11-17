@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
                 new DateTime(2014, 03, 24), // data for this date will be used to trigger the initial selection
                 new DateTime(2014, 03, 26), // date during warmup
                 new DateTime(2014, 05, 9), // after warmup
-                new DateTime(2020, 05, 9))); // after backtest ends -> wont be executed
+                new DateTime(2020, 05, 9))); // after backtest ends -> won't be executed
             AddUniverse(FundamentalUniverse.USA(SelectionFunction_SpecificDate));
 
             SetWarmUp(_warmupSpan);

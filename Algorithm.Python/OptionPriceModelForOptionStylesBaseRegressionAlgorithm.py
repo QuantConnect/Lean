@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Base regression algorithm exercising different style options with option price models that might
-### or might not support them. Also, if the option style is supported, greeks are asserted to be accesible and have valid values.
+### or might not support them. Also, if the option style is supported, greeks are asserted to be accessible and have valid values.
 ### </summary>
 class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
     def __init__(self) -> None:
@@ -69,7 +69,7 @@ class OptionPriceModelForOptionStylesBaseRegressionAlgorithm(QCAlgorithm):
                 if self._option_style_is_supported:
                     raise AssertionError(f'Expected greeks to be calculated for {contract.symbol.value}, an {option_style_str} style option, using {type(self._option.price_model).__name__}, which supports them, but they were not')
 
-            # Greeks should be valid if they were successfuly accessed for supported option style
+            # Greeks should be valid if they were successfully accessed for supported option style
             # Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
             # Vega can be 0 if the price is very off from theoretical price, Gamma = 0 if Delta belongs to {-1, 1}
             if (self._option_style_is_supported

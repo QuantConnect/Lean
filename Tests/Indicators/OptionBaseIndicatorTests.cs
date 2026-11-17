@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Indicators
     public abstract class OptionBaseIndicatorTests<T> : CommonIndicatorTests<IBaseData>
         where T : OptionIndicatorBase
     {
-        // count of risk free rate calls per each update on opiton indicator
+        // count of risk free rate calls per each update on option indicator
         protected int RiskFreeRateUpdatesPerIteration { get; set; }
 
         // count of dividend yield calls per each update on option indicator

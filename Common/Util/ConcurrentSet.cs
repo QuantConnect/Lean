@@ -79,7 +79,7 @@ namespace QuantConnect.Util
             {
                 foreach (var item in otherSet)
                 {
-                    // wont overwrite existing references of same key
+                    // won't overwrite existing references of same key
                     AddImpl(item);
                 }
             }

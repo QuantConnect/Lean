@@ -31,9 +31,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public sealed class SortEnumerator<TKey> : IEnumerator<BaseData>, IDisposable
     {
         private readonly IEnumerable<BaseData> _data;
-#pragma warning disable CA2213 // call csutom DisposeSafely() in Dispose()
+#pragma warning disable CA2213 // call custom DisposeSafely() in Dispose()
         private IEnumerator<BaseData> _sortedEnumerator;
-#pragma warning restore CA2213 // call csutom DisposeSafely() in Dispose()
+#pragma warning restore CA2213 // call custom DisposeSafely() in Dispose()
         private readonly Func<BaseData, TKey> _keySelector;
 
         /// <summary>

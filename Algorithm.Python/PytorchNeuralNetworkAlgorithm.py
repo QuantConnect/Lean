@@ -46,7 +46,7 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         
         for symbol in self._symbols:
             if not history.empty:
-                # x: preditors; y: response
+                # x: predictors; y: response
                 self.prices_x[symbol] = list(history.loc[symbol.value]['open'])[:-1]
                 self.prices_y[symbol] = list(history.loc[symbol.value]['open'])[1:]
                 

@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // just to make sure the price makes sense
                         throw new RegressionTestException($"Unexpected combo price {comboPrice}");
                     }
-                    // place order slightly bellow price
+                    // place order slightly below price
                     ComboLimitOrder(legs, 6, comboPrice - 0.5m);
 
                     _submittionTime = Time;

@@ -119,7 +119,7 @@ namespace QuantConnect.Brokerages
             finally
             {
                 // once we finish our 'code' we will process any message that come through,
-                // to make sure no message get's left behind (race condition between us finishing 'ProcessMessages'
+                // to make sure no message gets left behind (race condition between us finishing 'ProcessMessages'
                 // and some message being enqueued to it, we just take a lock on the buffer
                 lock (_messageBuffer)
                 {

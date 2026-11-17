@@ -122,7 +122,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             var isMarketAlwaysOpen = security.Exchange.Hours.IsMarketAlwaysOpen;
 
-            // define all the times we want this event to be fired, every tradeable day for the securtiy
+            // define all the times we want this event to be fired, every tradeable day for the security
             // at the delta time before market close expressed in UTC
             var times =
                 // for every date the exchange is open for this security

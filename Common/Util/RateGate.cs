@@ -110,7 +110,7 @@ namespace QuantConnect.Util
         }
 
         // Callback for the exit timer that exits the semaphore based on exit times
-        // in the queue and then sets the timer for the nextexit time.
+        // in the queue and then sets the timer for the next exit time.
         // Credit to Jim: http://www.jackleitch.net/2010/10/better-rate-limiting-with-dot-net/#comment-3620
         // for providing the code below, fixing issue #3499 - https://github.com/QuantConnect/Lean/issues/3499
         private void ExitTimerCallback(object state)

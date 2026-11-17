@@ -77,7 +77,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
             else
             {
-                // we've been rate limitted
+                // we've been rate limited
                 _current = default(T);
             }
 

@@ -195,7 +195,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (Current != null && Current.DataType != MarketDataType.Auxiliary)
             {
-                // only set the _previous if the last item we emitted was NOT auxilliary data,
+                // only set the _previous if the last item we emitted was NOT auxiliary data,
                 // since _previous is used for fill forward behavior
                 _previous = Current;
             }
@@ -240,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
 
                     if (Current != null && Current.EndTime == endOfSubscription.EndTime
-                        // TODO this changes stats, why would the FF enumerator emit a data point beyoned the end time he was requested
+                        // TODO this changes stats, why would the FF enumerator emit a data point beyond the end time he was requested
                         //|| endOfSubscription.EndTime > _subscriptionEndTime
                         )
                     {
@@ -409,14 +409,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // which is sensitive for specific dates (daylight movement) if we are  in Exchange TimeZone, for example
                 // We have 00:00:00 + 1 day = 1.00:00:00, so both are in Standard TZ, but we expect endTime in Daylight, i.e. 1.01:00:00
 
-                // futher down double Convert (Exchange TZ => data TZ => Exchange TZ)
+                // further down double Convert (Exchange TZ => data TZ => Exchange TZ)
                 // allows us to calculate Time using it's own TZ (aka reapply)
                 // and don't rely on TZ of bar start/end time
                 // i.e. 00:00:00 + 1 day = 1.01:00:00, both start and end are in their own TZ
                 // it's interesting that NodaTime  consider next
                 // if time great or equal than 01:00 AM it's considered as "moved" (Standard, not Daylight)
                 // when time less than 01:00 AM it's considered as previous TZ (Standard, not Daylight)
-                // it's easy to fix this behavior by substract 1 tick  before first convert, and then return it back.
+                // it's easy to fix this behavior by subtract 1 tick  before first convert, and then return it back.
                 // so we work with 0:59:59.. AM instead.
                 // but now follow native behavior
 
@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // and both should be based on the same TZ (for example UTC)
                 if (potentialBarEndTime < nextCalculatedEndTimeUtc
                     // let's fill forward based on previous (which isn't auxiliary) if next is auxiliary and they share the end time
-                    // we do allow emitting both an auxiliary data point and a Filled Forwared data for the same end time
+                    // we do allow emitting both an auxiliary data point and a Filled Forward data for the same end time
                     || next != null && next.DataType == MarketDataType.Auxiliary && potentialBarEndTime == nextCalculatedEndTimeUtc)
                 {
                     // to check open hours we need to convert potential
@@ -583,7 +583,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // we need to round down because previous end time could be of the smaller resolution, in data TZ!
             if (UseStrictEndTime)
             {
-                // case B: say smaller resolution (FF res) is 1 hour, larget resolution (daily data resolution) is 1 day
+                // case B: say smaller resolution (FF res) is 1 hour, larger resolution (daily data resolution) is 1 day
                 // For example for SPX we need to emit the daily FF bar from 8:30->15:15, even before the 'A' case above which would be 15->16 bar
                 var dailyCalendar = GetDailyCalendar(previousEndTime);
                 if (previousEndTime < (dailyCalendar.Start + dailyCalendar.Period))

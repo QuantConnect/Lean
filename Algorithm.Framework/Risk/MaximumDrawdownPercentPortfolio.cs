@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
             var pnl = GetTotalDrawdownPercent(currentValue);
             if (pnl < _maximumDrawdownPercent && targets.Length != 0)
             {
-                // reset the trailing high value for restart investing on next rebalcing period
+                // reset the trailing high value for restart investing on next rebalancing period
                 _initialised = false;
                 foreach (var target in targets)
                 {

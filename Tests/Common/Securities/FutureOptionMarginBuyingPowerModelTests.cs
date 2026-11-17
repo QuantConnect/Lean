@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2021, 3, 19);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
             var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
             var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m, new DateTime(2021, 3, 19));
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2021, 3, 19);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
             var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
             var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2021, 3, 19);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
             var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
             var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
@@ -169,7 +169,7 @@ namespace QuantConnect.Tests.Common.Securities
                 var time = new DateTime(2020, 10, 14);
                 var expDate = new DateTime(2021, 3, 19);
 
-                // For this symbol we dont have any history, but only one date and margins line
+                // For this symbol we don't have any history, but only one date and margins line
                 var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
                 var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
                 var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
@@ -200,7 +200,7 @@ namespace QuantConnect.Tests.Common.Securities
             var expDate = new DateTime(2021, 3, 19);
             var tz = TimeZones.NewYork;
 
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
             var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
             var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
@@ -311,7 +311,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var tz = TimeZones.NewYork;
             var expDate = new DateTime(2021, 3, 19);
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Energy.CrudeOilWTI;
             var future = Symbol.CreateFuture(ticker, Market.NYMEX, expDate);
             var symbol = Symbol.CreateOption(future, Market.NYMEX, OptionStyle.American, optionRight, strike,
@@ -355,7 +355,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var tz = TimeZones.NewYork;
             var expDate = new DateTime(2021, 3, 19);
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Metals.Gold;
             var future = Symbol.CreateFuture(ticker, Market.COMEX, expDate);
             var symbol = Symbol.CreateOption(future, Market.COMEX, OptionStyle.American, optionRight, strike,
@@ -406,7 +406,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var tz = TimeZones.NewYork;
             var expDate = new DateTime(2021, 3, 19);
-            // For this symbol we dont have any history, but only one date and margins line
+            // For this symbol we don't have any history, but only one date and margins line
             var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
             var future = Symbol.CreateFuture(ticker, Market.Globex, expDate);
             var symbol = Symbol.CreateOption(future, Market.Globex, OptionStyle.American, optionRight, strike,

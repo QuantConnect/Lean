@@ -46,7 +46,7 @@ namespace QuantConnect.Commands
         {
             if (symbol != null)
             {
-                // No need to create symbol if alrady exists
+                // No need to create symbol if already exists
                 return symbol;
             }
             if (ticker != null && (securityType != null && securityType != SecurityType.Base) && market != null)
