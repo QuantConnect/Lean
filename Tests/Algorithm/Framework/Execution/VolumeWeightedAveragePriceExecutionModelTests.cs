@@ -25,7 +25,9 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -191,6 +193,63 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
                 // the price is now far below the VWAP computed for the previous subscription
+                SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
+
+                // ask price of $50.01 is above the new VWAP of $50, so selling is favorable
+                model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(-10, orders[0].Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage?.Dispose();
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language)
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+            try
+            {
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // VWAP is around $100 and the quote sits below it, so selling is not favorable
+                SetMarketData(security, time, 100m, 1000m, 99.98m, 99.99m);
+
+                // another universe selects the symbol with a different subscription, which keeps the security in the algorithm
+                var otherSubscription = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), Symbols.AAPL,
+                    Resolution.Minute, extendedMarketHours: true);
+                security.AddData(otherSubscription);
+
+                // the first universe deselects the symbol: the subscription feeding the model's consolidator is taken down,
+                // but the security keeps it, with the consolidator, because it is still selected by the other universe
+                var subscription = security.Subscriptions.Single(config => config.Consolidators.Count > 0);
+                Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, subscription, time, time.AddDays(1))));
+                Assert.IsTrue(dataManager.RemoveSubscription(subscription));
+                Assert.IsFalse(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL).Contains(subscription));
+
+                // the first universe selects the symbol again
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the price is now far below the VWAP computed from the removed subscription
                 SetMarketData(security, time.AddMinutes(1), 50m, 5000m, 50m, 50.01m);
 
                 // ask price of $50.01 is above the new VWAP of $50, so selling is favorable

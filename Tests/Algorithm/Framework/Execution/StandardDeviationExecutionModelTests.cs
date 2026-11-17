@@ -25,7 +25,9 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
@@ -237,6 +239,72 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
 
                 // the price is now far below the SMA computed for the previous subscription
+                security.SetMarketPrice(new TradeBar { Time = time.AddMinutes(1), Symbol = Symbols.AAPL, Close = 50m });
+                security.SetMarketPrice(new Tick(time.AddMinutes(1), Symbols.AAPL, 50m, 50.01m));
+
+                // ask price of $50.01 is above the new SMA of $50, so selling is favorable
+                model.Execute(algorithm, new IPortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, -10) });
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().ToList();
+                Assert.AreEqual(1, orders.Count);
+                Assert.AreEqual(-10, orders[0].Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage?.Dispose();
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ReAddedSecurityGetsFreshSymbolDataWhenAnotherSubscriptionKeptIt(Language language)
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+            var historicalPrice = 100m;
+
+            var historyProvider = new Mock<IHistoryProvider>();
+            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns(() => CreateHistory(time, historicalPrice));
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetHistoryProvider(historyProvider.Object);
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = ImmediateExecutionModelTests.GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+            try
+            {
+                var model = GetExecutionModel(language);
+                algorithm.SetExecution(model);
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the SMA is around $100 and the quote sits below it, so selling is not favorable
+                security.SetMarketPrice(new TradeBar { Time = time, Symbol = Symbols.AAPL, Close = 100m });
+                security.SetMarketPrice(new Tick(time, Symbols.AAPL, 99.98m, 99.99m));
+
+                // another universe selects the symbol with a different subscription, which keeps the security in the algorithm
+                var otherSubscription = algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(typeof(TradeBar), Symbols.AAPL,
+                    Resolution.Minute, extendedMarketHours: true);
+                security.AddData(otherSubscription);
+
+                // the first universe deselects the symbol: the subscription feeding the model's consolidator is taken down,
+                // but the security keeps it, with the consolidator, because it is still selected by the other universe
+                var subscription = security.Subscriptions.Single(config => config.Consolidators.Count > 0);
+                Assert.IsTrue(dataManager.AddSubscription(new SubscriptionRequest(false, null, security, subscription, time, time.AddDays(1))));
+                Assert.IsTrue(dataManager.RemoveSubscription(subscription));
+                Assert.IsFalse(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.AAPL).Contains(subscription));
+
+                // the first universe selects the symbol again
+                historicalPrice = 50m;
+                model.OnSecuritiesChanged(algorithm, SecurityChangesTests.CreateNonInternal(new[] { security }, Enumerable.Empty<Security>()));
+
+                // the price is now far below the SMA computed from the removed subscription
                 security.SetMarketPrice(new TradeBar { Time = time.AddMinutes(1), Symbol = Symbols.AAPL, Close = 50m });
                 security.SetMarketPrice(new Tick(time.AddMinutes(1), Symbols.AAPL, 50m, 50.01m));
 
