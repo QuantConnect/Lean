@@ -366,6 +366,36 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             });
         }
 
+        [TestCase("BTCUSDT", 1, 40000, 50000, 45000)]
+        [TestCase("BTCUSD1", 1, 40000, 50000, 45000)]
+        [TestCase("BTCUSD1", -1, 40000, 50000, 45000)]
+        [TestCase("BTCU", 1, 40000, 50000, 45000)]
+        [TestCase("BTCU", -1, 40000, 50000, 45000)]
+        [TestCase("ETHBTC", 1, 0.02, 0.03, 0.025)]
+        [TestCase("ETHBTC", -1, 0.02, 0.03, 0.025)]
+        public void AddingToLinearPositionKeepsArithmeticAveragePrice(string ticker, decimal quantity,
+            decimal firstPrice, decimal secondPrice, decimal expectedAveragePrice)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            cryptoFuture.FeeModel = new ConstantFeeModel(0);
+            var direction = quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell;
+
+            SetPrice(cryptoFuture, firstPrice);
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(1, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled, direction, firstPrice, quantity, OrderFee.Zero)
+            });
+            SetPrice(cryptoFuture, secondPrice);
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(2, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled, direction, secondPrice, quantity, OrderFee.Zero)
+            });
+
+            Assert.AreEqual(2 * quantity, cryptoFuture.Holdings.Quantity);
+            Assert.AreEqual(expectedAveragePrice, cryptoFuture.Holdings.AveragePrice);
+        }
+
         private static QCAlgorithm GetAlgorithm()
         {
             // Initialize algorithm

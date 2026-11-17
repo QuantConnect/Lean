@@ -99,8 +99,10 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <returns>The average price of the increased position</returns>
         internal override decimal GetAveragePriceAfterIncrease(decimal averagePrice, decimal quantity, decimal fillPrice, decimal fillQuantity)
         {
-            // an average price of 0, such as from holdings without one, can't be inverted
-            if (Symbol.ID.Market != Market.DYDX && ((CryptoFuture)Security).IsCryptoCoinFuture() && averagePrice != 0)
+            // coin-margined contracts have a USD face value: IsCryptoCoinFuture() also matches linear contracts
+            // quoted in other currencies, such as ETHBTC or BTCUSD1, which keep the arithmetic average.
+            // An average price of 0, such as from holdings without one, can't be inverted
+            if (Symbol.ID.Market != Market.DYDX && Security.QuoteCurrency.Symbol == Currencies.USD && averagePrice != 0)
             {
                 // Inverse contracts average the entry price harmonically, weighted by quantity, so the
                 // position's value in the margin coin is the sum of the fills' values
