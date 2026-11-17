@@ -144,9 +144,10 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException($"The symbol {symbol} is not an option type");
             }
 
-            // AM-settled index options settle on market open of their last trading day. For the known AM-settled tickers
-            // that day is earlier than the expiration date for legacy Saturday expirations, and isn't a 3rd Friday for
-            // VIX and VIXW (Wednesday). Other tickers not known to be PM-settled are taken as AM-settled on 3rd Fridays only.
+            // AM-settled index options settle on the market open of their expiration date, or of the previous trading day
+            // when it isn't one, as for legacy Saturday expirations. For the known AM-settled tickers that date isn't always
+            // a 3rd Friday, as for VIX and VIXW (Wednesday). Other tickers not known to be PM-settled are taken as AM-settled
+            // on 3rd Fridays only.
             // Non-standard tickers (e.g. SPXW, RUTW) are always PM-settled, even when expiring on the 3rd Friday.
             if (symbol.SecurityType == SecurityType.IndexOption
                 && (expiryTime.Date <= symbol.ID.Date.Date

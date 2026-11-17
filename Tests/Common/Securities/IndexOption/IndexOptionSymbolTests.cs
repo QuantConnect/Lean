@@ -38,5 +38,23 @@ namespace QuantConnect.Tests.Common.Securities.IndexOption
 
             Assert.AreEqual(isStandard, IndexOptionSymbol.IsStandard(option));
         }
+
+        [TestCase("SPX", 1)]
+        [TestCase("NDX", 1)]
+        [TestCase("RUT", 1)]
+        [TestCase("VIX", 1)]
+        [TestCase("VIXW", 1)]
+        [TestCase("SPXW", 0)]
+        [TestCase("RUTW", 0)]
+        [TestCase("NDXP", 0)]
+        [TestCase("NQX", 0)]
+        public void LastTradingDateIsTheDayBeforeExpirationForAMSettledTickers(string optionTicker, int daysBeforeExpiration)
+        {
+            var expiration = new DateTime(2024, 2, 14);
+            var lastTradingDate = expiration.AddDays(-daysBeforeExpiration);
+
+            Assert.AreEqual(lastTradingDate, IndexOptionSymbol.GetLastTradingDate(optionTicker, expiration));
+            Assert.AreEqual(expiration, IndexOptionSymbol.GetExpiryDate(optionTicker, lastTradingDate));
+        }
     }
 }
