@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Common.Statistics
 
             var trade = builder.ClosedTrades[0];
             Assert.AreEqual(1, builder.ClosedTrades.Count);
-            Assert.AreEqual(direction * expectedProfit, trade.ProfitLoss);
+            Assert.That(trade.ProfitLoss, Is.EqualTo(direction * expectedProfit).Within(1e-18m));
             Assert.AreEqual(40000m, trade.EntryPrice);
             Assert.AreEqual(44000m, trade.ExitPrice);
             Assert.AreEqual(quantity, trade.Quantity);
@@ -76,9 +76,9 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var builder = CreateCryptoFutureTradeBuilder("BTCUSD", FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO,
                 out var security, accountCurrency: accountRate == 1.0 ? Currencies.USD : "EUR");
-            var adverse = direction > 0 ? -1222.22m : -2200m;
-            var favorable = direction > 0 ? 2200m : 1222.22m;
-            var drawdown = direction > 0 ? 3422.22m : 2222.22m;
+            var adverse = direction > 0 ? -11000m / 9 : -2200m;
+            var favorable = direction > 0 ? 2200m : 11000m / 9;
+            var drawdown = direction > 0 ? 30800m / 9 : 20000m / 9;
             var rate = (decimal)accountRate;
             security.BaseCurrency.ConversionRate = 44000m * rate;
             security.QuoteCurrency.ConversionRate = rate;
@@ -92,10 +92,10 @@ namespace QuantConnect.Tests.Common.Statistics
                 rate, 0m, 100m);
 
             var trade = builder.ClosedTrades[0];
-            Assert.AreEqual(direction * 1000m * rate, trade.ProfitLoss);
-            Assert.AreEqual(Math.Round(adverse * rate, 2), trade.MAE);
-            Assert.AreEqual(Math.Round(favorable * rate, 2), trade.MFE);
-            Assert.AreEqual(Math.Round(drawdown * rate, 2), trade.EndTradeDrawdown);
+            Assert.That(trade.ProfitLoss, Is.EqualTo(direction * 1000m * rate).Within(1e-18m));
+            Assert.That(trade.MAE, Is.EqualTo(adverse * rate).Within(1e-18m));
+            Assert.That(trade.MFE, Is.EqualTo(favorable * rate).Within(1e-18m));
+            Assert.That(trade.EndTradeDrawdown, Is.EqualTo(drawdown * rate).Within(1e-18m));
         }
 
         [Test]
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 1m, 0m, 100m);
 
             var trade = builder.ClosedTrades[0];
-            Assert.AreEqual(1000m, trade.ProfitLoss);
+            Assert.That(trade.ProfitLoss, Is.EqualTo(1000m).Within(1e-18m));
             Assert.AreEqual(0m, trade.MAE);
             Assert.AreEqual(0m, trade.EndTradeDrawdown);
         }
@@ -133,12 +133,36 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 totalProfit += trade.ProfitLoss;
             }
-            Assert.AreEqual(direction * 633.33m, totalProfit);
+            Assert.That(totalProfit, Is.EqualTo(direction * 1900m / 3).Within(1e-18m));
             Assert.IsFalse(builder.HasOpenPosition(security.Symbol));
             if (groupingMethod == FillGroupingMethod.FlatToFlat)
             {
                 Assert.AreEqual(45000m, builder.ClosedTrades[0].EntryPrice);
                 Assert.AreEqual(46000m, builder.ClosedTrades[0].ExitPrice);
+            }
+        }
+
+        [Test]
+        public void KeepsAccountCurrencyPrecision([Values] FillGroupingMethod groupingMethod)
+        {
+            // a USD-quoted security in a BTC account: $1 is 0.000025 BTC
+            const decimal usdToBtc = 0.000025m;
+            var builder = new TradeBuilder(groupingMethod, FillMatchingMethod.FIFO);
+            builder.ProcessFill(new OrderEvent(1, Symbols.SPY, _startTime, OrderStatus.Filled, OrderDirection.Buy, 100m, 1m, OrderFee.Zero),
+                usdToBtc, 0m);
+            builder.SetMarketPrice(Symbols.SPY, 95m);
+            builder.SetMarketPrice(Symbols.SPY, 112m);
+            builder.ProcessFill(new OrderEvent(2, Symbols.SPY, _startTime.AddHours(1), OrderStatus.Filled, OrderDirection.Sell, 110m, -1m, OrderFee.Zero),
+                usdToBtc, 0m);
+
+            var trade = builder.ClosedTrades.Single();
+            Assert.AreEqual(0.00025m, trade.ProfitLoss);
+            Assert.IsTrue(trade.IsWin);
+            if (groupingMethod == FillGroupingMethod.FillToFill)
+            {
+                Assert.AreEqual(-0.000125m, trade.MAE);
+                Assert.AreEqual(0.0003m, trade.MFE);
+                Assert.AreEqual(0.000125m, trade.EndTradeDrawdown);
             }
         }
 
@@ -1255,7 +1279,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(3000, split), trade.Quantity);
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade.ExitPrice);
-                        Assert.AreEqual(40, trade.ProfitLoss);
+                        Assert.That(trade.ProfitLoss, Is.EqualTo(40m).Within(1e-18m));
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(0, trade.MAE);
                         Assert.AreEqual(0, trade.MFE);
@@ -1457,7 +1481,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(3000, split), trade.Quantity);
                         Assert.AreEqual(time.AddMinutes(40), trade.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade.ExitPrice);
-                        Assert.AreEqual(-40, trade.ProfitLoss);
+                        Assert.That(trade.ProfitLoss, Is.EqualTo(-40m).Within(1e-18m));
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(0, trade.MAE);
                         Assert.AreEqual(0, trade.MFE);
@@ -1744,7 +1768,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(3000, split), trade2.Quantity);
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade2.ExitPrice);
-                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 40, trade2.ProfitLoss);
+                        Assert.That(trade2.ProfitLoss, Is.EqualTo(matchingMethod == FillMatchingMethod.FIFO ? 30m : 40m).Within(1e-18m));
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(0, trade2.MAE);
                         Assert.AreEqual(0, trade2.MFE);
@@ -2002,7 +2026,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(3000, split), trade2.Quantity);
                         Assert.AreEqual(time.AddMinutes(40), trade2.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade2.ExitPrice);
-                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -40, trade2.ProfitLoss);
+                        Assert.That(trade2.ProfitLoss, Is.EqualTo(matchingMethod == FillMatchingMethod.FIFO ? -30m : -40m).Within(1e-18m));
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(0, trade2.MAE);
                         Assert.AreEqual(0, trade2.MFE);
@@ -2595,7 +2619,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(1500, split), trade1.Quantity);
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade1.ExitPrice);
-                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 25 : 20, trade1.ProfitLoss);
+                        Assert.That(trade1.ProfitLoss, Is.EqualTo(matchingMethod == FillMatchingMethod.FIFO ? 25m : 20m).Within(1e-18m));
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(0, trade1.MAE);
                         Assert.AreEqual(0, trade1.MFE);
@@ -2783,7 +2807,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(AdjustQuantityToSplit(1500, split), trade1.Quantity);
                         Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
                         Assert.AreEqual(AdjustPriceToSplit(1.09m, split), trade1.ExitPrice);
-                        Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -25 : -20, trade1.ProfitLoss);
+                        Assert.That(trade1.ProfitLoss, Is.EqualTo(matchingMethod == FillMatchingMethod.FIFO ? -25m : -20m).Within(1e-18m));
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(0, trade1.MAE);
                         Assert.AreEqual(0, trade1.MFE);
