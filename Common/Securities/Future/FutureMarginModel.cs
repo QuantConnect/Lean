@@ -113,18 +113,46 @@ namespace QuantConnect.Securities.Future
         {
             if (Math.Abs(parameters.TargetBuyingPower) > 1)
             {
-                // a leveraged target is allowed only when it reduces the current position, such as a margin call liquidating
-                // holdings whose margin is above the portfolio value
-                var currentMargin = this.GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
-                var targetMargin = parameters.TargetBuyingPower * parameters.Portfolio.TotalPortfolioValue;
-                if (currentMargin == 0 || Math.Sign(targetMargin) != Math.Sign(currentMargin) || Math.Abs(targetMargin) > Math.Abs(currentMargin))
-                {
-                    throw new InvalidOperationException(
-                        "Futures do not allow specifying a leveraged target, since they are traded using margin which already is leveraged. " +
-                        $"Possible target buying power goes from -1 to 1, target provided is: {parameters.TargetBuyingPower}");
-                }
+                throw new InvalidOperationException(
+                    "Futures do not allow specifying a leveraged target, since they are traded using margin which already is leveraged. " +
+                    $"Possible target buying power goes from -1 to 1, target provided is: {parameters.TargetBuyingPower}");
             }
             return base.GetMaximumOrderQuantityForTargetBuyingPower(parameters);
+        }
+
+        /// <summary>
+        /// Get the maximum market order quantity to obtain a delta in the buying power used by a security.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
+            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
+        {
+            var holdingsQuantity = parameters.Security.Holdings.Quantity;
+            var usedBuyingPower = GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(parameters.Security))
+                .AbsoluteUsedBuyingPower;
+            var targetBuyingPower = Math.Sign(holdingsQuantity) * usedBuyingPower + parameters.DeltaBuyingPower;
+            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
+
+            // a delta that only reduces the holdings, such as a margin call's, targets more margin than the portfolio value when the
+            // holdings already use more than it, which isn't a leveraged target
+            if (totalPortfolioValue == 0 || Math.Abs(targetBuyingPower) <= Math.Abs(totalPortfolioValue)
+                || Math.Sign(targetBuyingPower) != Math.Sign(holdingsQuantity) || Math.Abs(targetBuyingPower) > usedBuyingPower)
+            {
+                return base.GetMaximumOrderQuantityForDeltaBuyingPower(parameters);
+            }
+
+            var result = base.GetMaximumOrderQuantityForTargetBuyingPower(new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                parameters.Portfolio, parameters.Security, targetBuyingPower / totalPortfolioValue,
+                parameters.MinimumOrderMarginPortfolioPercentage, parameters.SilenceNonErrorReasons));
+
+            // fees can size the order past the holdings, or against the reduction, when the portfolio value is close to zero
+            var reducedQuantity = Math.Sign(result.Quantity) == -Math.Sign(holdingsQuantity)
+                ? Math.Min(Math.Abs(result.Quantity), Math.Abs(holdingsQuantity))
+                : 0;
+            return new GetMaximumOrderQuantityResult(-Math.Sign(holdingsQuantity) * reducedQuantity, result.Reason, result.IsError);
         }
 
         /// <summary>
