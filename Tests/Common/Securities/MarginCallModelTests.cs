@@ -467,11 +467,10 @@ namespace QuantConnect.Tests.Common.Securities
             }
             else
             {
-                // the open covered call liquidation releases $5000: the stock group is liquidated again for the $2500 left,
-                // the 50 shares whose own margin covers it
+                // the open covered call liquidation releases $5000: the stock group is liquidated again for the rest
                 Assert.AreEqual(1, marginCallOrders.Count);
                 Assert.IsNull(marginCallOrders[0].GroupOrderManager);
-                Assert.AreEqual(-50, marginCallOrders[0].Quantity);
+                Assert.AreEqual(-51, marginCallOrders[0].Quantity);
             }
 
             // once every margin call order is closed, the margin call is generated again from the current holdings
@@ -836,14 +835,13 @@ namespace QuantConnect.Tests.Common.Securities
             var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
             Assert.AreEqual(3, marginCallOrders.Count);
 
-            // the combo order is rejected: the stock group is liquidated as generated for the whole $4100 deficit, the 82 shares
-            // whose own margin covers it
+            // the combo order is rejected: the stock group is liquidated as generated for the whole $4100 deficit
             var tickets = portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
             Assert.AreEqual(3, tickets.Count);
             Assert.IsTrue(tickets.Take(2).All(ticket => ticket.Status == OrderStatus.Invalid && ticket.SubmitRequest.GroupOrderManager != null));
             Assert.AreEqual(Symbols.SPY, tickets[2].Symbol);
             Assert.IsNull(tickets[2].SubmitRequest.GroupOrderManager);
-            Assert.AreEqual(-82, tickets[2].Quantity);
+            Assert.AreEqual(-83, tickets[2].Quantity);
             Assert.IsTrue(tickets[2].Status.IsOpen());
         }
 

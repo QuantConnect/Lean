@@ -207,9 +207,7 @@ namespace QuantConnect.Securities
             var currentlyUsedBuyingPower = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(Portfolio, positionGroup);
 
             decimal absQuantity;
-            if (Portfolio.Positions.Groups.TryGetGroup(positionGroup.Key, out var heldPositionGroup) && heldPositionGroup.Quantity == positionGroup.Quantity
-                // a single security's buying power model sizes from all of its holdings, which other position groups can share
-                && (positionGroup.Count > 1 || positionGroup.Single().Quantity == Portfolio.Securities[positionGroup.Single().Symbol].Holdings.Quantity))
+            if (Portfolio.Positions.Groups.TryGetGroup(positionGroup.Key, out var heldPositionGroup) && heldPositionGroup.Quantity == positionGroup.Quantity)
             {
                 // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
                 var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
@@ -227,9 +225,8 @@ namespace QuantConnect.Securities
             }
             else
             {
-                // the holdings left after other liquidations can form a group that isn't held, and a security's holdings can be
-                // shared with other groups, which the buying power model sizes from: the fewest lots of this group whose margin
-                // covers the deficit are liquidated instead
+                // the holdings left after other liquidations can form a group that isn't held, which the buying power model
+                // sizes from the held one: the fewest lots of this group whose margin covers the deficit are liquidated instead
                 var heldLots = Math.Abs(positionGroup.Quantity);
                 var lowerLots = 1m;
                 var upperLots = Math.Ceiling(heldLots);
