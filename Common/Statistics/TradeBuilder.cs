@@ -528,7 +528,7 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = ((exitTotalValue * (totalEntryQuantity / totalExitQuantity) - entryTotalValue) * conversionRate * multiplier).SmartRounding(),
+                        ProfitLoss = ((exitTotalValue / totalExitQuantity - entryTotalValue / totalEntryQuantity) * totalEntryQuantity * conversionRate * multiplier).SmartRounding(),
                         TotalFees = position.TotalFees,
                         OrderIds = relatedOrderIds
                         // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
