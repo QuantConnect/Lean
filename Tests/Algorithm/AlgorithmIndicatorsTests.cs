@@ -394,18 +394,33 @@ namespace QuantConnect.Tests.Algorithm
             CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, sma.Current.Select(x => x.Value));
         }
 
-        [Test]
-        public void IndicatorHistoryKeepsQuoteBarsOfIndicatorRegisteredWithQuoteConsolidator()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IndicatorHistoryUsesQuoteBarsOfIndicatorRegisteredWithQuoteConsolidator(bool quoteBarLast)
         {
             var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
             _algorithm.AddFutureContract(symbol);
             var sma = new SimpleMovingAverage(1);
             _algorithm.RegisterIndicator(symbol, sma, _algorithm.ResolveConsolidator(symbol, Resolution.Hour, typeof(QuoteBar)));
-            var slices = GetTradeAndQuoteSlices(symbol);
+            var slices = GetTradeAndQuoteSlices(symbol, quoteBarLast: quoteBarLast);
 
             var history = _algorithm.IndicatorHistory(sma, slices);
 
             CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, history.Current.Select(x => x.Value));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IndicatorHistoryUsesTradeBarsOfIndicatorRegisteredByHelper(bool quoteBarLast)
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            _algorithm.AddFutureContract(symbol);
+            var sma = _algorithm.SMA(symbol, 1, Resolution.Hour);
+            var slices = GetTradeAndQuoteSlices(symbol, quoteBarLast: quoteBarLast);
+
+            var history = _algorithm.IndicatorHistory(sma, slices);
+
+            CollectionAssert.AreEqual(new[] { 100m, 101m, 102m }, history.Current.Select(x => x.Value));
         }
 
         [Test]
@@ -465,7 +480,7 @@ namespace QuantConnect.Tests.Algorithm
             CollectionAssert.AreEqual(new[] { 100m, 101m, 102m }, sma.Current.Select(x => x.Value));
         }
 
-        private static List<Slice> GetTradeAndQuoteSlices(Symbol symbol, bool includeTrades = true)
+        private static List<Slice> GetTradeAndQuoteSlices(Symbol symbol, bool includeTrades = true, bool quoteBarLast = true)
         {
             return Enumerable.Range(0, 3).Select(i =>
             {
@@ -477,8 +492,8 @@ namespace QuantConnect.Tests.Algorithm
                 };
                 if (includeTrades)
                 {
-                    // the trade bar comes first so that the slice's default value for the symbol is the quote bar
-                    data.Insert(0, new TradeBar(time, symbol, 100 + i, 100 + i, 100 + i, 100 + i, 10, TimeSpan.FromHours(1)));
+                    // the slice's default value for the symbol is its last bar
+                    data.Insert(quoteBarLast ? 0 : 1, new TradeBar(time, symbol, 100 + i, 100 + i, 100 + i, 100 + i, 10, TimeSpan.FromHours(1)));
                 }
                 return new Slice(time.AddHours(1), data, time.AddHours(1));
             }).ToList();

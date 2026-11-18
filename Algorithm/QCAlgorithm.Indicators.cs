@@ -4630,16 +4630,17 @@ namespace QuantConnect.Algorithm
             indicator.Updated += callback;
 
             var dataPointInput = typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract;
-            // a selector or a registered consolidator is the caller's choice of input, which keeps the slice's default value
-            if (dataPointInput && (!defaultSelector || indicator.Consolidators.Count > 0))
+            // a selector is the caller's choice of input, which keeps the slice's default value
+            if (dataPointInput && !defaultSelector)
             {
                 history.PushThrough(bar => updateIndicator(bar), dataType);
             }
             else if (dataPointInput)
             {
-                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where registering
-                // the indicator would consolidate trade bars, so then the symbol gets the bar type registering it would use:
-                // its subscription's, which prefers trades, or quotes for the contracts of an option indicator
+                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where the indicator
+                // consolidates trade bars, so then the symbol gets the bar type of the subscription the indicator is registered on,
+                // or else the one registering it would use: its subscription's, which prefers trades, or quotes for the contracts
+                // of an option indicator
                 var barTypeBySymbol = new Dictionary<Symbol, Type>();
                 foreach (var slice in history)
                 {
@@ -4654,7 +4655,13 @@ namespace QuantConnect.Algorithm
 
                         if (!barTypeBySymbol.TryGetValue(symbol, out var barType))
                         {
-                            if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
+                            var registeredSubscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                                .FirstOrDefault(config => config.Consolidators.Overlaps(indicator.Consolidators));
+                            if (registeredSubscription != null)
+                            {
+                                barType = registeredSubscription.Type;
+                            }
+                            else if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
                             {
                                 barType = typeof(QuoteBar);
                             }
