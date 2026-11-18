@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// True for for live trading, non internal, non universe subscriptions, non custom data subscriptions
+        /// True for live trading, non internal, non universe subscriptions, non custom data subscriptions
         /// </summary>
         private bool PreFilter(SubscriptionRequest request)
         {

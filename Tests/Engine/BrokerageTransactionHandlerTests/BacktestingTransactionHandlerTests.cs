@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 var security = _algorithm.Securities[Ticker];
                 var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 600, 0, 0, 0, DateTime.Now, "");
 
-                // Mock the the order processor
+                // Mock the order processor
                 var orderProcessorMock = new Mock<IOrderProcessor>();
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
                 _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 orderRequest.SetOrderId(1);
                 orderRequest2.SetOrderId(2);
 
-                // Mock the the order processor
+                // Mock the order processor
                 var orderProcessorMock = new Mock<IOrderProcessor>();
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
@@ -194,7 +194,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 orderRequest.SetOrderId(1);
                 orderRequest2.SetOrderId(2);
 
-                // Mock the the order processor
+                // Mock the order processor
                 var orderProcessorMock = new Mock<IOrderProcessor>();
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
@@ -282,7 +282,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 orderRequest.SetOrderId(1);
                 orderRequest2.SetOrderId(2);
 
-                // Mock the the order processor
+                // Mock the order processor
                 var orderProcessorMock = new Mock<IOrderProcessor>();
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 1))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
                 orderProcessorMock.Setup(m => m.GetOrderTicket(It.Is<int>(i => i == 2))).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));

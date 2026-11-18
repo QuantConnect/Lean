@@ -63,7 +63,7 @@ namespace QuantConnect.Util
         /// Encapsulates a python method with a <see cref="System.Action{T1, T2}"/>
         /// </summary>
         /// <typeparam name="T1">The first input type</typeparam>
-        /// <typeparam name="T2">The second input type type</typeparam>
+        /// <typeparam name="T2">The second input type</typeparam>
         /// <param name="pyObject">The python method</param>
         /// <returns>A <see cref="System.Action{T1, T2}"/> that encapsulates the python method</returns>
         public static Action<T1, T2> ToAction<T1, T2>(PyObject pyObject)

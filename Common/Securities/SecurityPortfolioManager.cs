@@ -373,7 +373,7 @@ namespace QuantConnect.Securities
         {
             get
             {
-                //Sum sum of holdings
+                //Sum of holdings
                 return Securities.Values.Sum(security => security.Holdings.AbsoluteHoldingsValue);
             }
         }

@@ -294,7 +294,7 @@ namespace QuantConnect.ToolBox
         /// <summary>
         /// Read the daily equity date from file
         /// </summary>
-        /// <param name="pathForDailyEquityData">Path the the daily data</param>
+        /// <param name="pathForDailyEquityData">Path to the daily data</param>
         /// <returns>A list of <see cref="TradeBar"/> read from file</returns>
         private static List<TradeBar> ReadDailyEquityData(string pathForDailyEquityData)
         {

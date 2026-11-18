@@ -36,7 +36,7 @@ namespace QuantConnect.Orders
         OrderAlreadyExists = -2,
 
         /// <summary>
-        /// Not enough money to to submit order (-3)
+        /// Not enough money to submit order (-3)
         /// </summary>
         InsufficientBuyingPower = -3,
 

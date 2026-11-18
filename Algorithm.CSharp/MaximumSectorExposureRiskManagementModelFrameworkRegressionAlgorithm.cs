@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             ));
 
             // define risk management model such that maximum weight of a single sector be 10%
-            // Number of of trades changed from 34 to 30 when using the MaximumSectorExposureRiskManagementModel
+            // Number of trades changed from 34 to 30 when using the MaximumSectorExposureRiskManagementModel
             SetRiskManagement(new MaximumSectorExposureRiskManagementModel(0.1m));
         }
 

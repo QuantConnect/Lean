@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Sets the current time interpreting the specified time as a local time
         /// using the time zone used at instantiation.
         /// </summary>
-        /// <param name="time">The local time to set the current time time, will be
+        /// <param name="time">The local time to set the current time, will be
         /// converted into UTC</param>
         public void SetCurrentTime(DateTime time)
         {

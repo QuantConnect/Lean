@@ -873,7 +873,7 @@ namespace QuantConnect
                 "Portfolio object is an adaptor for Security Manager. To add a new asset add the required data during initialization.";
 
             /// <summary>
-            /// Returns a string message saying the Portfolio object object is an adaptor for Security Manager and cannot be cleared
+            /// Returns a string message saying the Portfolio object is an adaptor for Security Manager and cannot be cleared
             /// </summary>
             public static string DictionaryClearNotImplemented = "Portfolio object is an adaptor for Security Manager and cannot be cleared.";
 

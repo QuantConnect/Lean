@@ -19,10 +19,10 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastic %K is is computed by 
+    /// This indicator computes the Slow Stochastics %K and %D. The Fast Stochastic %K is computed by 
     /// (Current Close Price - Lowest Price of given Period) / (Highest Price of given Period - Lowest Price of given Period)
     /// multiplied by 100. Once the Fast Stochastic %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
-    /// of the Fast %K with the given period. The Slow Stochastic %D is then derived from the Slow Stochastic %K with the given period.
+    /// the Fast %K with the given period. The Slow Stochastic %D is then derived from the Slow Stochastic %K with the given period.
     /// </summary>
     public class Stochastic : BarIndicator, IIndicatorWarmUpPeriodProvider
     {

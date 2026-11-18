@@ -232,7 +232,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 var clearCacheIfOlderThan = utcNow.AddSeconds(-_cacheSeconds);
-                // clean all items that that are older than CacheSeconds than the current date
+                // clean all items that are older than CacheSeconds than the current date
                 foreach (var zip in _zipFileCache)
                 {
                     if (zip.Value.Uncache(clearCacheIfOlderThan))

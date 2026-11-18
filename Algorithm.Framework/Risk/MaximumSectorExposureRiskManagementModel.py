@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from itertools import groupby
 
 class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
-    '''Provides an implementation of IRiskManagementModel that that limits the sector exposure to the specified percentage'''
+    '''Provides an implementation of IRiskManagementModel that limits the sector exposure to the specified percentage'''
 
     def __init__(self, maximum_sector_exposure = 0.20):
         '''Initializes a new instance of the MaximumSectorExposureRiskManagementModel class

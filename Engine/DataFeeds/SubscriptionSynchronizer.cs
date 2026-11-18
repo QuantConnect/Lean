@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             else
                             {
                                 // assume that if the first item is a base data collection then the enumerator handled the aggregation,
-                                // otherwise, load all the the data into a new collection instance
+                                // otherwise, load all the data into a new collection instance
                                 var packetBaseDataCollection = packet.Data[0] as BaseDataCollection;
                                 var packetData = packetBaseDataCollection == null
                                     ? packet.Data

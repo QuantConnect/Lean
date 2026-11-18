@@ -390,7 +390,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public ScheduleManager Schedule => _baseAlgorithm.Schedule;
 
         /// <summary>
-        /// Security object collection class stores an array of objects representing representing each security/asset
+        /// Security object collection class stores an array of objects representing each security/asset
         /// we have a subscription for.
         /// </summary>
         /// <remarks>It is an IDictionary implementation and can be indexed by symbol</remarks>
