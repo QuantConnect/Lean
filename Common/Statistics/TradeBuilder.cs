@@ -490,8 +490,8 @@ namespace QuantConnect.Statistics
                     var totalExitQuantity = 0m;
                     var entryAveragePrice = 0m;
                     var exitAveragePrice = 0m;
-                    var entryAverageValue = 0m;
-                    var exitAverageValue = 0m;
+                    var entryTotalValue = 0m;
+                    var exitTotalValue = 0m;
                     var relatedOrderIds = new HashSet<int>();
 
                     while (position.PendingFills.Count > 0)
@@ -503,14 +503,14 @@ namespace QuantConnect.Statistics
                             // entry
                             totalEntryQuantity += currentFill.FillQuantity;
                             entryAveragePrice += (currentFill.FillPrice - entryAveragePrice) * currentFill.FillQuantity / totalEntryQuantity;
-                            entryAverageValue += (currentValue - entryAverageValue) * currentFill.FillQuantity / totalEntryQuantity;
+                            entryTotalValue += currentValue * currentFill.FillQuantity;
                         }
                         else
                         {
                             // exit
                             totalExitQuantity += currentFill.FillQuantity;
                             exitAveragePrice += (currentFill.FillPrice - exitAveragePrice) * currentFill.FillQuantity / totalExitQuantity;
-                            exitAverageValue += (currentValue - exitAverageValue) * currentFill.FillQuantity / totalExitQuantity;
+                            exitTotalValue += currentValue * currentFill.FillQuantity;
                         }
                         relatedOrderIds.Add(currentFill.OrderId);
                         position.PendingFills.RemoveAt(index);
@@ -528,7 +528,7 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = ((exitAverageValue - entryAverageValue) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier).SmartRounding(),
+                        ProfitLoss = ((exitTotalValue * (totalEntryQuantity / totalExitQuantity) - entryTotalValue) * conversionRate * multiplier).SmartRounding(),
                         TotalFees = position.TotalFees,
                         OrderIds = relatedOrderIds
                         // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
@@ -596,7 +596,7 @@ namespace QuantConnect.Statistics
                 var entryTime = position.PendingFills[index].UtcTime;
                 var totalExecutedQuantity = 0m;
                 var entryPrice = 0m;
-                var entryValue = 0m;
+                var entryTotalValue = 0m;
                 position.TotalFees += orderFee;
                 var relatedOrderIds = new HashSet<int> { fill.OrderId };
 
@@ -612,7 +612,7 @@ namespace QuantConnect.Statistics
 
                         totalExecutedQuantity -= currentFill.FillQuantity;
                         entryPrice -= (currentFill.FillPrice - entryPrice) * currentFill.FillQuantity / totalExecutedQuantity;
-                        entryValue -= (currentValue - entryValue) * currentFill.FillQuantity / totalExecutedQuantity;
+                        entryTotalValue += currentValue * currentFill.FillQuantity;
                         position.PendingFills.RemoveAt(index);
 
                         if (_matchingMethod == FillMatchingMethod.LIFO && index > 0) index--;
@@ -622,7 +622,7 @@ namespace QuantConnect.Statistics
                         var executedQuantity = absoluteUnexecutedQuantity * Math.Sign(fill.FillQuantity);
                         totalExecutedQuantity += executedQuantity;
                         entryPrice += (currentFill.FillPrice - entryPrice) * executedQuantity / totalExecutedQuantity;
-                        entryValue += (currentValue - entryValue) * executedQuantity / totalExecutedQuantity;
+                        entryTotalValue -= currentValue * executedQuantity;
                         currentFill.FillQuantity += executedQuantity;
                     }
                     relatedOrderIds.Add(currentFill.OrderId);
@@ -638,7 +638,7 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = fill.UtcTime,
                     ExitPrice = fill.FillPrice,
-                    ProfitLoss = ((GetProfitPrice(fill.Symbol, fill.FillPrice) - entryValue) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier).SmartRounding(),
+                    ProfitLoss = ((-GetProfitPrice(fill.Symbol, fill.FillPrice) * totalExecutedQuantity - entryTotalValue) * conversionRate * multiplier).SmartRounding(),
                     TotalFees = position.TotalFees,
                     OrderIds = relatedOrderIds
 

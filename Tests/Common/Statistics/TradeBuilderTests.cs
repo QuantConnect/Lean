@@ -167,6 +167,33 @@ namespace QuantConnect.Tests.Common.Statistics
             }
         }
 
+        // entry cost and exit proceeds are equal, but averaging the fills leaves decimal residue
+        [TestCase(FillGroupingMethod.FlatToFlat, new[] { 1.0, 2, 1, -4 }, new[] { 3.0, 11, 1, 6.5 })]
+        [TestCase(FillGroupingMethod.FlatToReduced, new[] { 1.0, 2, 1, -4 }, new[] { 3.0, 11, 1, 6.5 })]
+        [TestCase(FillGroupingMethod.FlatToFlat, new[] { 9.0, 4, 5, -4, -5, -9 }, new[] { 1.0, 18, 4, 18, 4, 1 })]
+        public void BreakevenAveragedFillsHaveZeroProfit(FillGroupingMethod groupingMethod, double[] quantities, double[] prices)
+        {
+            foreach (var matchingMethod in new[] { FillMatchingMethod.FIFO, FillMatchingMethod.LIFO })
+            {
+                var builder = new TradeBuilder(groupingMethod, matchingMethod);
+                var time = _startTime;
+                for (var i = 0; i < quantities.Length; i++)
+                {
+                    var quantity = (decimal)quantities[i];
+                    builder.ProcessFill(new OrderEvent(i + 1, Symbols.SPY, time = time.AddMinutes(1), OrderStatus.Filled,
+                        quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell, (decimal)prices[i], quantity, OrderFee.Zero), 1m, 0m);
+                }
+                builder.ProcessFill(new OrderEvent(100, Symbols.SPY, time.AddMinutes(1), OrderStatus.Filled, OrderDirection.Buy, 100m, 1000m, OrderFee.Zero), 1m, 0m);
+                builder.ProcessFill(new OrderEvent(101, Symbols.SPY, time.AddMinutes(2), OrderStatus.Filled, OrderDirection.Sell, 110m, -1000m, OrderFee.Zero), 1m, 0m);
+
+                var breakeven = builder.ClosedTrades[0];
+                Assert.AreEqual(0m, breakeven.ProfitLoss);
+                Assert.IsFalse(breakeven.IsWin);
+                Assert.AreEqual(10000m, builder.ClosedTrades[^1].ProfitLoss);
+                Assert.DoesNotThrow(() => new TradeStatistics(builder.ClosedTrades));
+            }
+        }
+
         private static IEnumerable<TestCaseData> CryptoFutureTradeCases
         {
             get
