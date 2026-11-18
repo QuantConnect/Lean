@@ -121,6 +121,41 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
+        /// Get the maximum market order quantity to obtain a delta in the buying power used by a security.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
+            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
+        {
+            var holdingsQuantity = parameters.Security.Holdings.Quantity;
+            var usedBuyingPower = GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(parameters.Security))
+                .AbsoluteUsedBuyingPower;
+            var targetBuyingPower = Math.Sign(holdingsQuantity) * usedBuyingPower + parameters.DeltaBuyingPower;
+            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
+
+            // a delta that only reduces the holdings, such as a margin call's, targets more margin than the portfolio value when the
+            // holdings already use more than it, which isn't a leveraged target
+            if (totalPortfolioValue == 0 || Math.Abs(targetBuyingPower) <= Math.Abs(totalPortfolioValue)
+                || Math.Sign(targetBuyingPower) != Math.Sign(holdingsQuantity) || Math.Abs(targetBuyingPower) > usedBuyingPower)
+            {
+                return base.GetMaximumOrderQuantityForDeltaBuyingPower(parameters);
+            }
+
+            var result = base.GetMaximumOrderQuantityForTargetBuyingPower(new GetMaximumOrderQuantityForTargetBuyingPowerParameters(
+                parameters.Portfolio, parameters.Security, targetBuyingPower / totalPortfolioValue,
+                parameters.MinimumOrderMarginPortfolioPercentage, parameters.SilenceNonErrorReasons));
+
+            // fees can size the order past the holdings, or against the reduction, when the portfolio value is close to zero
+            var reducedQuantity = Math.Sign(result.Quantity) == -Math.Sign(holdingsQuantity)
+                ? Math.Min(Math.Abs(result.Quantity), Math.Abs(holdingsQuantity))
+                : 0;
+            return new GetMaximumOrderQuantityResult(-Math.Sign(holdingsQuantity) * reducedQuantity, result.Reason, result.IsError);
+        }
+
+        /// <summary>
         /// Gets the total margin required to execute the specified order in units of the account currency including fees
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the order</param>

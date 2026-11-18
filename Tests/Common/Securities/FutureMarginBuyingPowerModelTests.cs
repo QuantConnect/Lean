@@ -27,6 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -494,6 +495,91 @@ namespace QuantConnect.Tests.Common.Securities
                     futureSecurity,
                     target,
                     0)));
+        }
+
+        [Test]
+        public void GetMaximumOrderQuantityForDeltaBuyingPower_AllowsReducingLeveragedTarget()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
+            var futureSecurity = algorithm.AddFuture(ticker);
+            Update(futureSecurity, 100, algorithm);
+
+            algorithm.Portfolio.SetCash(1000);
+            futureSecurity.Holdings.SetHoldings(100, 10);
+            algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+            var usedBuyingPower = futureSecurity.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var totalPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+            var targetBuyingPower = 1.1m * totalPortfolioValue;
+            var deltaBuyingPower = targetBuyingPower - usedBuyingPower;
+
+            Assert.Greater(Math.Abs(usedBuyingPower / totalPortfolioValue), 1m);
+            Assert.Less(deltaBuyingPower, 0m);
+
+            Assert.DoesNotThrow(() =>
+            {
+                var result = futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                    new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
+                        algorithm.Portfolio,
+                        futureSecurity,
+                        deltaBuyingPower,
+                        0
+                    ));
+                Assert.Less(result.Quantity, 0m);
+            });
+        }
+
+        [TestCase(10)]
+        [TestCase(-10)]
+        public void GetMaximumOrderQuantityForTargetBuyingPower_ThrowsForLeveragedTargetReducingTheHoldings(int quantity)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var futureSecurity = algorithm.AddFuture(QuantConnect.Securities.Futures.Financials.EuroDollar);
+            Update(futureSecurity, 100, algorithm);
+            algorithm.Portfolio.SetCash(1000);
+            futureSecurity.Holdings.SetHoldings(100, quantity);
+            algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+            // only margin call deltas reduce the holdings past a leveraged target, target requests keep rejecting it
+            var target = Math.Sign(quantity) * 1.1m;
+            Assert.Less(1.1m * algorithm.Portfolio.TotalPortfolioValue, futureSecurity.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower);
+            Assert.Throws<InvalidOperationException>(() => futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio, futureSecurity, target, 0)));
+        }
+
+        [TestCase(10)]
+        [TestCase(-10)]
+        public void GetMaximumOrderQuantityForDeltaBuyingPower_ReducesLeveragedHoldingsWithoutReversingThem(int quantity)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var futureSecurity = algorithm.AddFuture(QuantConnect.Securities.Futures.Financials.EuroDollar);
+            futureSecurity.FeeModel = new ConstantFeeModel(2.5m);
+            Update(futureSecurity, 100, algorithm);
+            futureSecurity.Holdings.SetHoldings(100, quantity);
+
+            // a $2 portfolio value, less than an order's fee, which sizes a fee adjusted target past the holdings
+            algorithm.Portfolio.CashBook[Currencies.USD].AddAmount(2 - algorithm.Portfolio.TotalPortfolioValue);
+            algorithm.Portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(2, algorithm.Portfolio.TotalPortfolioValue);
+
+            var usedBuyingPower = futureSecurity.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var result = futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(algorithm.Portfolio, futureSecurity,
+                    -Math.Sign(quantity) * usedBuyingPower * 0.1m, 0));
+
+            Assert.AreEqual(-Math.Sign(quantity), Math.Sign(result.Quantity));
+            Assert.LessOrEqual(Math.Abs(result.Quantity), Math.Abs(quantity));
         }
 
         [TestCase(1)]

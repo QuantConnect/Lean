@@ -24,6 +24,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Positions;
 
@@ -842,6 +843,12 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNull(tickets[2].SubmitRequest.GroupOrderManager);
             Assert.AreEqual(-83, tickets[2].Quantity);
             Assert.IsTrue(tickets[2].Status.IsOpen());
+
+            // the fill and its $1 fee leave the account within its margin requirement
+            var order = Order.CreateOrder(tickets[2].SubmitRequest);
+            portfolio.ProcessFills(new List<OrderEvent> { new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(1, Currencies.USD)))
+                { FillPrice = 100m, FillQuantity = order.Quantity, Status = OrderStatus.Filled } });
+            Assert.GreaterOrEqual(portfolio.MarginRemaining, 0);
         }
 
         [Test]
@@ -948,6 +955,100 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.MarginCallModel.GetMarginCallOrders(out _).Count);
         }
 
+        [TestCase(10)]
+        [TestCase(-10)]
+        public void GeneratesMarginCallOrdersForFutures(int quantity)
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            // $60000 maintenance margin against a $30000 portfolio: the $30000 the futures keep is a target of the whole
+            // portfolio value, which holds the 4 contracts whose $6600 initial margin each fits in it
+            var portfolio = GetFuturesPortfolio(orderProcessor, 30000, quantity);
+            Assert.AreEqual(60000, portfolio.TotalMarginUsed);
+            Assert.AreEqual(30000, portfolio.TotalPortfolioValue);
+
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out var issueMarginCallWarning);
+            Assert.IsTrue(issueMarginCallWarning);
+            Assert.AreEqual(1, marginCallOrders.Count);
+            Assert.AreEqual(Symbols.Future_ESZ18_Dec2018, marginCallOrders[0].Symbol);
+            Assert.AreEqual(-Math.Sign(quantity) * 6, marginCallOrders[0].Quantity);
+
+            var orders = ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
+            Assert.AreEqual(-Math.Sign(quantity) * 6, orders.Single().Quantity);
+        }
+
+        [TestCase(10)]
+        [TestCase(-10)]
+        public void GeneratesMarginCallOrdersForFuturesAlongsideAnotherSecurity(int quantity)
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetFuturesPortfolio(orderProcessor, 30000, quantity);
+
+            // 100 AAPL shares at $100 with 2x leverage, bought at $120 so they're the loser and liquidated first
+            var stock = GetSecurity(Symbols.AAPL, portfolio.CashBook);
+            portfolio.Securities.Add(stock);
+            stock.SetLeverage(2);
+            stock.SetMarketPrice(new Tick(DateTime.Now, Symbols.AAPL, 100m, 100m));
+            stock.Holdings.SetHoldings(120m, 100);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(65000, portfolio.TotalMarginUsed);
+            Assert.AreEqual(40000, portfolio.TotalPortfolioValue);
+
+            // the $25000 deficit: the futures keep $35000 of their $60000 margin, 5 contracts at $6600 initial margin each,
+            // and the stock none of its $5000
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(2, marginCallOrders.Count);
+            Assert.AreEqual(-Math.Sign(quantity) * 5, marginCallOrders.Single(request => request.Symbol == Symbols.Future_ESZ18_Dec2018).Quantity);
+            Assert.AreEqual(-100, marginCallOrders.Single(request => request.Symbol == Symbols.AAPL).Quantity);
+
+            // the stock order releases $5000, the futures one is scaled down to the 4 contracts whose $6000 maintenance margin each
+            // covers the $20000 left
+            var orders = ExecuteMarginCall(portfolio, orderProcessor, marginCallOrders);
+            Assert.AreEqual(2, orders.Count);
+            Assert.AreEqual(-100, orders[0].Quantity);
+            Assert.AreEqual(-Math.Sign(quantity) * 4, orders[1].Quantity);
+        }
+
+        [TestCase(10, OptionRight.Call)]
+        [TestCase(-10, OptionRight.Put)]
+        public void GeneratesMarginCallOrdersForFuturesSharedWithAFutureOptionStrategy(int quantity, OptionRight right)
+        {
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetSharedFuturesPortfolio(orderProcessor, 5000, quantity, right);
+            Assert.AreEqual(4990, portfolio.TotalPortfolioValue);
+
+            // the strategy's margin and the $54000 of the futures group leave a deficit larger than the latter, which is liquidated
+            // entirely
+            var marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out _);
+            Assert.AreEqual(3, marginCallOrders.Count);
+            Assert.AreEqual(-Math.Sign(quantity) * 9, marginCallOrders.Single(request => request.GroupOrderManager == null).Quantity);
+            Assert.AreEqual(-Math.Sign(quantity), marginCallOrders.Single(request => request.Symbol == Symbols.Future_ESZ18_Dec2018
+                && request.GroupOrderManager != null).Quantity);
+            Assert.AreEqual(1, marginCallOrders.Single(request => request.Symbol.SecurityType == SecurityType.FutureOption).Quantity);
+        }
+
+        [TestCase(10, OptionRight.Call)]
+        [TestCase(-10, OptionRight.Put)]
+        public void LiquidatesFuturesSharedWithARejectedFutureOptionStrategyForTheDeficitAndFees(int quantity, OptionRight right)
+        {
+            // the brokerage rejects combo orders, so the futures group's order has to cover the deficit by itself
+            var orderProcessor = new FakeOrderProcessor { RejectsOrder = requests => requests[0].OrderType == OrderType.ComboMarket };
+            var portfolio = GetSharedFuturesPortfolio(orderProcessor, 0, quantity, right);
+            portfolio.CashBook[Currencies.USD].AddAmount(portfolio.TotalMarginUsed - 12000 - portfolio.TotalPortfolioValue);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(12000, portfolio.TotalMarginUsed - portfolio.TotalPortfolioValue);
+
+            var tickets = portfolio.MarginCallModel.ExecuteMarginCall(portfolio.MarginCallModel.GetMarginCallOrders(out _));
+            Assert.AreEqual(3, tickets.Count);
+            var futuresTicket = tickets.Single(ticket => ticket.SubmitRequest.GroupOrderManager == null);
+            Assert.AreEqual(-Math.Sign(quantity) * 3, futuresTicket.Quantity);
+
+            // the fill and its $1 fee leave the account within its margin requirement
+            var order = Order.CreateOrder(futuresTicket.SubmitRequest);
+            portfolio.ProcessFills(new List<OrderEvent> { new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(1, Currencies.USD)))
+                { FillPrice = 2900m, FillQuantity = order.Quantity, Status = OrderStatus.Filled } });
+            Assert.GreaterOrEqual(portfolio.MarginRemaining, 0);
+        }
+
         public enum OpenOrderKind
         {
             MarginCall,
@@ -985,6 +1086,54 @@ namespace QuantConnect.Tests.Common.Securities
             }
             portfolio.CashBook[Currencies.USD].SetAmount(cash);
             portfolio.InvalidateTotalPortfolioValue();
+
+            return portfolio;
+        }
+
+        private SecurityPortfolioManager GetFuturesPortfolio(IOrderProcessor orderProcessor, decimal cash, int quantity)
+        {
+            var portfolio = GetPortfolio(orderProcessor, 0);
+            portfolio.MarginCallModel = new DefaultMarginCallModel(portfolio, null);
+            portfolio.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
+
+            // the ES maintenance margin is $6000 per contract on this date
+            var time = new DateTime(2018, 10, 1);
+            var future = new Future(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.Future_ESZ18_Dec2018, Resolution.Minute, TimeZones.NewYork,
+                    TimeZones.NewYork, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null);
+            future.FeeModel = new ConstantFeeModel(0);
+            portfolio.Securities.Add(future);
+            future.SetMarketPrice(new Tick(time, future.Symbol, 2900m, 2900m));
+            future.Holdings.SetHoldings(2900m, quantity);
+            portfolio.CashBook[Currencies.USD].SetAmount(cash);
+            portfolio.InvalidateTotalPortfolioValue();
+
+            return portfolio;
+        }
+
+        /// <summary>
+        /// Gets a futures portfolio where one of the futures covers a short future option, so the others are a group of their own
+        /// </summary>
+        private SecurityPortfolioManager GetSharedFuturesPortfolio(IOrderProcessor orderProcessor, decimal cash, int quantity,
+            OptionRight right)
+        {
+            var portfolio = GetFuturesPortfolio(orderProcessor, cash, quantity);
+            var future = portfolio.Securities[Symbols.Future_ESZ18_Dec2018];
+            var optionSymbol = Symbol.CreateOption(future.Symbol, Market.CME, OptionStyle.American, right, 2900m, new DateTime(2018, 12, 21));
+            var option = new QuantConnect.Securities.FutureOption.FutureOption(optionSymbol, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)), portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null, new SecurityCache(), future);
+            option.FeeModel = new ConstantFeeModel(0);
+            portfolio.Securities.Add(option);
+            option.SetMarketPrice(new Tick(new DateTime(2018, 10, 1), optionSymbol, 10m, 10m));
+            option.Holdings.SetHoldings(10m, -1);
+            portfolio.InvalidateTotalPortfolioValue();
+            Assert.AreEqual(2, portfolio.Positions.Groups.Count);
 
             return portfolio;
         }
