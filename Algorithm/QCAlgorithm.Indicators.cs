@@ -18,6 +18,7 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -3630,6 +3631,18 @@ namespace QuantConnect.Algorithm
             return Enumerable.Empty<Slice>();
         }
 
+        private Tuple<Type, TickType> GetDefaultSubscriptionDataType(Symbol symbol)
+        {
+            return SubscriptionManager.LookupSubscriptionConfigDataTypes(
+                symbol.SecurityType,
+                Resolution.Daily,
+                // order by tick type so that behavior is consistent with 'GetSubscription()'
+                symbol.IsCanonical())
+                // make sure common lean data types are at the bottom
+                .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
+                .ThenBy(tuple => tuple.Item2).First();
+        }
+
         private bool AssertIndicatorHasWarmupPeriod(IIndicator indicator)
         {
             if (indicator is not IIndicatorWarmUpPeriodProvider)
@@ -3666,15 +3679,7 @@ namespace QuantConnect.Algorithm
                     var providedType = typeof(T);
                     if (providedType.IsAbstract)
                     {
-                        var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
-                            symbol.SecurityType,
-                            Resolution.Daily,
-                            // order by tick type so that behavior is consistent with 'GetSubscription()'
-                            symbol.IsCanonical())
-                            // make sure common lean data types are at the bottom
-                            .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
-                            .ThenBy(tuple => tuple.Item2).First();
-
+                        var dataType = GetDefaultSubscriptionDataType(symbol);
                         consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
                     }
                     else
@@ -4623,9 +4628,52 @@ namespace QuantConnect.Algorithm
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;
 
-            if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
+            if (dataType != null)
             {
                 history.PushThrough(bar => updateIndicator(bar), dataType);
+            }
+            else if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
+            {
+                // a slice's default value for a symbol can be a quote bar where the registered indicator consolidates trade bars,
+                // so each symbol gets the bar type registering the indicator would use: its subscription's, which prefers trades,
+                // or quotes for the contracts of an option indicator
+                var barTypeBySymbol = new Dictionary<Symbol, Type>();
+                foreach (var slice in history)
+                {
+                    foreach (var symbol in slice.Keys)
+                    {
+                        if (!barTypeBySymbol.TryGetValue(symbol, out var barType))
+                        {
+                            if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
+                            {
+                                barType = typeof(QuoteBar);
+                            }
+                            else
+                            {
+                                barType = TryGetSubscription(symbol, null, out var subscription)
+                                    ? subscription.Type
+                                    : GetDefaultSubscriptionDataType(symbol).Item1;
+                            }
+                            barTypeBySymbol[symbol] = barType;
+                        }
+
+                        if (barType == typeof(TradeBar) || barType == typeof(QuoteBar))
+                        {
+                            if (slice.TryGet(barType, symbol, out var bar))
+                            {
+                                updateIndicator((BaseData)bar);
+                            }
+                            continue;
+                        }
+
+                        if (!slice.TryGetValue(symbol, out var value))
+                        {
+                            continue;
+                        }
+                        var list = value as IList;
+                        updateIndicator((BaseData)(list != null ? list[list.Count - 1] : value));
+                    }
+                }
             }
             else
             {

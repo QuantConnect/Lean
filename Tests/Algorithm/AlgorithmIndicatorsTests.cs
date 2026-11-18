@@ -363,6 +363,66 @@ namespace QuantConnect.Tests.Algorithm
             CollectionAssert.AreEqual(expected.Select(x => x.Value), indicatorValues.Select(x => x.Current.Value));
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IndicatorHistoryUsesTradeBarsWhenSliceAlsoHasQuoteBars(bool addSecurity)
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            if (addSecurity)
+            {
+                _algorithm.AddFutureContract(symbol);
+            }
+            var slices = GetTradeAndQuoteSlices(symbol);
+
+            var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices);
+            var atr = _algorithm.IndicatorHistory(new AverageTrueRange(1), slices);
+
+            CollectionAssert.AreEqual(new[] { 100m, 101m, 102m }, sma.Current.Select(x => x.Value));
+            // the true range of each trade bar, open = high = low = close, is zero
+            CollectionAssert.AreEqual(new[] { 0m, 1m, 1m }, atr.Current.Select(x => x.Value));
+        }
+
+        [Test]
+        public void IndicatorHistoryUsesQuoteBarsWhenSelectorRequiresThem()
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            var slices = GetTradeAndQuoteSlices(symbol);
+
+            var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices, Field.BidClose);
+
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, sma.Current.Select(x => x.Value));
+        }
+
+        [Test]
+        public void IndicatorHistoryUsesQuoteBarsForQuoteOnlySecurities()
+        {
+            var symbol = _algorithm.AddForex("EURUSD").Symbol;
+            var slices = GetTradeAndQuoteSlices(symbol, includeTrades: false);
+
+            var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices);
+
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, sma.Current.Select(x => x.Value));
+        }
+
+        private static List<Slice> GetTradeAndQuoteSlices(Symbol symbol, bool includeTrades = true)
+        {
+            return Enumerable.Range(0, 3).Select(i =>
+            {
+                var time = new DateTime(2024, 1, 2, 10 + i, 0, 0);
+                var price = 200m + i;
+                var data = new List<BaseData>
+                {
+                    new QuoteBar(time, symbol, new Bar(price, price, price, price), 1, new Bar(price, price, price, price), 1, TimeSpan.FromHours(1))
+                };
+                if (includeTrades)
+                {
+                    // the trade bar comes first so that the slice's default value for the symbol is the quote bar
+                    data.Insert(0, new TradeBar(time, symbol, 100 + i, 100 + i, 100 + i, 100 + i, 10, TimeSpan.FromHours(1)));
+                }
+                return new Slice(time.AddHours(1), data, time.AddHours(1));
+            }).ToList();
+        }
+
         [Test]
         public void LeastSquaresMovingAverageWithReferenceIsWarmedUpByTheAlgorithm()
         {
