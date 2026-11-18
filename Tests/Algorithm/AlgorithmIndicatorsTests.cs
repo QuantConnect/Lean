@@ -21,6 +21,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -402,6 +403,21 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.AddFutureContract(symbol);
             var sma = new SimpleMovingAverage(1);
             _algorithm.RegisterIndicator(symbol, sma, _algorithm.ResolveConsolidator(symbol, Resolution.Hour, typeof(QuoteBar)));
+            var slices = GetTradeAndQuoteSlices(symbol, quoteBarLast: quoteBarLast);
+
+            var history = _algorithm.IndicatorHistory(sma, slices);
+
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, history.Current.Select(x => x.Value));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IndicatorHistoryUsesQuoteBarsOfIndicatorRegisteredOnQuoteTicks(bool quoteBarLast)
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            _algorithm.AddFutureContract(symbol, Resolution.Tick);
+            var sma = new SimpleMovingAverage(1);
+            _algorithm.RegisterIndicator(symbol, sma, new TickQuoteBarConsolidator(TimeSpan.FromHours(1)));
             var slices = GetTradeAndQuoteSlices(symbol, quoteBarLast: quoteBarLast);
 
             var history = _algorithm.IndicatorHistory(sma, slices);

@@ -4638,10 +4638,10 @@ namespace QuantConnect.Algorithm
             else if (dataPointInput)
             {
                 // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where the indicator
-                // consolidates trade bars, so then the symbol gets the bar type of the subscription the indicator is registered on,
-                // or else the one registering it would use: its subscription's, which prefers trades, or quotes for the contracts
-                // of an option indicator
-                var barTypeBySymbol = new Dictionary<Symbol, Type>();
+                // consolidates trades, so then the symbol gets the bar of the tick type the indicator consolidates: that of the
+                // subscription it is registered on, or else of the one registering it would use, which prefers trades, or quotes
+                // for the contracts of an option indicator
+                var tickTypeBySymbol = new Dictionary<Symbol, TickType>();
                 foreach (var slice in history)
                 {
                     new[] { slice }.PushThrough(data =>
@@ -4653,27 +4653,27 @@ namespace QuantConnect.Algorithm
                             return;
                         }
 
-                        if (!barTypeBySymbol.TryGetValue(symbol, out var barType))
+                        if (!tickTypeBySymbol.TryGetValue(symbol, out var tickType))
                         {
                             var registeredSubscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
                                 .FirstOrDefault(config => config.Consolidators.Overlaps(indicator.Consolidators));
                             if (registeredSubscription != null)
                             {
-                                barType = registeredSubscription.Type;
+                                tickType = registeredSubscription.TickType;
                             }
                             else if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
                             {
-                                barType = typeof(QuoteBar);
+                                tickType = TickType.Quote;
                             }
                             else
                             {
-                                barType = TryGetSubscription(symbol, null, out var subscription)
-                                    ? subscription.Type
-                                    : GetDefaultSubscriptionDataType(symbol).Item1;
+                                tickType = TryGetSubscription(symbol, null, out var subscription)
+                                    ? subscription.TickType
+                                    : GetDefaultSubscriptionDataType(symbol).Item2;
                             }
-                            barTypeBySymbol[symbol] = barType;
+                            tickTypeBySymbol[symbol] = tickType;
                         }
-                        updateIndicator(barType == typeof(QuoteBar) ? quoteBar : tradeBar);
+                        updateIndicator(tickType == TickType.Quote ? quoteBar : tradeBar);
                     });
                 }
             }
