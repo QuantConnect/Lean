@@ -18,7 +18,6 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -4634,14 +4633,21 @@ namespace QuantConnect.Algorithm
             }
             else if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
             {
-                // a slice's default value for a symbol can be a quote bar where the registered indicator consolidates trade bars,
-                // so each symbol gets the bar type registering the indicator would use: its subscription's, which prefers trades,
-                // or quotes for the contracts of an option indicator
+                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where the registered
+                // indicator consolidates trade bars, so then the symbol gets the bar type registering the indicator would use:
+                // its subscription's, which prefers trades, or quotes for the contracts of an option indicator
                 var barTypeBySymbol = new Dictionary<Symbol, Type>();
                 foreach (var slice in history)
                 {
-                    foreach (var symbol in slice.Keys)
+                    new[] { slice }.PushThrough(data =>
                     {
+                        var symbol = data.Symbol;
+                        if (!slice.Bars.TryGetValue(symbol, out var tradeBar) || !slice.QuoteBars.TryGetValue(symbol, out var quoteBar))
+                        {
+                            updateIndicator(data);
+                            return;
+                        }
+
                         if (!barTypeBySymbol.TryGetValue(symbol, out var barType))
                         {
                             if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
@@ -4656,23 +4662,8 @@ namespace QuantConnect.Algorithm
                             }
                             barTypeBySymbol[symbol] = barType;
                         }
-
-                        if (barType == typeof(TradeBar) || barType == typeof(QuoteBar))
-                        {
-                            if (slice.TryGet(barType, symbol, out var bar))
-                            {
-                                updateIndicator((BaseData)bar);
-                            }
-                            continue;
-                        }
-
-                        if (!slice.TryGetValue(symbol, out var value))
-                        {
-                            continue;
-                        }
-                        var list = value as IList;
-                        updateIndicator((BaseData)(list != null ? list[list.Count - 1] : value));
-                    }
+                        updateIndicator(barType == typeof(QuoteBar) ? quoteBar : tradeBar);
+                    });
                 }
             }
             else

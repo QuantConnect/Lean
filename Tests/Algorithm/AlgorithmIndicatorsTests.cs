@@ -21,6 +21,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -402,6 +403,39 @@ namespace QuantConnect.Tests.Algorithm
             var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices);
 
             CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, sma.Current.Select(x => x.Value));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void IndicatorHistoryUsesTicks(bool subscribed)
+        {
+            var symbol = subscribed ? _equity : Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var slices = Enumerable.Range(0, 3).Select(i =>
+            {
+                var time = new DateTime(2013, 10, 7, 10, 0, i);
+                var tick = new Tick(time, symbol, string.Empty, string.Empty, 10, 100 + i);
+                return new Slice(time, new List<BaseData> { tick }, time);
+            }).ToList();
+
+            var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices);
+
+            CollectionAssert.AreEqual(new[] { 100m, 101m, 102m }, sma.Current.Select(x => x.Value));
+        }
+
+        [Test]
+        public void IndicatorHistoryUsesCustomDataWithoutSubscription()
+        {
+            var symbol = Symbol.Create("CUSTOM", SecurityType.Base, Market.USA);
+            var slices = Enumerable.Range(0, 3).Select(i =>
+            {
+                var time = new DateTime(2013, 10, 7).AddDays(i);
+                var data = new UnlinkedData { Symbol = symbol, Time = time, EndTime = time.AddDays(1), Value = 100 + i };
+                return new Slice(data.EndTime, new List<BaseData> { data }, data.EndTime);
+            }).ToList();
+
+            var sma = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices);
+
+            CollectionAssert.AreEqual(new[] { 100m, 101m, 102m }, sma.Current.Select(x => x.Value));
         }
 
         private static List<Slice> GetTradeAndQuoteSlices(Symbol symbol, bool includeTrades = true)
