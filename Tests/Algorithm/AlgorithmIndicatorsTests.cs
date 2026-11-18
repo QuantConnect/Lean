@@ -395,6 +395,33 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void IndicatorHistoryKeepsQuoteBarsOfIndicatorRegisteredWithQuoteConsolidator()
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            _algorithm.AddFutureContract(symbol);
+            var sma = new SimpleMovingAverage(1);
+            _algorithm.RegisterIndicator(symbol, sma, _algorithm.ResolveConsolidator(symbol, Resolution.Hour, typeof(QuoteBar)));
+            var slices = GetTradeAndQuoteSlices(symbol);
+
+            var history = _algorithm.IndicatorHistory(sma, slices);
+
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, history.Current.Select(x => x.Value));
+        }
+
+        [Test]
+        public void IndicatorHistoryKeepsQuoteBarsForCustomQuoteSelectors()
+        {
+            var symbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2024, 3, 15));
+            var slices = GetTradeAndQuoteSlices(symbol);
+
+            var castSelector = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices, x => ((QuoteBar)x).Bid.Close);
+            var wrappedFieldSelector = _algorithm.IndicatorHistory(new SimpleMovingAverage(1), slices, x => Field.BidClose(x));
+
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, castSelector.Current.Select(x => x.Value));
+            CollectionAssert.AreEqual(new[] { 200m, 201m, 202m }, wrappedFieldSelector.Current.Select(x => x.Value));
+        }
+
+        [Test]
         public void IndicatorHistoryUsesQuoteBarsForQuoteOnlySecurities()
         {
             var symbol = _algorithm.AddForex("EURUSD").Symbol;

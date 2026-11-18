@@ -4191,8 +4191,9 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
+            var defaultSelector = selector == null;
             selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), GetDataTypeFromSelector(selector));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), defaultSelector, GetDataTypeFromSelector(selector));
         }
 
         /// <summary>
@@ -4205,8 +4206,9 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
+            var defaultSelector = selector == null;
             selector ??= GetDefaultSelector<T>();
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)), defaultSelector);
         }
 
         /// <summary>
@@ -4558,7 +4560,7 @@ namespace QuantConnect.Algorithm
             return dataNormalizationMode;
         }
 
-        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, Type dataType = null)
+        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, bool defaultSelector, Type dataType = null)
             where T : IBaseData
         {
             // Reset the indicator
@@ -4627,14 +4629,16 @@ namespace QuantConnect.Algorithm
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;
 
-            if (dataType != null)
+            var dataPointInput = typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract;
+            // a selector or a registered consolidator is the caller's choice of input, which keeps the slice's default value
+            if (dataPointInput && (!defaultSelector || indicator.Consolidators.Count > 0))
             {
                 history.PushThrough(bar => updateIndicator(bar), dataType);
             }
-            else if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
+            else if (dataPointInput)
             {
-                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where the registered
-                // indicator consolidates trade bars, so then the symbol gets the bar type registering the indicator would use:
+                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where registering
+                // the indicator would consolidate trade bars, so then the symbol gets the bar type registering it would use:
                 // its subscription's, which prefers trades, or quotes for the contracts of an option indicator
                 var barTypeBySymbol = new Dictionary<Symbol, Type>();
                 foreach (var slice in history)
