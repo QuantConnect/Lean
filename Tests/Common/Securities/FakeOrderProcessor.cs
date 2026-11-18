@@ -32,6 +32,18 @@ namespace QuantConnect.Tests.Common.Securities
         public ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests { get; init; } = new ConcurrentDictionary<int, OrderRequest>();
 
         public SecurityTransactionManager TransactionManager { get; set; }
+
+        /// <summary>
+        /// Whether a submitted order, given the requests of all its legs, is rejected with <see cref="RejectedOrderStatus"/>.
+        /// Combo orders are checked once all their legs are submitted
+        /// </summary>
+        public Func<List<SubmitOrderRequest>, bool> RejectsOrder { get; set; } = _ => false;
+
+        /// <summary>
+        /// The status of the rejected orders, invalid by default
+        /// </summary>
+        public OrderStatus RejectedOrderStatus { get; init; } = OrderStatus.Invalid;
+
         public void AddOrder(Order order)
         {
             _orders[order.Id] = order;
@@ -88,8 +100,23 @@ namespace QuantConnect.Tests.Common.Securities
             switch (request.OrderRequestType)
             {
                 case OrderRequestType.Submit:
-                    ticket = new OrderTicket(TransactionManager, (SubmitOrderRequest) request);
+                    var submitRequest = (SubmitOrderRequest)request;
+                    ticket = new OrderTicket(TransactionManager, submitRequest);
                     AddTicket(ticket);
+                    var legTickets = submitRequest.GroupOrderManager == null
+                        ? new List<OrderTicket> { ticket }
+                        : _tickets.Values.Where(x => x.SubmitRequest?.GroupOrderManager == submitRequest.GroupOrderManager).ToList();
+                    if (legTickets.Count == (submitRequest.GroupOrderManager?.Count ?? 1)
+                        && RejectsOrder(legTickets.Select(x => x.SubmitRequest).ToList()))
+                    {
+                        foreach (var legTicket in legTickets)
+                        {
+                            var order = Order.CreateOrder(legTicket.SubmitRequest);
+                            order.Status = RejectedOrderStatus;
+                            AddOrder(order);
+                            legTicket.SetOrder(order);
+                        }
+                    }
                     return ticket;
                 case OrderRequestType.Cancel:
                     ticket = GetOrderTicket(request.OrderId);
