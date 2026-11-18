@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Applies universe selection the the data feed and algorithm
+        /// Applies universe selection to the data feed and algorithm
         /// </summary>
         /// <param name="universe">The universe to perform selection on</param>
         /// <param name="dateTimeUtc">The current date time in utc</param>

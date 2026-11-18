@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace QuantConnect.Scheduling
 {
     /// <summary>
-    /// Specifies times times on dates for events, used in conjunction with <see cref="IDateRule"/>
+    /// Specifies times on dates for events, used in conjunction with <see cref="IDateRule"/>
     /// </summary>
     public interface ITimeRule
     {

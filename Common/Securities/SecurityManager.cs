@@ -196,7 +196,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Remove a key value of of symbol-securities from the collections.
+        /// Remove a key value of symbol-securities from the collections.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <param name="pair">Key Value pair of symbol-security to remove</param>

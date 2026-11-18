@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             // Unit test to prove that in the event that default resolution (minute) history request returns
             // no data for our currency conversion that BaseSetupHandler will use a daily history request
-            // to determine the the conversion rate if possible.
+            // to determine the conversion rate if possible.
 
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();
@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Engine.Setup
         {
             // Unit test to prove that in the event that default resolution (minute) history request returns
             // no data for our currency conversion that BaseSetupHandler will use a daily history request
-            // to determine the the conversion rate if possible.
+            // to determine the conversion rate if possible.
 
             // Setup history provider and algorithm
             var historyProvider = new SubscriptionDataReaderHistoryProvider();

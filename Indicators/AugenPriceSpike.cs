@@ -81,7 +81,7 @@ namespace QuantConnect.Indicators
         /// Computes the next value for this indicator from the given state.
         /// </summary>
         /// <param name="input">The input value to this indicator on this time step</param>
-        /// <returns>A a value for this indicator</returns>
+        /// <returns>A value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             _rollingData.Add(input.Value);

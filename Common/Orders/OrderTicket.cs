@@ -599,7 +599,7 @@ namespace QuantConnect.Orders
         /// This method is thread safe.
         /// </remarks>
         /// <param name="request">The <see cref="CancelOrderRequest"/> that canceled this ticket.</param>
-        /// <returns>False if the the CancelRequest has already been set, true if this call set it</returns>
+        /// <returns>False if the CancelRequest has already been set, true if this call set it</returns>
         internal bool TrySetCancelRequest(CancelOrderRequest request)
         {
             if (request.OrderId != OrderId)

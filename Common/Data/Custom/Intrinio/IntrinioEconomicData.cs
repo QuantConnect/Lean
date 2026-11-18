@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Custom.Intrinio
         {
             _dataTransformation = dataTransformation;
 
-            // If the user and the password is not set then then throw error.
+            // If the user and the password is not set then throw error.
             if (!IntrinioConfig.IsInitialized)
             {
                 throw new

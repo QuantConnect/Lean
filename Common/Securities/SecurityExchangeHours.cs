@@ -605,7 +605,7 @@ namespace QuantConnect.Securities
             }
 
             // It could be the case we have a late open after an early close (the market resumes after the early close), in that case, we should take
-            // the segments before the early close and the the segments after the late opens and append them. Therefore, if that's not the case, this is,
+            // the segments before the early close and the segments after the late opens and append them. Therefore, if that's not the case, this is,
             // if there was an early close but there is not a late open or it's before the early close, we need to update the variable marketHours with
             // the value of newMarketHours, so that it contains the segments before the early close
             if (segmentsEarlyClose != null && (!hasLateOpen || earlyCloseTime > lateOpenTime))

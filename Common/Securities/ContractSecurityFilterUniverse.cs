@@ -492,7 +492,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Explicitly sets the selected contract symbols for this universe.
-        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// This overrides any and all other methods of selecting symbols assuming it is called last.
         /// </summary>
         /// <param name="contracts">The option contract symbol objects to select</param>
         /// <returns>Universe with filter applied</returns>
@@ -510,7 +510,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Explicitly sets the selected contract symbols for this universe.
-        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// This overrides any and all other methods of selecting symbols assuming it is called last.
         /// </summary>
         /// <param name="contracts">The option contract symbol objects to select</param>
         /// <returns>Universe with filter applied</returns>
@@ -522,7 +522,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Explicitly sets the selected contract symbols for this universe.
-        /// This overrides and and all other methods of selecting symbols assuming it is called last.
+        /// This overrides any and all other methods of selecting symbols assuming it is called last.
         /// </summary>
         /// <param name="contracts">The option contract symbol objects to select</param>
         /// <returns>Universe with filter applied</returns>

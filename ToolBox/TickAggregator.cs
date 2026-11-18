@@ -9,7 +9,7 @@ using QuantConnect.Util;
 namespace QuantConnect.ToolBox
 {
     /// <summary>
-    /// Class that uses consolidators to aggregate tick data data
+    /// Class that uses consolidators to aggregate tick data
     /// </summary>
     public abstract class TickAggregator
     {
