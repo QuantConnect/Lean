@@ -379,12 +379,12 @@ namespace QuantConnect.Statistics
 
                         trade.ExitTime = fill.UtcTime;
                         trade.ExitPrice = fill.FillPrice;
-                        trade.ProfitLoss = (exitValue - entryValue) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier;
+                        trade.ProfitLoss = ((exitValue - entryValue) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier).SmartRounding();
                         // if closing multiple trades with the same order, assign order fee only once
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
-                        trade.MAE = (trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * trade.Quantity * conversionRate * multiplier;
-                        trade.MFE = (trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * trade.Quantity * conversionRate * multiplier;
-                        trade.EndTradeDrawdown = tradeState.MaxDrawdown * trade.Quantity * conversionRate * multiplier;
+                        trade.MAE = ((trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * trade.Quantity * conversionRate * multiplier).SmartRounding();
+                        trade.MFE = ((trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * trade.Quantity * conversionRate * multiplier).SmartRounding();
+                        trade.EndTradeDrawdown = (tradeState.MaxDrawdown * trade.Quantity * conversionRate * multiplier).SmartRounding();
 
                         AddNewTrade(trade, fill);
                     }
@@ -402,11 +402,11 @@ namespace QuantConnect.Statistics
                             Quantity = absoluteUnexecutedQuantity,
                             ExitTime = fill.UtcTime,
                             ExitPrice = fill.FillPrice,
-                            ProfitLoss = (exitValue - entryValue) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier,
+                            ProfitLoss = ((exitValue - entryValue) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier).SmartRounding(),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = (trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * absoluteUnexecutedQuantity * conversionRate * multiplier,
-                            MFE = (trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * absoluteUnexecutedQuantity * conversionRate * multiplier,
-                            EndTradeDrawdown = tradeState.MaxDrawdown * absoluteUnexecutedQuantity * conversionRate * multiplier,
+                            MAE = ((trade.Direction == TradeDirection.Long ? minValue - entryValue : entryValue - maxValue) * absoluteUnexecutedQuantity * conversionRate * multiplier).SmartRounding(),
+                            MFE = ((trade.Direction == TradeDirection.Long ? maxValue - entryValue : entryValue - minValue) * absoluteUnexecutedQuantity * conversionRate * multiplier).SmartRounding(),
+                            EndTradeDrawdown = (tradeState.MaxDrawdown * absoluteUnexecutedQuantity * conversionRate * multiplier).SmartRounding(),
                             OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId])
                         };
 
@@ -528,7 +528,7 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = (exitAverageValue - entryAverageValue) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier,
+                        ProfitLoss = ((exitAverageValue - entryAverageValue) * Math.Abs(totalEntryQuantity) * Math.Sign(totalEntryQuantity) * conversionRate * multiplier).SmartRounding(),
                         TotalFees = position.TotalFees,
                         OrderIds = relatedOrderIds
                         // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
@@ -638,7 +638,7 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = fill.UtcTime,
                     ExitPrice = fill.FillPrice,
-                    ProfitLoss = (GetProfitPrice(fill.Symbol, fill.FillPrice) - entryValue) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier,
+                    ProfitLoss = ((GetProfitPrice(fill.Symbol, fill.FillPrice) - entryValue) * Math.Abs(totalExecutedQuantity) * Math.Sign(-totalExecutedQuantity) * conversionRate * multiplier).SmartRounding(),
                     TotalFees = position.TotalFees,
                     OrderIds = relatedOrderIds
 
