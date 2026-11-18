@@ -289,6 +289,37 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
+        private static IEnumerable<TestCaseData> CrossZeroSecondPartOrderTypeParameters
+        {
+            get
+            {
+                var time = new DateTime(2024, 6, 10);
+                foreach (var quantity in new[] { -20m, 20m })
+                {
+                    yield return new TestCaseData(new MarketOrder(Symbols.AAPL, quantity, time), OrderType.Market);
+                    yield return new TestCaseData(new LimitOrder(Symbols.AAPL, quantity, 180m, time), OrderType.Limit);
+                    yield return new TestCaseData(new StopMarketOrder(Symbols.AAPL, quantity, 180m, time), OrderType.Market);
+                    yield return new TestCaseData(new StopLimitOrder(Symbols.AAPL, quantity, 180m, 180m, time), OrderType.Limit);
+                    yield return new TestCaseData(new TrailingStopOrder(Symbols.AAPL, quantity, 180m, 5m, false, time), OrderType.Market);
+                    yield return new TestCaseData(new TrailingStopOrder(Symbols.AAPL, quantity, 180m, 0.01m, true, time), OrderType.Market);
+                }
+            }
+        }
+
+        [Test, TestCaseSource(nameof(CrossZeroSecondPartOrderTypeParameters))]
+        public void CrossZeroSecondPartOrderTypeDoesNotWaitForAnotherTrigger(Order leanOrder, OrderType expectedSecondPartOrderType)
+        {
+            var holdingQuantity = -leanOrder.Quantity / 2;
+            var openingPosition = leanOrder.Direction == OrderDirection.Sell ? OrderPosition.SellToOpen : OrderPosition.BuyToOpen;
+            var closingPosition = leanOrder.Direction == OrderDirection.Sell ? OrderPosition.SellToClose : OrderPosition.BuyToClose;
+
+            var firstPart = new CrossZeroFirstOrderRequest(leanOrder, leanOrder.Type, -holdingQuantity, holdingQuantity, closingPosition);
+            var secondPart = new CrossZeroSecondOrderRequest(leanOrder, leanOrder.Type, leanOrder.Quantity + holdingQuantity, 0m, openingPosition, firstPart);
+
+            Assert.AreEqual(leanOrder.Type, firstPart.OrderType);
+            Assert.AreEqual(expectedSecondPartOrderType, secondPart.OrderType);
+        }
+
         /// <summary>
         /// Create instance of Phony brokerage.
         /// </summary>
