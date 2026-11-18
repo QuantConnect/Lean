@@ -528,7 +528,8 @@ namespace QuantConnect.Statistics
                         Quantity = Math.Abs(totalEntryQuantity),
                         ExitTime = fill.UtcTime,
                         ExitPrice = exitAveragePrice,
-                        ProfitLoss = ((exitTotalValue / totalExitQuantity - entryTotalValue / totalEntryQuantity) * totalEntryQuantity * conversionRate * multiplier).SmartRounding(),
+                        ProfitLoss = RoundAveragedProfitLoss((exitTotalValue / totalExitQuantity - entryTotalValue / totalEntryQuantity) * totalEntryQuantity,
+                            entryTotalValue, conversionRate * multiplier),
                         TotalFees = position.TotalFees,
                         OrderIds = relatedOrderIds
                         // MAE, MFE, EndTradeDrawdown are zero for FlatToFlat grouping method.
@@ -638,7 +639,8 @@ namespace QuantConnect.Statistics
                     Quantity = Math.Abs(totalExecutedQuantity),
                     ExitTime = fill.UtcTime,
                     ExitPrice = fill.FillPrice,
-                    ProfitLoss = ((-GetProfitPrice(fill.Symbol, fill.FillPrice) * totalExecutedQuantity - entryTotalValue) * conversionRate * multiplier).SmartRounding(),
+                    ProfitLoss = RoundAveragedProfitLoss(-GetProfitPrice(fill.Symbol, fill.FillPrice) * totalExecutedQuantity - entryTotalValue,
+                        entryTotalValue, conversionRate * multiplier),
                     TotalFees = position.TotalFees,
                     OrderIds = relatedOrderIds
 
@@ -665,6 +667,20 @@ namespace QuantConnect.Statistics
                         position.TotalFees = 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Rounds the profit of a trade grouping several fills, dropping the residue that a breakeven trade keeps
+        /// when its fill values aren't exact decimals, such as an inverse contract's reciprocal prices
+        /// </summary>
+        private static decimal RoundAveragedProfitLoss(decimal profit, decimal entryTotalValue, decimal accountCurrencyScale)
+        {
+            // relative to the trade's size, so that small but real profits, such as in a BTC account, are kept
+            if (Math.Abs(profit) < Math.Abs(entryTotalValue) * 1e-20m)
+            {
+                return 0;
+            }
+            return (profit * accountCurrencyScale).SmartRounding();
         }
 
         private decimal GetProfitPrice(Symbol symbol, decimal price)

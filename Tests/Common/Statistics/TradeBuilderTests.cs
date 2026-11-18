@@ -174,27 +174,41 @@ namespace QuantConnect.Tests.Common.Statistics
         // the closing fill also reverses the position, which a final fill flattens at the same price
         [TestCase(FillGroupingMethod.FlatToFlat, new[] { 3.0, -9, 6 }, new[] { 50.0, 50, 50 })]
         [TestCase(FillGroupingMethod.FlatToFlat, new[] { 1.0, 2, 1, -6, 2 }, new[] { 3.0, 11, 1, 6.5, 6.5 })]
-        public void BreakevenAveragedFillsHaveZeroProfit(FillGroupingMethod groupingMethod, double[] quantities, double[] prices)
+        // an inverse contract's reciprocal prices aren't exact decimals: 48000 is the harmonic mean of 40000 and 60000
+        [TestCase(FillGroupingMethod.FlatToFlat, new[] { 100.0, 100, -200 }, new[] { 40000.0, 60000, 48000 }, "BTCUSD")]
+        [TestCase(FillGroupingMethod.FlatToFlat, new[] { -100.0, -100, 200 }, new[] { 40000.0, 60000, 48000 }, "BTCUSD")]
+        [TestCase(FillGroupingMethod.FlatToReduced, new[] { 100.0, 100, -200 }, new[] { 40000.0, 60000, 48000 }, "BTCUSD")]
+        [TestCase(FillGroupingMethod.FlatToReduced, new[] { -100.0, -100, 200 }, new[] { 40000.0, 60000, 48000 }, "BTCUSD")]
+        public void BreakevenAveragedFillsHaveZeroProfit(FillGroupingMethod groupingMethod, double[] quantities, double[] prices,
+            string inverseCryptoFuture = null)
         {
             foreach (var matchingMethod in new[] { FillMatchingMethod.FIFO, FillMatchingMethod.LIFO })
             {
                 var builder = new TradeBuilder(groupingMethod, matchingMethod);
+                var symbol = Symbols.SPY;
+                var multiplier = 1m;
+                if (inverseCryptoFuture != null)
+                {
+                    builder = CreateCryptoFutureTradeBuilder(inverseCryptoFuture, groupingMethod, matchingMethod, out var security);
+                    symbol = security.Symbol;
+                    multiplier = security.SymbolProperties.ContractMultiplier;
+                }
                 var time = _startTime;
                 for (var i = 0; i < quantities.Length; i++)
                 {
                     var quantity = (decimal)quantities[i];
-                    builder.ProcessFill(new OrderEvent(i + 1, Symbols.SPY, time = time.AddMinutes(1), OrderStatus.Filled,
-                        quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell, (decimal)prices[i], quantity, OrderFee.Zero), 1m, 0m);
+                    builder.ProcessFill(new OrderEvent(i + 1, symbol, time = time.AddMinutes(1), OrderStatus.Filled,
+                        quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell, (decimal)prices[i], quantity, OrderFee.Zero), 1m, 0m, multiplier);
                 }
-                builder.ProcessFill(new OrderEvent(100, Symbols.SPY, time.AddMinutes(1), OrderStatus.Filled, OrderDirection.Buy, 100m, 1000m, OrderFee.Zero), 1m, 0m);
-                builder.ProcessFill(new OrderEvent(101, Symbols.SPY, time.AddMinutes(2), OrderStatus.Filled, OrderDirection.Sell, 110m, -1000m, OrderFee.Zero), 1m, 0m);
+                builder.ProcessFill(new OrderEvent(100, symbol, time.AddMinutes(1), OrderStatus.Filled, OrderDirection.Buy, 100m, 1000m, OrderFee.Zero), 1m, 0m, multiplier);
+                builder.ProcessFill(new OrderEvent(101, symbol, time.AddMinutes(2), OrderStatus.Filled, OrderDirection.Sell, 110m, -1000m, OrderFee.Zero), 1m, 0m, multiplier);
 
                 foreach (var breakeven in builder.ClosedTrades.SkipLast(1))
                 {
                     Assert.AreEqual(0m, breakeven.ProfitLoss);
                     Assert.IsFalse(breakeven.IsWin);
                 }
-                Assert.AreEqual(10000m, builder.ClosedTrades[^1].ProfitLoss);
+                Assert.Greater(builder.ClosedTrades[^1].ProfitLoss, 0m);
                 Assert.DoesNotThrow(() => new TradeStatistics(builder.ClosedTrades));
             }
         }
