@@ -254,7 +254,7 @@ Also worth mentioning here is that **ALL** derived types will have to provide im
 
 ### SecurityPositionGroupBuyingPowerModel
 
-Provides an implementation of `IPositionGroupBuyingPowerModel` that delegates to `security.BuyingPowerModel`. This model is intended to be used with the 'default' group and its aim is to provide 100% backwards compatible behavior. Below are the overriden methods with a _very_ brief comment describing how the delegating to the security's models happens. It's important to note here that `IPositionGroup.Quantity` is, from the security's perspective, a number of lots. In our 5 covered call example, there's 5 lots of (-1 GOOG CALL & 100 GOOG) for a total of -5 GOOG CALL & 500 GOOG shares. This is a position group quantity of 5. There are 5 lots of the GOOG equity and 5 lots of -1 GOOG CALL.
+Provides an implementation of `IPositionGroupBuyingPowerModel` that delegates to `security.BuyingPowerModel`. This model is intended to be used with the 'default' group and its aim is to provide 100% backwards compatible behavior. Below are the overridden methods with a _very_ brief comment describing how the delegating to the security's models happens. It's important to note here that `IPositionGroup.Quantity` is, from the security's perspective, a number of lots. In our 5 covered call example, there's 5 lots of (-1 GOOG CALL & 100 GOOG) for a total of -5 GOOG CALL & 500 GOOG shares. This is a position group quantity of 5. There are 5 lots of the GOOG equity and 5 lots of -1 GOOG CALL.
 
 ``` csharp
 // See: https://github.com/QuantConnect/Lean/blob/refactor-4065-position-groups/Common/Securities/Positions/SecurityPositionGroupBuyingPowerModel.cs
