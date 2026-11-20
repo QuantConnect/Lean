@@ -534,6 +534,84 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
+        public void RestoredEquityUsesTheCurrentTickerWhenTheAlgorithmTimeIsHistorical()
+        {
+            // a live algorithm warming up: its time is before GOOGL's ticker change
+            var algorithm = GetAlgorithm(liveMode: true, utcTime: new DateTime(2013, 1, 2, 15, 0, 0));
+            var googl = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            var currentGoog = algorithm.AddEquity("GOOG").Symbol;
+            Assert.AreNotEqual(googl.ID, currentGoog.ID);
+
+            Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(new Symbol(googl.ID, "GOOG"), out var security));
+
+            Assert.AreEqual(googl.ID, security.Symbol.ID);
+            Assert.AreEqual("GOOGL", security.Symbol.Value);
+            Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
+        }
+
+        [Test]
+        public void RestoredEquityUsesTheExchangeDateWhenTheAlgorithmTimeZoneIsBehind()
+        {
+            // April 3 in New York, when GOOCV became GOOG, but still April 2 in Los Angeles
+            var algorithm = GetAlgorithm(liveMode: false, utcTime: new DateTime(2014, 4, 3, 5, 0, 0), timeZone: "America/Los_Angeles");
+            var goog = Symbol.Create("GOOG", SecurityType.Equity, Market.USA);
+
+            Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(new Symbol(goog.ID, "GOOG"), out var security));
+
+            Assert.AreEqual(goog.ID, security.Symbol.ID);
+            Assert.AreEqual("GOOG", security.Symbol.Value);
+            Assert.AreEqual(goog.ID, SymbolCache.GetSymbol("GOOG").ID);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void RestoredEquityWithAnEndedMapFileKeepsItsTickerOffTheCurrentOwner(bool tickerRequestedBefore)
+        {
+            var algorithm = GetAlgorithm(liveMode: true, utcTime: DateTime.UtcNow);
+            var currentFb = Symbol.Create("FB", SecurityType.Equity, Market.USA);
+            if (tickerRequestedBefore)
+            {
+                Assert.AreEqual(currentFb.ID, algorithm.AddEquity("FB").Symbol.ID);
+            }
+            // this FB's map file ends in 2003
+            var oldFb = new Symbol(SecurityIdentifier.GenerateEquity(new DateTime(1999, 9, 29), "FB", Market.USA), "FB");
+            Assert.AreNotEqual(currentFb.ID, oldFb.ID);
+
+            Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(oldFb, out var security));
+
+            Assert.AreEqual(oldFb.ID, security.Symbol.ID);
+            Assert.AreEqual(currentFb.ID, algorithm.AddEquity("FB").Symbol.ID);
+        }
+
+        [Test]
+        public void RestoredEquityResolvesByItsTicker()
+        {
+            var algorithm = GetAlgorithm(liveMode: true, utcTime: DateTime.UtcNow);
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+
+            Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(new Symbol(aapl.ID, "AAPL"), out var security));
+            security.Holdings.SetHoldings(10, 100);
+
+            Assert.AreEqual(aapl, SymbolCache.GetSymbol("AAPL"));
+            Assert.AreEqual(100, algorithm.Portfolio["AAPL"].Quantity);
+            Assert.AreEqual(aapl, algorithm.AddEquity("AAPL").Symbol);
+        }
+
+        private static QCAlgorithm GetAlgorithm(bool liveMode, DateTime utcTime, string timeZone = null)
+        {
+            SymbolCache.Clear();
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(liveMode);
+            if (timeZone != null)
+            {
+                algorithm.SetTimeZone(timeZone);
+            }
+            algorithm.SetDateTime(utcTime);
+            return algorithm;
+        }
+
+        [Test]
         public void SeedsSecurityCorrectly()
         {
             var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
