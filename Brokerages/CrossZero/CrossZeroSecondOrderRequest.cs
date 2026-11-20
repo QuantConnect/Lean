@@ -48,13 +48,13 @@ namespace QuantConnect.Brokerages.CrossZero
         /// </summary>
         /// <param name="orderType">The original order type to be converted.</param>
         /// <returns>
-        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
+        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/> or <see cref="OrderType.TrailingStop"/>,
         /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
         /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
         /// </returns>
         private static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
         {
-            OrderType.StopMarket => OrderType.Market,
+            OrderType.StopMarket or OrderType.TrailingStop => OrderType.Market,
             OrderType.StopLimit => OrderType.Limit,
             _ => orderType
         };
