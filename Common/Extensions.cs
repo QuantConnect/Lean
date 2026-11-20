@@ -4285,8 +4285,9 @@ namespace QuantConnect
                 }
                 else
                 {
-                    // for items not directly requested set leverage to 1 and at the min resolution
-                    security = algorithm.AddSecurity(symbol.SecurityType, symbol.Value, resolution, symbol.ID.Market, fillForward, leverage, extendedHours);
+                    // add by symbol, not by ticker: the ticker can be outdated, such as a deserialized symbol's first ticker,
+                    // and resolving it today could land on a different security than the security identifier
+                    security = algorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedHours);
                 }
             }
             return true;

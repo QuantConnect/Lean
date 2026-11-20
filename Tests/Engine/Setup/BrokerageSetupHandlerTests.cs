@@ -484,6 +484,51 @@ namespace QuantConnect.Tests.Engine.Setup
         }
 
         [Test]
+        public void LoadsHoldingsForTheSecurityIdentifierWhenTheTickerIsOutdated()
+        {
+            // GOOGL's first ticker is GOOG, which today belongs to a different security
+            var googl = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            var holdingSymbol = new Symbol(googl.ID, googl.ID.Symbol);
+            var currentGoog = Symbol.Create(holdingSymbol.Value, SecurityType.Equity, Market.USA);
+            Assert.AreEqual("GOOG", holdingSymbol.Value);
+            Assert.AreNotEqual(googl.ID, currentGoog.ID);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                new Holding { Symbol = holdingSymbol, Quantity = 100, AveragePrice = 10 }
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(googl, out var security));
+            Assert.AreEqual(googl.ID, security.Symbol.ID);
+            Assert.AreEqual(100, security.Holdings.Quantity);
+            Assert.IsFalse(algorithm.Portfolio.Securities.ContainsKey(currentGoog));
+        }
+
+        [Test]
         public void SeedsSecurityCorrectly()
         {
             var symbol = Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda);
