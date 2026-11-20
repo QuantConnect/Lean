@@ -4273,6 +4273,17 @@ namespace QuantConnect
 
                 Log.Trace("GetOrAddUnrequestedSecurity(): Adding unrequested security: " + symbol.Value);
 
+                if (symbol.SecurityType == SecurityType.Option)
+                {
+                    // the underlying's ticker can be outdated, such as a deserialized symbol's first ticker, and adding it would
+                    // make that ticker resolve to the underlying instead of the security trading under it today
+                    var currentTicker = SecurityIdentifier.Ticker(symbol.Underlying, algorithm.Time);
+                    if (!string.IsNullOrEmpty(currentTicker) && currentTicker != symbol.Underlying.Value)
+                    {
+                        symbol = symbol.UpdateMappedSymbol(currentTicker);
+                    }
+                }
+
                 if (symbol.SecurityType.IsOption())
                 {
                     // add current option contract to the system
