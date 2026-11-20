@@ -41,6 +41,7 @@ using QuantConnect.Configuration;
 using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom.IconicTypes;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -595,6 +596,20 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(aapl, SymbolCache.GetSymbol("AAPL"));
             Assert.AreEqual(100, algorithm.Portfolio["AAPL"].Quantity);
             Assert.AreEqual(aapl, algorithm.AddEquity("AAPL").Symbol);
+        }
+
+        [Test]
+        public void RestoredEquityResolvesByItsTickerWhenTheTickerHasCustomData()
+        {
+            var algorithm = GetAlgorithm(liveMode: true, utcTime: DateTime.UtcNow);
+            algorithm.AddData<UnlinkedData>("AAPL");
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+
+            Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(new Symbol(aapl.ID, "AAPL"), out var security));
+            security.Holdings.SetHoldings(10, 100);
+
+            Assert.AreEqual(aapl, SymbolCache.GetSymbol("AAPL"));
+            Assert.AreEqual(100, algorithm.Portfolio["AAPL"].Quantity);
         }
 
         private static QCAlgorithm GetAlgorithm(bool liveMode, DateTime utcTime, string timeZone = null)

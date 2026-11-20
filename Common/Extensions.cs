@@ -4317,6 +4317,11 @@ namespace QuantConnect
             }
 
             SymbolCache.TryGetSymbol(symbol.Value, out var previous);
+            if (previous != null && (previous.SecurityType != symbol.SecurityType || previous.ID.Market != symbol.ID.Market))
+            {
+                // like adding the ticker does, a cached symbol of another security type or market, such as custom data, doesn't keep it
+                previous = null;
+            }
             var security = algorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedHours);
 
             if (previous != null && previous.ID != symbol.ID)
