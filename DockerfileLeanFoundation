@@ -334,7 +334,10 @@ RUN conda install -c nvidia -y cuda-compiler=12.8.1 && conda clean -y --all
 ENV MKL_THREADING_LAYER=GNU
 ENV CUDA_MODULE_LOADING=LAZY
 ENV XLA_FLAGS=--xla_gpu_cuda_data_dir=/opt/miniconda3/
-ENV LD_LIBRARY_PATH=/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:$LD_LIBRARY_PATH
+# conda's OpenSSL first: .NET loads libssl/libcrypto by soname before python, and conda extensions then bind to that same copy,
+# which must be conda's. Only these two are linked so every other library keeps resolving as before
+RUN mkdir -p /opt/conda-openssl/lib && ln -s /opt/miniconda3/lib/libssl.so.3 /opt/miniconda3/lib/libcrypto.so.3 /opt/conda-openssl/lib/
+ENV LD_LIBRARY_PATH=/opt/conda-openssl/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/nvjitlink/lib/:/opt/miniconda3/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib/:$LD_LIBRARY_PATH
 # reduces GPU memory usage
 ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
