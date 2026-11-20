@@ -384,6 +384,43 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
+        [Test]
+        public void CancelRequestedWhileSecondPartIsSubmittedAndAcknowledgedAfterCancelsTheSecondPart()
+        {
+            var leanOrder = new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10));
+            using var autoResetEventSecondPartCanceled = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder.Symbol.Value, 180m, 10));
+            brokerage.CancelAcknowledgementDelay = TimeSpan.FromMilliseconds(100);
+
+            // The algorithm requests the cancel while the second part is being placed: it targets the filled first part,
+            // waits for the placement to return and is acknowledged after it
+            var cancelTask = default(Task<bool>);
+            brokerage.PlacingCrossZeroSecondPart = () =>
+            {
+                var order = brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single();
+                cancelTask = Task.Run(() => brokerage.CancelOrder(order));
+                Assert.IsFalse(cancelTask.Wait(TimeSpan.FromMilliseconds(100)));
+            };
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                if (orderEvents[0].Status == OrderStatus.Canceled && brokerage.CanceledBrokerageOrderIds.Count == 2)
+                {
+                    autoResetEventSecondPartCanceled.Set();
+                }
+            };
+
+            Assert.IsTrue(brokerage.PlaceOrder(leanOrder));
+
+            brokerage.FillOpenOrders();
+            Assert.IsTrue(autoResetEventSecondPartCanceled.WaitOne(TimeSpan.FromSeconds(5)));
+            Assert.IsTrue(cancelTask.Result);
+
+            CollectionAssert.AreEqual(brokerage.PlacedBrokerageOrderIds, brokerage.CanceledBrokerageOrderIds);
+            Assert.AreEqual(OrderStatus.Canceled, brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single().Status);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
         /// <summary>
         /// Create instance of Phony brokerage.
         /// </summary>
@@ -494,6 +531,16 @@ namespace QuantConnect.Tests.Brokerages
             /// </summary>
             public List<string> CanceledBrokerageOrderIds { get; } = new();
 
+            /// <summary>
+            /// How long a cancel waits, once it holds the placement lock, before the brokerage acknowledges it.
+            /// </summary>
+            public TimeSpan CancelAcknowledgementDelay { get; set; }
+
+            /// <summary>
+            /// Held while an order is placed or canceled, the way a brokerage serializes its requests with its order updates stream.
+            /// </summary>
+            private readonly object _placementLock = new();
+
             public override bool IsConnected => true;
 
             public PhonyBrokerage(string name, IAlgorithm algorithm) : base(name)
@@ -539,8 +586,14 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool CancelOrder(Order order)
             {
-                CanceledBrokerageOrderIds.Add(order.BrokerId.Last());
-                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                // The cancel targets the brokerage order id it reads before waiting for the placement lock
+                var brokerageOrderId = order.BrokerId.Last();
+                lock (_placementLock)
+                {
+                    CanceledBrokerageOrderIds.Add(brokerageOrderId);
+                    Thread.Sleep(CancelAcknowledgementDelay);
+                    OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                }
                 return true;
             }
 
@@ -617,14 +670,18 @@ namespace QuantConnect.Tests.Brokerages
                     crossZeroOrderRequest.LeanOrder.Direction, 0m, crossZeroOrderRequest.OrderType);
 
                 // Step 2: Place the order request, paying attention to the flag 'isPlaceOrderWithoutLeanEvent'
-                var response = PlaceOrderPhonyBrokerage(crossZeroOrderRequest.LeanOrder, isPlaceOrderWithoutLeanEvent, brokeragePhonyParameterRequest);
-                if (response.IsOrderPlacedSuccessfully)
+                PhonyPlaceOrderResponse response;
+                lock (_placementLock)
                 {
-                    PlacedBrokerageOrderIds.Add(response.OrderId);
-                }
-                if (!isPlaceOrderWithoutLeanEvent)
-                {
-                    PlacingCrossZeroSecondPart?.Invoke();
+                    response = PlaceOrderPhonyBrokerage(crossZeroOrderRequest.LeanOrder, isPlaceOrderWithoutLeanEvent, brokeragePhonyParameterRequest);
+                    if (response.IsOrderPlacedSuccessfully)
+                    {
+                        PlacedBrokerageOrderIds.Add(response.OrderId);
+                    }
+                    if (!isPlaceOrderWithoutLeanEvent)
+                    {
+                        PlacingCrossZeroSecondPart?.Invoke();
+                    }
                 }
 
                 // Step 3: Return the result of placing the order
