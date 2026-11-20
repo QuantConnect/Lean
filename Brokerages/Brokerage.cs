@@ -167,6 +167,14 @@ namespace QuantConnect.Brokerages
         /// <param name="orderEvents">The list of order events</param>
         protected virtual void OnOrderEvents(List<OrderEvent> orderEvents)
         {
+            foreach (var orderEvent in orderEvents)
+            {
+                if (orderEvent.Status is OrderStatus.Canceled or OrderStatus.Invalid)
+                {
+                    _isClosedByQueuedCrossZeroLeanOrderId.TryUpdate(orderEvent.OrderId, true, false);
+                }
+            }
+
             try
             {
                 OrdersStatusChanged?.Invoke(this, orderEvents);
@@ -708,6 +716,12 @@ namespace QuantConnect.Brokerages
         private readonly ConcurrentDictionary<int, CrossZeroSecondOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
 
         /// <summary>
+        /// The Lean order ids whose cross-zero second part is queued for submission, mapped to whether a canceled or invalid
+        /// event closed the Lean order meanwhile, in which case the second part must not keep working at the brokerage.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, bool> _isClosedByQueuedCrossZeroLeanOrderId = new();
+
+        /// <summary>
         /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
         /// ensuring thread safety when accessing the order collection.
         /// </summary>
@@ -915,6 +929,7 @@ namespace QuantConnect.Brokerages
                         return false;
                 }
 
+                _isClosedByQueuedCrossZeroLeanOrderId[leanOrder.Id] = false;
                 OnOrderEvent(orderEvent);
 
                 Task.Run(() =>
@@ -925,6 +940,12 @@ namespace QuantConnect.Brokerages
                         var response = default(CrossZeroOrderResponse);
                         lock (_lockCrossZeroObject)
                         {
+                            if (_isClosedByQueuedCrossZeroLeanOrderId.TryRemove(new KeyValuePair<int, bool>(leanOrder.Id, true)))
+                            {
+                                Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Skip the second part of cross order by Id:{leanOrder.Id}, the order was closed before its submission");
+                                return;
+                            }
+
                             Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
                             response = PlaceCrossZeroOrder(brokerageOrder, false);
 
@@ -943,6 +964,19 @@ namespace QuantConnect.Brokerages
                             }
                         }
 
+                        _isClosedByQueuedCrossZeroLeanOrderId.TryRemove(leanOrder.Id, out var isLeanOrderClosedWhileSubmitting);
+                        if (response.IsOrderPlacedSuccessfully && isLeanOrderClosedWhileSubmitting)
+                        {
+                            // The cancellation was acknowledged against the filled first part while this one was being placed
+                            Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Cancel the second part of cross order by Id:{leanOrder.Id}, the order was closed while it was submitted");
+                            if (!CancelOrder(leanOrder))
+                            {
+                                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroCancelFailed",
+                                    $"{leanOrder.Symbol} Failed canceling the second part of cross order for LeanOrderId: {leanOrder.Id.ToStringInvariant()} " +
+                                    $"- BrokerageOrderId: {response.BrokerageOrderId}, it was submitted after the order was closed."));
+                            }
+                        }
+
                         if (!response.IsOrderPlacedSuccessfully)
                         {
                             // if we failed to place this order I don't know what to do, we've filled the first part
@@ -958,6 +992,7 @@ namespace QuantConnect.Brokerages
                     catch (Exception err)
                     {
                         Log.Error(err);
+                        _isClosedByQueuedCrossZeroLeanOrderId.TryRemove(leanOrder.Id, out _);
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "Error occurred submitting cross zero order: " + err.Message));
                         OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
                     }
