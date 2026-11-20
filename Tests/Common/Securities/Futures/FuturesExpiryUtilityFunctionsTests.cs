@@ -287,6 +287,30 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             });
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Currencies.BRL, Market.CME)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.EUR, Market.CME)]
+        [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, Market.NYMEX)]
+        [TestCase(QuantConnect.Securities.Futures.Energy.BrentCrude, Market.ICE)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.SP500EMini, Market.CME)]
+        public void ContractMonthRoundTripsToTheSameExpiry(string ticker, string market)
+        {
+            // The contract month written for a contract (zip entry names, universe files) must read back as the same contract
+            var canonical = Symbol.Create(ticker, SecurityType.Future, market);
+            var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(canonical);
+
+            for (var month = 1; month <= 12; month++)
+            {
+                var contractMonth = new DateTime(2019, month, 1);
+                var expiry = expiryFunction(contractMonth);
+                var contract = Symbol.CreateFuture(ticker, market, expiry);
+
+                var writtenContractMonth = FuturesExpiryUtilityFunctions.GetFutureContractMonth(contract);
+                var readBack = FuturesExpiryUtilityFunctions.GetFutureExpirationFromContractMonth(canonical, writtenContractMonth);
+
+                Assert.AreEqual(expiry.Date, readBack.Date, $"{ticker}: contract month {writtenContractMonth:yyyy-MM} written for the contract expiring {expiry:yyyy-MM-dd} read back as a different contract");
+            }
+        }
+
         [TestCase("06/01/2015 00:00:01", DayOfWeek.Friday, "30/01/2015 00:00:00")]
         [TestCase("06/07/2015 00:00:01", DayOfWeek.Thursday, "30/07/2015 00:00:00")]
         [TestCase("06/05/2016 00:00:01", DayOfWeek.Wednesday, "25/05/2016 00:00:00")]
