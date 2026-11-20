@@ -43,6 +43,18 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
+        private readonly List<Func<IBaseData, decimal>> _barTypeAgnosticFields = new() {
+            Field.Open,
+            Field.High,
+            Field.Low,
+            Field.Close,
+            Field.Average,
+            Field.Median,
+            Field.Typical,
+            Field.Weighted,
+            Field.SevenBar,
+        };
+
         private static readonly HashSet<string> _ignoredProperties = new HashSet<string>
         {
             "Consolidators",
@@ -4191,9 +4203,9 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
-            var defaultSelector = selector == null;
-            selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), defaultSelector, GetDataTypeFromSelector(selector));
+            selector ??= Field.Close;
+            var barTypeAgnosticSelector = _barTypeAgnosticFields.Any(x => ReferenceEquals(selector, x));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), barTypeAgnosticSelector, GetDataTypeFromSelector(selector));
         }
 
         /// <summary>
@@ -4206,9 +4218,9 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
-            var defaultSelector = selector == null;
+            var barTypeAgnosticSelector = selector == null;
             selector ??= GetDefaultSelector<T>();
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)), defaultSelector);
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)), barTypeAgnosticSelector);
         }
 
         /// <summary>
@@ -4560,7 +4572,7 @@ namespace QuantConnect.Algorithm
             return dataNormalizationMode;
         }
 
-        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, bool defaultSelector, Type dataType = null)
+        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, bool barTypeAgnosticSelector, Type dataType = null)
             where T : IBaseData
         {
             // Reset the indicator
@@ -4629,52 +4641,44 @@ namespace QuantConnect.Algorithm
             // register the callback, update the indicator and unregister finally
             indicator.Updated += callback;
 
-            var dataPointInput = typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract;
-            // a selector is the caller's choice of input, which keeps the slice's default value
-            if (dataPointInput && !defaultSelector)
+            if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
             {
-                history.PushThrough(bar => updateIndicator(bar), dataType);
-            }
-            else if (dataPointInput)
-            {
-                // a slice's default value for a symbol with both a trade and a quote bar can be the quote bar where the indicator
-                // consolidates trades, so then the symbol gets the bar of the tick type the indicator consolidates: that of the
-                // subscription it is registered on, or else of the one registering it would use, which prefers trades, or quotes
-                // for the contracts of an option indicator
-                var tickTypeBySymbol = new Dictionary<Symbol, TickType>();
-                foreach (var slice in history)
+                if (dataType != null)
                 {
-                    new[] { slice }.PushThrough(data =>
+                    history.PushThrough(bar => updateIndicator(bar), dataType);
+                }
+                else
+                {
+                    // a slice's default value can be a quote bar where the indicator consolidates trades, or the other way around
+                    var tickTypeBySymbol = new Dictionary<Symbol, TickType?>();
+                    Slice currentSlice = null;
+                    Action<BaseData> pushData = data =>
                     {
-                        var symbol = data.Symbol;
-                        if (!slice.Bars.TryGetValue(symbol, out var tradeBar) || !slice.QuoteBars.TryGetValue(symbol, out var quoteBar))
+                        if (data is not (TradeBar or QuoteBar))
                         {
                             updateIndicator(data);
                             return;
                         }
 
+                        var symbol = data.Symbol;
                         if (!tickTypeBySymbol.TryGetValue(symbol, out var tickType))
                         {
-                            var registeredSubscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
-                                .FirstOrDefault(config => config.Consolidators.Overlaps(indicator.Consolidators));
-                            if (registeredSubscription != null)
-                            {
-                                tickType = registeredSubscription.TickType;
-                            }
-                            else if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
-                            {
-                                tickType = TickType.Quote;
-                            }
-                            else
-                            {
-                                tickType = TryGetSubscription(symbol, null, out var subscription)
-                                    ? subscription.TickType
-                                    : GetDefaultSubscriptionDataType(symbol).Item2;
-                            }
+                            tickType = GetIndicatorTickType(indicator, symbol, barTypeAgnosticSelector);
                             tickTypeBySymbol[symbol] = tickType;
                         }
-                        updateIndicator(tickType == TickType.Quote ? quoteBar : tradeBar);
-                    });
+                        BaseData bar = tickType switch
+                        {
+                            TickType.Trade when data is not TradeBar && currentSlice.Bars.TryGetValue(symbol, out var tradeBar) => tradeBar,
+                            TickType.Quote when data is not QuoteBar && currentSlice.QuoteBars.TryGetValue(symbol, out var quoteBar) => quoteBar,
+                            _ => data
+                        };
+                        updateIndicator(bar);
+                    };
+                    foreach (var slice in history)
+                    {
+                        currentSlice = slice;
+                        slice.PushThrough(pushData);
+                    }
                 }
             }
             else
@@ -4694,6 +4698,32 @@ namespace QuantConnect.Algorithm
                 new Lazy<PyObject>(
                     () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)), nonIndicatorValues),
                     isThreadSafe: false));
+        }
+
+        /// <summary>
+        /// Gets the tick type of the data the indicator consolidates for the symbol, or null to keep the slice's default value
+        /// </summary>
+        private TickType? GetIndicatorTickType(IndicatorBase indicator, Symbol symbol, bool barTypeAgnosticSelector)
+        {
+            // live updates pass the data of the subscription the indicator is registered on to its selector, whatever it is
+            var registeredSubscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                .FirstOrDefault(config => config.Consolidators.Overlaps(indicator.Consolidators));
+            if (registeredSubscription != null)
+            {
+                return registeredSubscription.TickType;
+            }
+            // a custom selector on an unregistered indicator may require either bar type
+            if (!barTypeAgnosticSelector)
+            {
+                return null;
+            }
+            if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
+            {
+                return TickType.Quote;
+            }
+            return TryGetSubscription(symbol, null, out var subscription)
+                ? subscription.TickType
+                : GetDefaultSubscriptionDataType(symbol).Item2;
         }
 
         private Type GetDataTypeFromSelector(Func<IBaseData, decimal> selector)

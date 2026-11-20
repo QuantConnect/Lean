@@ -1408,6 +1408,22 @@ def Test(slice, symbol):
             Assert.AreEqual(expectedValue, valuePushed);
         }
 
+        [Test]
+        public void PushThroughPushesTheValueOfEachSymbolInASlice()
+        {
+            var time = new DateTime(2013, 10, 3);
+            var firstTick = new Tick(time, Symbols.SPY, string.Empty, string.Empty, 1, 10m);
+            var lastTick = new Tick(time, Symbols.SPY, string.Empty, string.Empty, 1, 11m);
+            var quoteBar = new QuoteBar(time, Symbols.AAPL, new Bar(20m, 20m, 20m, 20m), 1, new Bar(20m, 20m, 20m, 20m), 1, TimeSpan.FromMinutes(1));
+            var tradeBar = new TradeBar(time, Symbols.AAPL, 30m, 30m, 30m, 30m, 1, TimeSpan.FromMinutes(1));
+            var slice = new Slice(time.AddMinutes(1), new List<BaseData> { firstTick, lastTick, quoteBar, tradeBar }, time.AddMinutes(1));
+            var pushed = new List<BaseData>();
+
+            slice.PushThrough(pushed.Add);
+
+            CollectionAssert.AreEquivalent(new BaseData[] { lastTick, tradeBar }, pushed);
+        }
+
         private Slice GetSlice()
         {
             SymbolCache.Clear();
