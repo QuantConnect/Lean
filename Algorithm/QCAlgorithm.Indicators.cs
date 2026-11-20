@@ -650,6 +650,27 @@ namespace QuantConnect.Algorithm
             return connorsRelativeStrengthIndex;
         }
 
+        /// <summary>
+        /// Creates a new Cross-Sectional Information Coefficient (CSIC) indicator: each period, the Spearman correlation across
+        /// the assets between their signal values at the end of the previous period and their returns over this period.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbols">The assets to correlate across. A period needs at least three. The indicator's Add and Remove methods change them</param>
+        /// <param name="signalFactory">Creates the signal of each asset. The indicator updates them, so they must not be updated elsewhere</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator and its signals, if null defaults to the BaseData itself</param>
+        /// <returns>The CrossSectionalInformationCoefficient indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public CrossSectionalInformationCoefficient CSIC(IEnumerable<Symbol> symbols, Func<Symbol, IIndicator> signalFactory, Resolution? resolution = null, Func<IBaseData, IBaseData> selector = null)
+        {
+            var symbolsArray = symbols.ToArray();
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, "CSIC", resolution ?? GetSubscription(symbolsArray.First()).Resolution);
+            var informationCoefficient = new CrossSectionalInformationCoefficient(name, symbolsArray, signalFactory);
+            InitializeIndicator(informationCoefficient, resolution, selector, symbolsArray);
+
+            return informationCoefficient;
+        }
+
         ///<summary>
         /// Creates a new DeMarker Indicator (DEM), an oscillator-type indicator measuring changes in terms of an asset's
         /// High and Low tradebar values.
@@ -2518,6 +2539,27 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(trueStrengthIndex, resolution, selector, symbol);
 
             return trueStrengthIndex;
+        }
+
+        /// <summary>
+        /// Creates a new Time-Series Information Coefficient (TSIC) indicator: the Spearman correlation, over a window of periods,
+        /// between the signal's value at the end of each period and the asset's return over the next period.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The asset whose returns the signal times</param>
+        /// <param name="signal">The signal whose information coefficient to measure. The indicator updates it, so it must not be updated elsewhere</param>
+        /// <param name="period">The number of signal values and next returns to correlate</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator and its signal, if null defaults to the BaseData itself</param>
+        /// <returns>The TimeSeriesInformationCoefficient indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public TimeSeriesInformationCoefficient TSIC(Symbol symbol, IIndicator signal, int period, Resolution? resolution = null, Func<IBaseData, IBaseData> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"TSIC({signal.Name},{period})", resolution);
+            var informationCoefficient = new TimeSeriesInformationCoefficient(name, signal, period);
+            InitializeIndicator(informationCoefficient, resolution, selector, symbol);
+
+            return informationCoefficient;
         }
 
         /// <summary>
