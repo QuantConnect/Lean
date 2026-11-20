@@ -4277,7 +4277,12 @@ namespace QuantConnect
                 {
                     // the underlying's ticker can be outdated, such as a deserialized symbol's first ticker, and adding it would
                     // make that ticker resolve to the underlying instead of the security trading under it today
-                    var currentTicker = SecurityIdentifier.Ticker(symbol.Underlying, algorithm.Time);
+                    // today is the underlying exchange's date now: the algorithm's time zone can be on another date, and a live
+                    // algorithm's clock is in the past while it warms up
+                    var utcNow = algorithm.LiveMode ? DateTime.UtcNow : algorithm.UtcTime;
+                    var exchangeTimeZone = MarketHoursDatabase.FromDataFolder()
+                        .GetExchangeHours(symbol.ID.Market, symbol.Underlying, symbol.Underlying.SecurityType).TimeZone;
+                    var currentTicker = SecurityIdentifier.Ticker(symbol.Underlying, utcNow.ConvertFromUtc(exchangeTimeZone));
                     if (!string.IsNullOrEmpty(currentTicker) && currentTicker != symbol.Underlying.Value)
                     {
                         symbol = symbol.UpdateMappedSymbol(currentTicker);
