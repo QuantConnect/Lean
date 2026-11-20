@@ -555,6 +555,129 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new TimeSpan(21, 30, 0), losAngeles.EarlyCloses[new DateTime(2025, 12, 24)]);
         }
 
+        [TestCase("IBDE40", false)]
+        [TestCase("IBEU50", false)]
+        [TestCase("IBHK50", false)]
+        // the database holds no calendar of their exchanges yet, so they keep the US one
+        [TestCase("IBGB100", true)]
+        [TestCase("IBFR40", true)]
+        [TestCase("IBES35", true)]
+        [TestCase("IBNL25", true)]
+        [TestCase("IBCH20", true)]
+        [TestCase("IBJP225", true)]
+        [TestCase("IBAU200", true)]
+        [TestCase("IBUS500", true)]
+        [TestCase("IBUS30", true)]
+        [TestCase("IBUST100", true)]
+        [TestCase("XAUUSD", true)]
+        [TestCase("XAGUSD", true)]
+        // a CFD the database doesn't list, such as a US stock CFD, gets the market-wide entry
+        [TestCase("AAPL", true)]
+        public void InteractiveBrokersCfdsFollowTheUSCalendarUnlessTheyHaveTheirExchangeCalendar(string ticker, bool usCalendar)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            // Martin Luther King Jr. Day, Juneteenth and Thanksgiving
+            foreach (var usHoliday in new[] { new DateTime(2025, 1, 20), new DateTime(2025, 6, 19), new DateTime(2025, 11, 27) })
+            {
+                Assert.AreEqual(!usCalendar, exchangeHours.IsDateOpen(usHoliday), $"{usHoliday:d}");
+            }
+            Assert.AreEqual(usCalendar, exchangeHours.EarlyCloses.ContainsKey(new DateTime(2025, 11, 28)));
+
+            // Good Friday, Christmas and New Year's Day close every one of their markets
+            foreach (var sharedHoliday in new[] { new DateTime(2025, 4, 18), new DateTime(2025, 12, 25), new DateTime(2026, 1, 1) })
+            {
+                Assert.IsFalse(exchangeHours.IsDateOpen(sharedHoliday), $"{sharedHoliday:d}");
+            }
+        }
+
+        [TestCase("IBDE40", "2025-05-01", false)]
+        [TestCase("IBEU50", "2025-05-01", false)]
+        [TestCase("IBDE40", "2025-12-24", false)]
+        [TestCase("IBDE40", "2025-01-29", true)]
+        // Eurex doesn't observe New Year's Day on the next Monday
+        [TestCase("IBDE40", "2023-01-02", true)]
+        // missing from the database's Eurex calendar, but closed in Eurex's published 2003 calendar
+        [TestCase("IBDE40", "2003-05-01", false)]
+        [TestCase("IBDE40", "2003-12-24", false)]
+        [TestCase("IBDE40", "2003-12-25", false)]
+        [TestCase("IBDE40", "2003-12-26", false)]
+        [TestCase("IBDE40", "2003-12-31", false)]
+        [TestCase("IBEU50", "2003-12-24", false)]
+        [TestCase("IBEU50", "2003-12-26", false)]
+        [TestCase("IBHK50", "2025-01-29", false)]
+        [TestCase("IBHK50", "2025-10-01", false)]
+        // observed holidays
+        [TestCase("IBHK50", "2022-12-27", false)]
+        [TestCase("IBHK50", "2026-05-25", false)]
+        // before the Hong Kong Futures Exchange calendar starts, it keeps the US one
+        [TestCase("IBHK50", "2016-11-24", false)]
+        [TestCase("IBGB100", "2022-12-26", false)]
+        [TestCase("IBGB100", "2023-01-02", false)]
+        [TestCase("IBGB100", "2026-05-25", false)]
+        public void NonUSInteractiveBrokersIndexCfdsFollowTheirExchangeCalendar(string ticker, string date, bool open)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            Assert.AreEqual(open, exchangeHours.IsDateOpen(DateTime.Parse(date, CultureInfo.InvariantCulture)));
+        }
+
+        [Test]
+        public void IBHK50ClosesEarlyWithTheHongKongFuturesExchange()
+        {
+            var symbol = Symbol.Create("IBHK50", SecurityType.Cfd, Market.InteractiveBrokers);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, symbol, SecurityType.Cfd);
+
+            // 12:00 Hong Kong is 04:00 UTC, the CFD's exchange time zone
+            var date = new DateTime(2025, 12, 24);
+            Assert.AreEqual(new TimeSpan(4, 0, 0), exchangeHours.EarlyCloses[date]);
+            Assert.AreEqual(date.AddHours(4), exchangeHours.GetLastDailyMarketClose(date, false));
+        }
+
+        [Test]
+        public void EntriesCanIgnoreTheMarketWideCalendar()
+        {
+            var json = @"{
+  ""entries"": {
+    ""Cfd-interactivebrokers-[*]"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""11/27/2025"" ],
+      ""bankHolidays"": [ ""11/11/2025"" ],
+      ""earlyCloses"": { ""11/28/2025"": ""13:00:00"" },
+      ""lateOpens"": { ""12/26/2025"": ""10:00:00"" }
+    },
+    ""Cfd-interactivebrokers-INHERITS"": {
+      ""dataTimeZone"": ""UTC"", ""exchangeTimeZone"": ""UTC"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""12/25/2025"" ]
+    },
+    ""Cfd-interactivebrokers-IGNORES"": {
+      ""dataTimeZone"": ""UTC"", ""exchangeTimeZone"": ""UTC"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""holidays"": [ ""12/25/2025"" ],
+      ""earlyCloses"": { ""12/24/2025"": ""12:00:00"" },
+      ""ignoreMarketWideCalendar"": true
+    }
+  }
+}";
+            var database = JsonConvert.DeserializeObject<MarketHoursDatabase>(json);
+
+            var inherits = database.GetExchangeHours(Market.InteractiveBrokers, Symbol.Create("INHERITS", SecurityType.Cfd, Market.InteractiveBrokers), SecurityType.Cfd);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 11, 27), new DateTime(2025, 12, 25) }, inherits.Holidays);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 11, 11) }, inherits.BankHolidays);
+            Assert.AreEqual(new TimeSpan(18, 0, 0), inherits.EarlyCloses[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(15, 0, 0), inherits.LateOpens[new DateTime(2025, 12, 26)]);
+
+            var ignores = database.GetExchangeHours(Market.InteractiveBrokers, Symbol.Create("IGNORES", SecurityType.Cfd, Market.InteractiveBrokers), SecurityType.Cfd);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 12, 25) }, ignores.Holidays);
+            CollectionAssert.IsEmpty(ignores.BankHolidays);
+            CollectionAssert.AreEquivalent(new[] { new DateTime(2025, 12, 24) }, ignores.EarlyCloses.Keys);
+            CollectionAssert.IsEmpty(ignores.LateOpens);
+        }
+
         [TestCase("GC", Market.COMEX, "OG")]
         [TestCase("SI", Market.COMEX, "SO")]
         [TestCase("HG", Market.COMEX, "HXE")]

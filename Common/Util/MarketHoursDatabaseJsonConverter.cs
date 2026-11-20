@@ -244,6 +244,13 @@ namespace QuantConnect.Util
             public List<string> BankHolidays { get; set; } = new();
 
             /// <summary>
+            /// True if this entry doesn't inherit the holidays, bank holidays, early closes and late opens of its market-wide entry,
+            /// such as a non-US index CFD whose market-wide entry holds the US calendar
+            /// </summary>
+            [JsonProperty("ignoreMarketWideCalendar", DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool IgnoreMarketWideCalendar { get; set; }
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
             /// </summary>
             /// <param name="entry">The entry instance to copy</param>
@@ -270,6 +277,7 @@ namespace QuantConnect.Util
                 Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
                 EarlyCloses = entry.ExchangeHours.EarlyCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
                 LateOpens = entry.ExchangeHours.LateOpens.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
+                IgnoreMarketWideCalendar = entry.IgnoreMarketWideCalendar;
             }
 
             /// <summary>
@@ -315,7 +323,7 @@ namespace QuantConnect.Util
                     }
                 }
 
-                if(marketEntry != null)
+                if(marketEntry != null && !IgnoreMarketWideCalendar)
                 {
                     foreach (var holiday in marketEntry.ExchangeHours.Holidays)
                     {
@@ -350,7 +358,10 @@ namespace QuantConnect.Util
                 }
 
                 var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates);
-                return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
+                return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours)
+                {
+                    IgnoreMarketWideCalendar = IgnoreMarketWideCalendar
+                };
             }
 
             private void SetSegmentsForDay(SecurityExchangeHours hours, DayOfWeek day, out List<MarketHoursSegment> segments)
