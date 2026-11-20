@@ -169,7 +169,7 @@ namespace QuantConnect.Data.Consolidators
             if (barSize < Extensions.GetDecimalEpsilon())
             {
                 throw new ArgumentOutOfRangeException(nameof(barSize),
-                    "RenkoConsolidator bar size must be positve and greater than 1e-28");
+                    "RenkoConsolidator bar size must be positive and greater than 1e-28");
             }
         }
     }

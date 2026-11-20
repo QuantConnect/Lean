@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The amount for the individual regulatory noncurrent liability as itemized in a table of regulatory noncurrent liabilities as of the end of the PeriodAsByte. Such things as the costs of energy efficiency programs and low-income energy assistances programs and deferred fuel. This item is usually only available for utility industry.
+    /// The amount for the individual regulatory noncurrent liability as itemized in a table of regulatory noncurrent liabilities as of the end of the PeriodAsByte. Such things as the costs of energy efficiency programs and low-income energy assistance programs and deferred fuel. This item is usually only available for utility industry.
     /// </summary>
     public class RegulatoryLiabilitiesBalanceSheet : MultiPeriodField
     {

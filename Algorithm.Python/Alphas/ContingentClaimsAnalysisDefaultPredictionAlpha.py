@@ -19,7 +19,7 @@ from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPor
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
-    ''' Contingent Claim Analysis is put forth by Robert Merton, recepient of the Noble Prize in Economics in 1997 for his work in contributing to
+    ''' Contingent Claim Analysis is put forth by Robert Merton, recipient of the Nobel Prize in Economics in 1997 for his work in contributing to
     Black-Scholes option pricing theory, which says that the equity market value of stockholders’ equity is given by the Black-Scholes solution
     for a European call option. This equation takes into account Debt, which in CCA is the equivalent to a strike price in the BS solution. The probability
     of default on corporate debt can be calculated as the N(-d2) term, where d2 is a function of the interest rate on debt(µ), face value of the debt (B), value of the firm's assets (V),

@@ -299,7 +299,7 @@ RUN pip install --no-cache-dir      \
     deprecated==1.2.18              \
     pyod==2.0.6
 
-# llama-index-readers-file has a pandas build contraint, see https://github.com/run-llama/llama_index/pull/20387/files
+# llama-index-readers-file has a pandas build constraint, see https://github.com/run-llama/llama_index/pull/20387/files
 RUN pip install --no-cache-dir --no-deps \
     aiosqlite==0.22.0               \
     banks==2.2.0                    \

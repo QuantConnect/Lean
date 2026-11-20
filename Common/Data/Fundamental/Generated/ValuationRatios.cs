@@ -1356,7 +1356,7 @@ namespace QuantConnect.Data.Fundamental
         public double CashAndCashEquivalentsPerShare => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_CashAndCashEquivalentsPerShare);
 
         /// <summary>
-        /// This ratio represents the pecentage of net income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Dividend Payout Ratio.
+        /// This ratio represents the percentage of net income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Dividend Payout Ratio.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQ0I2
@@ -1365,7 +1365,7 @@ namespace QuantConnect.Data.Fundamental
         public double RetentionRate => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_RetentionRate);
 
         /// <summary>
-        /// This ratio represents the pecentage of normalized income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Normalized Dividend Payout Ratio.
+        /// This ratio represents the percentage of normalized income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Normalized Dividend Payout Ratio.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQ8MC

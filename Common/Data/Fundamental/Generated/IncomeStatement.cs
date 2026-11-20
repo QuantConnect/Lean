@@ -1990,7 +1990,7 @@ namespace QuantConnect.Data.Fundamental
         private readonly SecurityIdentifier _securityIdentifier;
 
         /// <summary>
-        /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQFPZ
@@ -2000,7 +2000,7 @@ namespace QuantConnect.Data.Fundamental
         private LitigationIncomeExpenseAdjustmentIncomeStatement _litigationIncomeExpenseAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents the goodwill impairment/write-off value reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents the goodwill impairment/write-off value reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQI2C
@@ -2010,7 +2010,7 @@ namespace QuantConnect.Data.Fundamental
         private GoodwillImpairmentWriteOffAdjustmentIncomeStatement _goodwillImpairmentWriteOffAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQN1N
@@ -2020,7 +2020,7 @@ namespace QuantConnect.Data.Fundamental
         private DebtRestructuringAdjustmentIncomeStatement _debtRestructuringAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents net gain or loss from disposal or sale of businesses reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents net gain or loss from disposal or sale of businesses reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQNZW
@@ -2030,7 +2030,7 @@ namespace QuantConnect.Data.Fundamental
         private DisposalOfBusinessesAdjustmentIncomeStatement _disposalOfBusinessesAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQRBW
@@ -2040,7 +2040,7 @@ namespace QuantConnect.Data.Fundamental
         private MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement _mergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents net income or loss from disposal of discontinued operations reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents net income or loss from disposal of discontinued operations reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQRC3
@@ -2060,7 +2060,7 @@ namespace QuantConnect.Data.Fundamental
         private IrregularIncomeExpenseIncomeStatement _irregularIncomeExpenseIncomeStatement;
 
         /// <summary>
-        /// This data point represents income or expenses from any other non-recurring activities reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents income or expenses from any other non-recurring activities reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQUOO
@@ -2070,7 +2070,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherIrregularIncomeExpensesAdjustmentIncomeStatement _otherIrregularIncomeExpensesAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents net gain or loss due to disposal or sale of assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents net gain or loss due to disposal or sale of assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQXPR
@@ -2080,7 +2080,7 @@ namespace QuantConnect.Data.Fundamental
         private AssetDisposalsAdjustmentIncomeStatement _assetDisposalsAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQZHQ
@@ -2140,7 +2140,7 @@ namespace QuantConnect.Data.Fundamental
         private NormalizedEBITDARIncomeStatement _normalizedEBITDARIncomeStatement;
 
         /// <summary>
-        /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQ10K
@@ -2150,7 +2150,7 @@ namespace QuantConnect.Data.Fundamental
         private ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement _foreignCurrencyExchangeUnrealizedGainsLossesIncomeStatement;
 
         /// <summary>
-        /// This data point represents net unrealized gain or loss due to changes in the fair value of financial assets reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// This data point represents net unrealized gain or loss due to changes in the fair value of financial assets reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQ2XY
@@ -2160,7 +2160,7 @@ namespace QuantConnect.Data.Fundamental
         private FinancialAssetsUnrealizedGainsLossesIncomeStatement _financialAssetsUnrealizedGainsLossesIncomeStatement;
 
         /// <summary>
-        /// This data point represents net gain or loss on disposal or sale of investments; including financial instruments and other investments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// This data point represents net gain or loss on disposal or sale of investments; including financial instruments and other investments reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQRHB
@@ -2170,7 +2170,7 @@ namespace QuantConnect.Data.Fundamental
         private FinancialInstrumentsAndInvestmentsGainsLossesIncomeStatement _financialInstrumentsAndInvestmentsGainsLossesIncomeStatement;
 
         /// <summary>
-        /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: EQZBQ

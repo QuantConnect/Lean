@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status.IsFill() && (Time - _submissionTime) < TimeSpan.FromMinutes(10))
             {
                 // we want to make sure we fill because the price moved and hit our limit price
-                throw new RegressionTestException($"Unexpected fill time {Time} submittion time {_submissionTime}");
+                throw new RegressionTestException($"Unexpected fill time {Time} submission time {_submissionTime}");
             }
         }
 

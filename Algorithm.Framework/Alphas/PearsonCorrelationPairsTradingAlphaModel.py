@@ -17,7 +17,7 @@ from scipy.stats import pearsonr
 
 class PearsonCorrelationPairsTradingAlphaModel(BasePairsTradingAlphaModel):
     ''' This alpha model is designed to rank every pair combination by its pearson correlation
-    and trade the pair with the hightest correlation
+    and trade the pair with the highest correlation
     This model generates alternating long ratio/short ratio insights emitted as a group'''
 
     def __init__(self, lookback = 15,

@@ -73,7 +73,7 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
     # Brokerage message event handler. This method is called for all types of brokerage messages.
     def on_brokerage_message(self, message_event):
-        self.debug(f"Brokerage meesage received - {message_event.to_string()}")
+        self.debug(f"Brokerage message received - {message_event.to_string()}")
 
     # Brokerage disconnected event handler. This method is called when the brokerage connection is lost.
     def on_brokerage_disconnect(self):

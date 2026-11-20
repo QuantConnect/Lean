@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (esIsInRegularHours != currentTimeIsRegularHours || esIsInExtendedHours != currentTimeIsExtendedHours)
             {
-                throw new RegressionTestException($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa");
+                throw new RegressionTestException($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or vice versa");
             }
         }
 

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+    /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
     /// </summary>
     public class ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement : MultiPeriodField
     {

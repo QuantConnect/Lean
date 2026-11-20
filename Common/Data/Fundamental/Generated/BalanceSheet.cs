@@ -775,7 +775,7 @@ namespace QuantConnect.Data.Fundamental
         private PolicyholderFundsBalanceSheet _policyholderFunds;
 
         /// <summary>
-        /// Preferred securities that that firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
+        /// Preferred securities that the firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23172
@@ -1445,7 +1445,7 @@ namespace QuantConnect.Data.Fundamental
         private FlightFleetVehicleAndRelatedEquipmentsBalanceSheet _flightFleetVehicleAndRelatedEquipments;
 
         /// <summary>
-        /// The carrying amount as of the balance sheet date of all assets obtained in full or partial satisfaction of a debt arrangement through foreclosure proceedings or defeasance; includes real and personal property; equity interests in corporations, partnerships, and joint ventures; and beneficial interest in trusts. This item is typically typically available for bank industry.
+        /// The carrying amount as of the balance sheet date of all assets obtained in full or partial satisfaction of a debt arrangement through foreclosure proceedings or defeasance; includes real and personal property; equity interests in corporations, partnerships, and joint ventures; and beneficial interest in trusts. This item is typically available for bank industry.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23302
@@ -1805,7 +1805,7 @@ namespace QuantConnect.Data.Fundamental
         private RegulatoryAssetsBalanceSheet _regulatoryAssets;
 
         /// <summary>
-        /// The amount for the individual regulatory noncurrent liability as itemized in a table of regulatory noncurrent liabilities as of the end of the period. Such things as the costs of energy efficiency programs and low-income energy assistances programs and deferred fuel. This item is usually only available for utility industry.
+        /// The amount for the individual regulatory noncurrent liability as itemized in a table of regulatory noncurrent liabilities as of the end of the period. Such things as the costs of energy efficiency programs and low-income energy assistance programs and deferred fuel. This item is usually only available for utility industry.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23360

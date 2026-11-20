@@ -24,7 +24,7 @@ class MarginCallEventsAlgorithm(QCAlgorithm):
     """
     This algorithm showcases two margin related event handlers.
     on_margin_call_warning: Fired when a portfolio's remaining margin dips below 5% of the total portfolio value
-    on_margin_call: Fired immediately before margin call orders are execued, this gives the algorithm a change to regain margin on its own through liquidation
+    on_margin_call: Fired immediately before margin call orders are executed, this gives the algorithm a chance to regain margin on its own through liquidation
     """
 
     def initialize(self):

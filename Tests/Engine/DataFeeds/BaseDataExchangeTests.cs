@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (first)
                 {
                     first = false;
-                    throw new RegressionTestException("This exception should be swalloed by the exchange!");
+                    throw new RegressionTestException("This exception should be swallowed by the exchange!");
                 }
                 lastUpdated.Set();
             });

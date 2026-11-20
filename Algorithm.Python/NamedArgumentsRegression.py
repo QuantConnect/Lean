@@ -31,13 +31,13 @@ class NamedArgumentsRegression(QCAlgorithm):
 
         #Check our values
         if self.start_date.year != 2013 or self.start_date.month != 10 or self.start_date.day != 8:
-            raise AssertionError(f"Start date was incorrect! Expected 10/8/2013 Recieved {self.start_date}")
+            raise AssertionError(f"Start date was incorrect! Expected 10/8/2013 Received {self.start_date}")
 
         if self.end_date.year != 2013 or self.end_date.month != 10 or self.end_date.day != 17:
-            raise AssertionError(f"End date was incorrect! Expected 10/17/2013 Recieved {self.end_date}")
+            raise AssertionError(f"End date was incorrect! Expected 10/17/2013 Received {self.end_date}")
 
         if self.portfolio.cash != 100000:
-            raise AssertionError(f"Portfolio cash was incorrect! Expected 100000 Recieved {self.portfolio.cash}")
+            raise AssertionError(f"Portfolio cash was incorrect! Expected 100000 Received {self.portfolio.cash}")
 
         # Use named args for addition of this security to our algorithm
         symbol = self.add_equity(resolution=Resolution.DAILY, ticker="SPY").symbol

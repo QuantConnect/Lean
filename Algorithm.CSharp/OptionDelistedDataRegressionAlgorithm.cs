@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (_delisted.Contains(d.Key))
                     {
-                        throw new RegressionTestException("We shouldn't be recieving data from an already delisted symbol");
+                        throw new RegressionTestException("We shouldn't be receiving data from an already delisted symbol");
                     }
                 }
             }

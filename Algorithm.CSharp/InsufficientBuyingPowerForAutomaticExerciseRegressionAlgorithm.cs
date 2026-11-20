@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!_optionAssigned)
             {
                 throw new RegressionTestException("Expected option to have been assigned before the margin call " +
-                    "(which should have been triggered by the auto-exercise of the option with inssuficient margin).");
+                    "(which should have been triggered by the auto-exercise of the option with insufficient margin).");
             }
 
             if (_marginCallReceived)

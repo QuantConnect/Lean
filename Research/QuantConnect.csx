@@ -18,7 +18,7 @@
 #r "QuantConnect.Lean.Engine.dll"
 #r "QuantConnect.Algorithm.CSharp.dll"
 #r "QuantConnect.Api.dll"
-// Note: #r directives must be in the beggining of the file
+// Note: #r directives must be at the beginning of the file
 
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.

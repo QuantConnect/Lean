@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel)
                 .Count(group => group.Positions.Any(position => position.Symbol == symbol && position.Quantity == quantity)) != 1)
             {
-                throw new RegressionTestException($"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!");
+                throw new RegressionTestException($"Default group for symbol '{symbol}' and quantity '{quantity}' was not found!");
             }
         }
 

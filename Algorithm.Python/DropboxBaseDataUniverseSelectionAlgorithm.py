@@ -41,7 +41,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
         for universe_data in historical_selection_data["symbols"]:
             if len(universe_data) != 5:
-                raise ValueError(f"Unexpected universe data receieved")
+                raise ValueError(f"Unexpected universe data received")
 
         self._changes = None
 

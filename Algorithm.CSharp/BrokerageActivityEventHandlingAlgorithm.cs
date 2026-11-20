@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnBrokerageMessage(BrokerageMessageEvent messageEvent)
         {
-            Debug($"Brokerage meesage received - {messageEvent.ToString()}");
+            Debug($"Brokerage message received - {messageEvent.ToString()}");
         }
 
         /// <summary>

@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Indicators
                 volumeRenkoConsolidator.Update(tradebar);
             }
             
-            Assert.IsTrue(renkoBarCount >= 1, "Atleast one renko bar were emitted.");
+            Assert.IsTrue(renkoBarCount >= 1, "At least one renko bar was emitted.");
             volumeRenkoConsolidator.Dispose();
         }
 
