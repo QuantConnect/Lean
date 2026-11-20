@@ -483,6 +483,76 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(symbol, security.Symbol);
         }
 
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void LoadsOptionHoldingsOnTheUnderlyingsCurrentTickerWhenTheTickerIsOutdated(bool withUnderlyingHolding, bool currentTickerOwnerRequested)
+        {
+            // GOOGL's first ticker is GOOG, which today belongs to a different security
+            var googl = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            var restoredUnderlying = new Symbol(googl.ID, googl.ID.Symbol);
+            var restoredOption = Symbol.CreateOption(restoredUnderlying, Market.USA, OptionStyle.American, OptionRight.Call, 100m, new DateTime(2050, 1, 21));
+            var currentGoog = Symbol.Create(restoredUnderlying.Value, SecurityType.Equity, Market.USA);
+            Assert.AreEqual("GOOG", restoredUnderlying.Value);
+            Assert.AreNotEqual(googl.ID, currentGoog.ID);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+            if (currentTickerOwnerRequested)
+            {
+                Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
+            }
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            var holdings = new List<Holding> { new Holding { Symbol = restoredOption, Quantity = -1, AveragePrice = 2 } };
+            if (withUnderlyingHolding)
+            {
+                holdings.Add(new Holding { Symbol = restoredUnderlying, Quantity = 100, AveragePrice = 10 });
+            }
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(holdings);
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(restoredOption, out var option));
+            Assert.AreEqual(restoredOption.ID, option.Symbol.ID);
+            Assert.AreEqual(-1, option.Holdings.Quantity);
+            Assert.AreEqual(googl.ID, option.Symbol.Underlying.ID);
+            Assert.AreEqual("GOOGL", option.Symbol.Underlying.Value);
+
+            Assert.IsTrue(algorithm.Portfolio.Securities.TryGetValue(googl, out var underlying));
+            Assert.AreEqual("GOOGL", underlying.Symbol.Value);
+            Assert.AreEqual(withUnderlyingHolding ? 100 : 0, underlying.Holdings.Quantity);
+            Assert.AreEqual(currentTickerOwnerRequested, algorithm.Portfolio.Securities.ContainsKey(currentGoog));
+
+            // the outdated ticker still resolves to the security trading under it today
+            if (SymbolCache.TryGetSymbol("GOOG", out var cachedGoog))
+            {
+                Assert.AreEqual(currentGoog.ID, cachedGoog.ID);
+            }
+            Assert.AreEqual(googl.ID, SymbolCache.GetSymbol("GOOGL").ID);
+            Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
+        }
+
         [Test]
         public void SeedsSecurityCorrectly()
         {
