@@ -2945,6 +2945,18 @@ def RunTest():
     report = sv.analyze(df, target_feat='target')");
         }
 
+        [Test]
+        public void Cryptography()
+        {
+            AssertCode(@"
+from cryptography.fernet import Fernet
+
+def RunTest():
+    cipher = Fernet(Fernet.generate_key())
+    message = b'LEAN'
+    assert cipher.decrypt(cipher.encrypt(message)) == message");
+        }
+
         [TestCase("tf2onnx", "1.16.1", "__version__"), Explicit("These need to be run by themselves")]
         [TestCase("skl2onnx", "1.19.1", "__version__")]
         [TestCase("onnxmltools", "1.14.0", "__version__")]
