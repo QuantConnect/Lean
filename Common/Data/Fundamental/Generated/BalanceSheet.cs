@@ -775,7 +775,7 @@ namespace QuantConnect.Data.Fundamental
         private PolicyholderFundsBalanceSheet _policyholderFunds;
 
         /// <summary>
-        /// Preferred securities that that firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
+        /// Preferred securities that the firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23172
