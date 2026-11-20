@@ -526,6 +526,11 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(googl.ID, security.Symbol.ID);
             Assert.AreEqual(100, security.Holdings.Quantity);
             Assert.IsFalse(algorithm.Portfolio.Securities.ContainsKey(currentGoog));
+
+            // the restored security uses today's ticker, and the old ticker still resolves to today's security
+            Assert.AreEqual("GOOGL", security.Symbol.Value);
+            Assert.AreEqual(googl.ID, SymbolCache.GetSymbol("GOOGL").ID);
+            Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
         }
 
         [Test]

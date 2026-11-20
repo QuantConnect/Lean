@@ -4287,6 +4287,15 @@ namespace QuantConnect
                 {
                     // add by symbol, not by ticker: the ticker can be outdated, such as a deserialized symbol's first ticker,
                     // and resolving it today could land on a different security than the security identifier
+                    if (symbol.SecurityType == SecurityType.Equity)
+                    {
+                        // use the ticker the security trades under today, so the old ticker keeps resolving to its current owner
+                        var currentTicker = SecurityIdentifier.Ticker(symbol, algorithm.Time);
+                        if (!string.IsNullOrEmpty(currentTicker) && currentTicker != symbol.Value)
+                        {
+                            symbol = symbol.UpdateMappedSymbol(currentTicker);
+                        }
+                    }
                     security = algorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedHours);
                 }
             }
