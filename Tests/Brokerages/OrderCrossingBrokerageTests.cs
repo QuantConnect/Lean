@@ -320,6 +320,70 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(expectedSecondPartOrderType, secondPart.OrderType);
         }
 
+        [Test]
+        public void CancelAcknowledgedBeforeQueuedSecondPartIsNotSubmitted()
+        {
+            var leanOrder = new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10));
+            using var autoResetEventCanceledStatus = new AutoResetEvent(false);
+            using var autoResetEventSecondPartPlaced = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder.Symbol.Value, 180m, 10));
+            brokerage.OrderIdChanged += (_, _) => autoResetEventSecondPartPlaced.Set();
+
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                switch (orderEvents[0].Status)
+                {
+                    case OrderStatus.PartiallyFilled:
+                        // The cancel targets the filled first part, which the brokerage acknowledges as canceled
+                        Assert.IsTrue(brokerage.CancelOrder(brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single()));
+                        break;
+                    case OrderStatus.Canceled:
+                        autoResetEventCanceledStatus.Set();
+                        break;
+                }
+            };
+
+            Assert.IsTrue(brokerage.PlaceOrder(leanOrder));
+
+            brokerage.FillOpenOrders();
+            Assert.IsTrue(autoResetEventCanceledStatus.WaitOne(TimeSpan.FromSeconds(5)));
+
+            Assert.IsFalse(autoResetEventSecondPartPlaced.WaitOne(TimeSpan.FromSeconds(1)));
+            Assert.AreEqual(1, brokerage.PlacedBrokerageOrderIds.Count);
+            Assert.AreEqual(OrderStatus.Canceled, brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single().Status);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
+        [Test]
+        public void CancelAcknowledgedWhileSecondPartIsSubmittedCancelsTheSecondPart()
+        {
+            var leanOrder = new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10));
+            using var autoResetEventSecondPartCanceled = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder.Symbol.Value, 180m, 10));
+
+            // The cancel targets the filled first part while the second part is being placed
+            brokerage.PlacingCrossZeroSecondPart = () =>
+                Assert.IsTrue(brokerage.CancelOrder(brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single()));
+            brokerage.OrdersStatusChanged += (_, orderEvents) =>
+            {
+                if (orderEvents[0].Status == OrderStatus.Canceled && brokerage.CanceledBrokerageOrderIds.Count == 2)
+                {
+                    autoResetEventSecondPartCanceled.Set();
+                }
+            };
+
+            Assert.IsTrue(brokerage.PlaceOrder(leanOrder));
+
+            brokerage.FillOpenOrders();
+            Assert.IsTrue(autoResetEventSecondPartCanceled.WaitOne(TimeSpan.FromSeconds(5)));
+
+            CollectionAssert.AreEqual(brokerage.PlacedBrokerageOrderIds, brokerage.CanceledBrokerageOrderIds);
+            Assert.AreEqual(OrderStatus.Canceled, brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single().Status);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
         /// <summary>
         /// Create instance of Phony brokerage.
         /// </summary>
@@ -415,6 +479,21 @@ namespace QuantConnect.Tests.Brokerages
             /// </remarks>
             public bool IsPlaceOrderPhonyBrokerageSecondPartSuccessfully { get; set; } = true;
 
+            /// <summary>
+            /// Invoked while the second part of a cross-zero order is being placed, before its placement returns.
+            /// </summary>
+            public Action PlacingCrossZeroSecondPart { get; set; }
+
+            /// <summary>
+            /// The brokerage order ids of the placed parts of cross-zero orders, in placement order.
+            /// </summary>
+            public List<string> PlacedBrokerageOrderIds { get; } = new();
+
+            /// <summary>
+            /// The brokerage order ids the cancel requests targeted, in request order.
+            /// </summary>
+            public List<string> CanceledBrokerageOrderIds { get; } = new();
+
             public override bool IsConnected => true;
 
             public PhonyBrokerage(string name, IAlgorithm algorithm) : base(name)
@@ -460,6 +539,7 @@ namespace QuantConnect.Tests.Brokerages
 
             public override bool CancelOrder(Order order)
             {
+                CanceledBrokerageOrderIds.Add(order.BrokerId.Last());
                 OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
                 return true;
             }
@@ -538,6 +618,14 @@ namespace QuantConnect.Tests.Brokerages
 
                 // Step 2: Place the order request, paying attention to the flag 'isPlaceOrderWithoutLeanEvent'
                 var response = PlaceOrderPhonyBrokerage(crossZeroOrderRequest.LeanOrder, isPlaceOrderWithoutLeanEvent, brokeragePhonyParameterRequest);
+                if (response.IsOrderPlacedSuccessfully)
+                {
+                    PlacedBrokerageOrderIds.Add(response.OrderId);
+                }
+                if (!isPlaceOrderWithoutLeanEvent)
+                {
+                    PlacingCrossZeroSecondPart?.Invoke();
+                }
 
                 // Step 3: Return the result of placing the order
                 return new CrossZeroOrderResponse(response.OrderId, response.IsOrderPlacedSuccessfully, response.Message);
