@@ -56,7 +56,7 @@ class FuturesExtendedMarketHoursRegressionAlgorithm(QCAlgorithm):
         current_time_is_regular_hours = (time_of_day >= time(9, 30, 0) and time_of_day < time(16, 15, 0)) or (time_of_day >= time(16, 30, 0) and time_of_day < time(17, 0, 0))
         current_time_is_extended_hours = not current_time_is_regular_hours and (time_of_day < time(9, 30, 0) or time_of_day >= time(18, 0, 0))
         if es_is_in_regular_hours != current_time_is_regular_hours or es_is_in_extended_hours != current_time_is_extended_hours:
-            raise AssertionError("At {Time}, {_es.symbol} is either in regular hours but current time is in extended hours, or viceversa")
+            raise AssertionError("At {Time}, {_es.symbol} is either in regular hours but current time is in extended hours, or vice versa")
 
     def on_end_of_algorithm(self):
         if not self._es_ran_on_regular_hours:

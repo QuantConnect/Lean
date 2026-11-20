@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             if (!(brokerage is BacktestingBrokerage))
             {
-                throw new ArgumentException("Brokerage must be of type BacktestingBrokerage for use wth the BacktestingTransactionHandler");
+                throw new ArgumentException("Brokerage must be of type BacktestingBrokerage for use with the BacktestingTransactionHandler");
             }
 
             _brokerage = (BacktestingBrokerage)brokerage;

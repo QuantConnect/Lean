@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+    /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusual items calculation.
     /// </summary>
     public class DerivativesUnrealizedGainsLossesIncomeStatement : MultiPeriodField
     {

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+    /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
     /// </summary>
     public class MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement : MultiPeriodField
     {

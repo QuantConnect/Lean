@@ -52,7 +52,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the password is missing
             /// </summary>
-            public static string MissingPassword = "FTP password is missing for unsecure FTP notification.";
+            public static string MissingPassword = "FTP password is missing for insecure FTP notification.";
         }
 
         /// <summary>

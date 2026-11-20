@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Framework algorithm that uses the <see cref="PearsonCorrelationPairsTradingAlphaModel"/>.
-    /// This model extendes <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
+    /// This model extends <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
     /// to rank the pairs trading candidates and use the best candidate to trade.
     /// </summary>
     public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition

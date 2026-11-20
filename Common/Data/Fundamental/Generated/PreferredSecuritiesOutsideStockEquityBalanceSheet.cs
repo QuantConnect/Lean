@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Preferred securities that that firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
+    /// Preferred securities that the firm treats as a liability. It includes convertible preferred stock or redeemable preferred stock.
     /// </summary>
     public class PreferredSecuritiesOutsideStockEquityBalanceSheet : MultiPeriodField
     {

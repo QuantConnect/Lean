@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+    /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
     /// </summary>
     public class LitigationIncomeExpenseAdjustmentIncomeStatement : MultiPeriodField
     {

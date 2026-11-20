@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var stockDataSource = (StockDataSource)universeData.Single();
                 if (stockDataSource.Symbols.Count != 5)
                 {
-                    throw new RegressionTestException($"Unexpected universe data receieved");
+                    throw new RegressionTestException($"Unexpected universe data received");
                 }
             }
         }

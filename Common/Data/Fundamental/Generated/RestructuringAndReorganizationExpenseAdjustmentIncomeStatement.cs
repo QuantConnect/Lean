@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+    /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
     /// </summary>
     public class RestructuringAndReorganizationExpenseAdjustmentIncomeStatement : MultiPeriodField
     {

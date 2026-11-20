@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
             if (vectors.LongLength == 0)
             {
-                algorithm.Debug($"PearsonCorrelationPairsTradingAlphaModel.OnSecuritiesChanged(): The requested historical data does not have series of prices with the same date/time. Please consider increasing the looback period. Current lookback: {_lookback}");
+                algorithm.Debug($"PearsonCorrelationPairsTradingAlphaModel.OnSecuritiesChanged(): The requested historical data does not have series of prices with the same date/time. Please consider increasing the lookback period. Current lookback: {_lookback}");
             }
             else
             {

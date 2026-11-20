@@ -119,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
             // and the regular subscription later (on delisting)
             if (_contractRemovalTime < _internalContractRemovalTime)
             {
-                throw new RegressionTestException($"Contract {_contractSymbol} was removed from the algorithm as aregular subscription before internal subscription");
+                throw new RegressionTestException($"Contract {_contractSymbol} was removed from the algorithm as a regular subscription before internal subscription");
             }
 
             if (Securities[_contractSymbol].Invested)

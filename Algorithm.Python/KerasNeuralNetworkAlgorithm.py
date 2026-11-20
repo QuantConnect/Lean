@@ -38,7 +38,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                     continue
                 file_path = self.object_store.get_file_path(kvp.key)
                 self._model_by_symbol[symbol] = keras.models.load_model(file_path)
-                self.debug(f'Model for {symbol} sucessfully retrieved. File {file_path}. Size {len(kvp.value)}. Weights {self._model_by_symbol[symbol].get_weights()}')
+                self.debug(f'Model for {symbol} successfully retrieved. File {file_path}. Size {len(kvp.value)}. Weights {self._model_by_symbol[symbol].get_weights()}')
 
         # Look-back period for training set
         self._lookback = 30
@@ -62,7 +62,7 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             file = self.object_store.get_file_path(key)
             model.save(file)
             self.object_store.save(key)
-            self.debug(f'Model for {symbol} sucessfully saved in the ObjectStore')
+            self.debug(f'Model for {symbol} successfully saved in the ObjectStore')
 
     def neural_network_training(self) -> None:
         '''Train the Neural Network and save the model in the ObjectStore'''

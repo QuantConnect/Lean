@@ -16,12 +16,12 @@ from Alphas.PearsonCorrelationPairsTradingAlphaModel import PearsonCorrelationPa
 
 ### <summary>
 ### Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
-### This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
+### This model extends BasePairsTradingAlphaModel and uses Pearson correlation
 ### to rank the pairs trading candidates and use the best candidate to trade.
 ### </summary>
 class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
-    This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
+    This model extends BasePairsTradingAlphaModel and uses Pearson correlation
     to rank the pairs trading candidates and use the best candidate to trade.'''
 
     def initialize(self):

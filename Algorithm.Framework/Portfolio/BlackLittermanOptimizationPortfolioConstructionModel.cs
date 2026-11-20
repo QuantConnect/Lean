@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(TimeSpan timeSpan,
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(IDateRule rebalancingDateRules,
@@ -170,7 +170,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
@@ -201,7 +201,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="riskFreeRate">The risk free rate</param>
-        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="delta">The risk aversion coefficient of the market portfolio</param>
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,

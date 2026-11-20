@@ -49,7 +49,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
             risk_free_rate(float): The risk free rate
-            delta(float): The risk aversion coeffficient of the market portfolio
+            delta(float): The risk aversion coefficient of the market portfolio
             tau(float): The model parameter indicating the uncertainty of the CAPM prior"""
         super().__init__()
         self.lookback = lookback

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+    /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusual items calculation.
     /// </summary>
     public class DebtRestructuringAdjustmentIncomeStatement : MultiPeriodField
     {
