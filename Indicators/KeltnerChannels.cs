@@ -48,7 +48,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the KeltnerChannels class
         /// </summary>
         /// <param name="period">The period of the average true range and moving average (middle band)</param>
-        /// <param name="k">The number of multiplies specifying the distance between the middle band and upper or lower bands</param>
+        /// <param name="k">The number of multiples specifying the distance between the middle band and upper or lower bands</param>
         /// <param name="movingAverageType">The type of moving average to be used</param>
         public KeltnerChannels(int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : this($"KC({period},{k})", period, k, movingAverageType)
