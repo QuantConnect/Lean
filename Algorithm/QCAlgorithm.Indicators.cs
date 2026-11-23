@@ -43,6 +43,18 @@ namespace QuantConnect.Algorithm
             Field.AskHigh,
         };
 
+        private readonly List<Func<IBaseData, decimal>> _barTypeAgnosticFields = new() {
+            Field.Open,
+            Field.High,
+            Field.Low,
+            Field.Close,
+            Field.Average,
+            Field.Median,
+            Field.Typical,
+            Field.Weighted,
+            Field.SevenBar,
+        };
+
         private static readonly HashSet<string> _ignoredProperties = new HashSet<string>
         {
             "Consolidators",
@@ -3630,6 +3642,18 @@ namespace QuantConnect.Algorithm
             return Enumerable.Empty<Slice>();
         }
 
+        private Tuple<Type, TickType> GetDefaultSubscriptionDataType(Symbol symbol)
+        {
+            return SubscriptionManager.LookupSubscriptionConfigDataTypes(
+                symbol.SecurityType,
+                Resolution.Daily,
+                // order by tick type so that behavior is consistent with 'GetSubscription()'
+                symbol.IsCanonical())
+                // make sure common lean data types are at the bottom
+                .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
+                .ThenBy(tuple => tuple.Item2).First();
+        }
+
         private bool AssertIndicatorHasWarmupPeriod(IIndicator indicator)
         {
             if (indicator is not IIndicatorWarmUpPeriodProvider)
@@ -3666,15 +3690,7 @@ namespace QuantConnect.Algorithm
                     var providedType = typeof(T);
                     if (providedType.IsAbstract)
                     {
-                        var dataType = SubscriptionManager.LookupSubscriptionConfigDataTypes(
-                            symbol.SecurityType,
-                            Resolution.Daily,
-                            // order by tick type so that behavior is consistent with 'GetSubscription()'
-                            symbol.IsCanonical())
-                            // make sure common lean data types are at the bottom
-                            .OrderByDescending(tuple => LeanData.IsCommonLeanDataType(tuple.Item1))
-                            .ThenBy(tuple => tuple.Item2).First();
-
+                        var dataType = GetDefaultSubscriptionDataType(symbol);
                         consolidator = CreateConsolidator(period, dataType.Item1, dataType.Item2);
                     }
                     else
@@ -4187,8 +4203,9 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
         public IndicatorHistory IndicatorHistory(IndicatorBase<IndicatorDataPoint> indicator, IEnumerable<Slice> history, Func<IBaseData, decimal> selector = null)
         {
-            selector ??= (x => x.Value);
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), GetDataTypeFromSelector(selector));
+            selector ??= Field.Close;
+            var barTypeAgnosticSelector = _barTypeAgnosticFields.Any(x => ReferenceEquals(selector, x));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar))), barTypeAgnosticSelector, GetDataTypeFromSelector(selector));
         }
 
         /// <summary>
@@ -4201,8 +4218,9 @@ namespace QuantConnect.Algorithm
         public IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
+            var barTypeAgnosticSelector = selector == null;
             selector ??= GetDefaultSelector<T>();
-            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)));
+            return IndicatorHistory(indicator, history, (bar) => indicator.Update(selector(bar)), barTypeAgnosticSelector);
         }
 
         /// <summary>
@@ -4554,7 +4572,7 @@ namespace QuantConnect.Algorithm
             return dataNormalizationMode;
         }
 
-        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, Type dataType = null)
+        private IndicatorHistory IndicatorHistory<T>(IndicatorBase<T> indicator, IEnumerable<Slice> history, Action<IBaseData> updateIndicator, bool barTypeAgnosticSelector, Type dataType = null)
             where T : IBaseData
         {
             // Reset the indicator
@@ -4625,7 +4643,43 @@ namespace QuantConnect.Algorithm
 
             if (typeof(T) == typeof(IndicatorDataPoint) || typeof(T).IsAbstract)
             {
-                history.PushThrough(bar => updateIndicator(bar), dataType);
+                if (dataType != null)
+                {
+                    history.PushThrough(bar => updateIndicator(bar), dataType);
+                }
+                else
+                {
+                    // a slice's default value can be a quote bar where the indicator consolidates trades, or the other way around
+                    var tickTypeBySymbol = new Dictionary<Symbol, TickType?>();
+                    Slice currentSlice = null;
+                    Action<BaseData> pushData = data =>
+                    {
+                        if (data is not (TradeBar or QuoteBar))
+                        {
+                            updateIndicator(data);
+                            return;
+                        }
+
+                        var symbol = data.Symbol;
+                        if (!tickTypeBySymbol.TryGetValue(symbol, out var tickType))
+                        {
+                            tickType = GetIndicatorTickType(indicator, symbol, barTypeAgnosticSelector);
+                            tickTypeBySymbol[symbol] = tickType;
+                        }
+                        BaseData bar = tickType switch
+                        {
+                            TickType.Trade when data is not TradeBar && currentSlice.Bars.TryGetValue(symbol, out var tradeBar) => tradeBar,
+                            TickType.Quote when data is not QuoteBar && currentSlice.QuoteBars.TryGetValue(symbol, out var quoteBar) => quoteBar,
+                            _ => data
+                        };
+                        updateIndicator(bar);
+                    };
+                    foreach (var slice in history)
+                    {
+                        currentSlice = slice;
+                        slice.PushThrough(pushData);
+                    }
+                }
             }
             else
             {
@@ -4644,6 +4698,32 @@ namespace QuantConnect.Algorithm
                 new Lazy<PyObject>(
                     () => PandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values)), nonIndicatorValues),
                     isThreadSafe: false));
+        }
+
+        /// <summary>
+        /// Gets the tick type of the data the indicator consolidates for the symbol, or null to keep the slice's default value
+        /// </summary>
+        private TickType? GetIndicatorTickType(IndicatorBase indicator, Symbol symbol, bool barTypeAgnosticSelector)
+        {
+            // live updates pass the data of the subscription the indicator is registered on to its selector, whatever it is
+            var registeredSubscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                .FirstOrDefault(config => config.Consolidators.Overlaps(indicator.Consolidators));
+            if (registeredSubscription != null)
+            {
+                return registeredSubscription.TickType;
+            }
+            // a custom selector on an unregistered indicator may require either bar type
+            if (!barTypeAgnosticSelector)
+            {
+                return null;
+            }
+            if (indicator is OptionIndicatorBase && symbol.SecurityType.IsOption())
+            {
+                return TickType.Quote;
+            }
+            return TryGetSubscription(symbol, null, out var subscription)
+                ? subscription.TickType
+                : GetDefaultSubscriptionDataType(symbol).Item2;
         }
 
         private Type GetDataTypeFromSelector(Func<IBaseData, decimal> selector)

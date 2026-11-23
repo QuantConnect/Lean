@@ -27,6 +27,7 @@ namespace QuantConnect
         private readonly static Func<IBaseData, decimal> _high = DataTypePropertyOrValue<IBaseDataBar>(x => x.High);
         private readonly static Func<IBaseData, decimal> _low = DataTypePropertyOrValue<IBaseDataBar>(x => x.Low);
         private readonly static Func<IBaseData, decimal> _open = DataTypePropertyOrValue<IBaseDataBar>(x => x.Open);
+        private readonly static Func<IBaseData, decimal> _close = x => x.Value;
         private readonly static Func<IBaseData, decimal> _bidClose = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Close);
         private readonly static Func<IBaseData, decimal> _bidOpen = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Open);
         private readonly static Func<IBaseData, decimal> _bidLow = DataTypePropertyOrValue<QuoteBar>(x => ((QuoteBar)x).Bid.Low);
@@ -153,7 +154,7 @@ namespace QuantConnect
         /// </summary>
         public static Func<IBaseData, decimal> Close
         {
-            get { return x => x.Value; }
+            get { return _close; }
         }
 
         /// <summary>

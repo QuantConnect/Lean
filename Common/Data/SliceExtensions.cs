@@ -317,20 +317,30 @@ namespace QuantConnect.Data
             {
                 foreach (var slice in slices)
                 {
-                    foreach (var symbol in slice.Keys)
-                    {
-                        dynamic value;
-                        if (!slice.TryGetValue(symbol, out value))
-                        {
-                            continue;
-                        }
-
-                        var list = value as IList;
-                        var data = (BaseData)(list != null ? list[list.Count - 1] : value);
-
-                        handler(data);
-                    }
+                    slice.PushThrough(handler);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Pushes the value of each symbol in the specified slice into the handler, the last data point when the value is a list
+        /// </summary>
+        /// <param name="slice">The data to send into the handler</param>
+        /// <param name="handler">Delegate handles each data piece from the slice</param>
+        public static void PushThrough(this Slice slice, Action<BaseData> handler)
+        {
+            foreach (var symbol in slice.Keys)
+            {
+                dynamic value;
+                if (!slice.TryGetValue(symbol, out value))
+                {
+                    continue;
+                }
+
+                var list = value as IList;
+                var data = (BaseData)(list != null ? list[list.Count - 1] : value);
+
+                handler(data);
             }
         }
     }
