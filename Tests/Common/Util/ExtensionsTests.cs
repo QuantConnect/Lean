@@ -38,6 +38,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
@@ -74,6 +75,11 @@ namespace QuantConnect.Tests.Common.Util
         public void GetOrAddUnrequestedSecurityMapsOptionsOnTheUnderlyingExchangesCurrentDate(string timeZone, string utcNow, bool liveMode,
             bool warmingUp, string underlyingTicker, string expectedUnderlyingTicker)
         {
+            // the map file provider is looked up in the composer, which another test can reset
+            if (Composer.Instance.GetPart<IMapFileProvider>() == null)
+            {
+                Composer.Instance.AddPart(TestGlobals.MapFileProvider);
+            }
             SymbolCache.Clear();
             try
             {

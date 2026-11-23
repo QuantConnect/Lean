@@ -4273,20 +4273,11 @@ namespace QuantConnect
 
                 Log.Trace("GetOrAddUnrequestedSecurity(): Adding unrequested security: " + symbol.Value);
 
-                if (symbol.SecurityType == SecurityType.Option)
+                var tickerIsCurrent = true;
+                if (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Option)
                 {
-                    // the underlying's ticker can be outdated, such as a deserialized symbol's first ticker, and adding it would
-                    // make that ticker resolve to the underlying instead of the security trading under it today
-                    // today is the underlying exchange's date now: the algorithm's time zone can be on another date, and a live
-                    // algorithm's clock is in the past while it warms up
-                    var utcNow = algorithm.LiveMode ? DateTime.UtcNow : algorithm.UtcTime;
-                    var exchangeTimeZone = MarketHoursDatabase.FromDataFolder()
-                        .GetExchangeHours(symbol.ID.Market, symbol.Underlying, symbol.Underlying.SecurityType).TimeZone;
-                    var currentTicker = SecurityIdentifier.Ticker(symbol.Underlying, utcNow.ConvertFromUtc(exchangeTimeZone));
-                    if (!string.IsNullOrEmpty(currentTicker) && currentTicker != symbol.Underlying.Value)
-                    {
-                        symbol = symbol.UpdateMappedSymbol(currentTicker);
-                    }
+                    // the ticker can be outdated, such as a deserialized symbol's first ticker, which another security can trade under today
+                    symbol = MapToCurrentTicker(algorithm, symbol, out tickerIsCurrent);
                 }
 
                 if (symbol.SecurityType.IsOption())
@@ -4304,7 +4295,7 @@ namespace QuantConnect
                     // add by symbol, not by ticker: the ticker can be outdated, such as a deserialized symbol's first ticker,
                     // and resolving it today could land on a different security than the security identifier
                     security = symbol.SecurityType == SecurityType.Equity
-                        ? AddUnrequestedEquity(algorithm, symbol, resolution, fillForward, leverage, extendedHours)
+                        ? AddUnrequestedEquity(algorithm, symbol, tickerIsCurrent, resolution, fillForward, leverage, extendedHours)
                         : algorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedHours);
                 }
             }
@@ -4312,26 +4303,30 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Adds an equity by its security identifier, under the ticker it trades under today, without taking that ticker
-        /// in the <see cref="SymbolCache"/> from the security that owns it today
+        /// Maps an equity, or an option's underlying, to the ticker it trades under today on its exchange
         /// </summary>
-        private static Security AddUnrequestedEquity(IAlgorithm algorithm, Symbol symbol, Resolution resolution, bool fillForward,
-            decimal leverage, bool extendedHours)
+        private static Symbol MapToCurrentTicker(IAlgorithm algorithm, Symbol symbol, out bool tickerIsCurrent)
         {
+            var equity = symbol.HasUnderlying ? symbol.Underlying : symbol;
             // the exchange's date now: the algorithm time can be behind it, during warmup or in another time zone
             var utcNow = algorithm.LiveMode ? DateTime.UtcNow : algorithm.UtcTime;
-            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType).TimeZone;
+            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder().GetExchangeHours(equity.ID.Market, equity, equity.SecurityType).TimeZone;
             var exchangeDate = utcNow.ConvertFromUtc(exchangeTimeZone).Date;
 
-            var mapFile = Composer.Instance.GetPart<IMapFileProvider>().Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
+            var mapFile = Composer.Instance.GetPart<IMapFileProvider>().Get(AuxiliaryDataKey.Create(equity)).ResolveMapFile(equity);
             // once the map file has ended the ticker isn't known to be this security's today
-            var tickerIsCurrent = exchangeDate <= mapFile.DelistingDate;
-            var currentTicker = mapFile.GetMappedSymbol(exchangeDate, symbol.Value);
-            if (!string.IsNullOrEmpty(currentTicker) && currentTicker != symbol.Value)
-            {
-                symbol = symbol.UpdateMappedSymbol(currentTicker);
-            }
+            tickerIsCurrent = exchangeDate <= equity.GetDelistingDate(mapFile);
+            var currentTicker = mapFile.GetMappedSymbol(exchangeDate, equity.Value);
+            return !string.IsNullOrEmpty(currentTicker) && currentTicker != equity.Value ? symbol.UpdateMappedSymbol(currentTicker) : symbol;
+        }
 
+        /// <summary>
+        /// Adds an equity by its security identifier, without taking its ticker in the <see cref="SymbolCache"/>
+        /// from the security that owns it today
+        /// </summary>
+        private static Security AddUnrequestedEquity(IAlgorithm algorithm, Symbol symbol, bool tickerIsCurrent, Resolution resolution,
+            bool fillForward, decimal leverage, bool extendedHours)
+        {
             SymbolCache.TryGetSymbol(symbol.Value, out var previous);
             if (previous != null && (previous.SecurityType != symbol.SecurityType || previous.ID.Market != symbol.ID.Market))
             {
