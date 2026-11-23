@@ -38,6 +38,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
@@ -47,6 +48,7 @@ using QuantConnect.Python;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -61,6 +63,63 @@ namespace QuantConnect.Tests.Common.Util
             var parsed = uint.Parse(saleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             var enums = Extensions.GetFlags<TradeConditionFlags>(parsed).ToArray();
             Assert.AreEqual(expected, enums);
+        }
+
+        // GOOGL traded as GOOG until 2014-04-02 and as GOOGL from 2014-04-03, New York time
+        [TestCase("Pacific/Honolulu", "2014-04-03 08:00", false, false, "GOOGL", "GOOGL")]
+        [TestCase("Asia/Tokyo", "2014-04-02 16:00", false, false, "GOOG", "GOOG")]
+        [TestCase("America/New_York", "2014-04-03 14:00", false, false, "GOOG", "GOOGL")]
+        [TestCase("America/New_York", "2014-04-02 18:00", false, false, "GOOG", "GOOG")]
+        [TestCase("America/New_York", "2014-04-03 14:00", true, true, "GOOGL", "GOOGL")]
+        [TestCase("America/New_York", "2014-04-03 14:00", true, true, "GOOG", "GOOGL")]
+        public void GetOrAddUnrequestedSecurityMapsOptionsOnTheUnderlyingExchangesCurrentDate(string timeZone, string utcNow, bool liveMode,
+            bool warmingUp, string underlyingTicker, string expectedUnderlyingTicker)
+        {
+            // the map file provider is looked up in the composer, which another test can reset
+            if (Composer.Instance.GetPart<IMapFileProvider>() == null)
+            {
+                Composer.Instance.AddPart(TestGlobals.MapFileProvider);
+            }
+            SymbolCache.Clear();
+            try
+            {
+                var googl = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+                var currentGoog = Symbol.Create("GOOG", SecurityType.Equity, Market.USA);
+                var option = Symbol.CreateOption(new Symbol(googl.ID, underlyingTicker), Market.USA, OptionStyle.American, OptionRight.Call,
+                    100m, new DateTime(2050, 1, 21));
+
+                var algorithm = new AlgorithmStub();
+                algorithm.SetTimeZone(timeZone);
+                algorithm.SetLiveMode(liveMode);
+                algorithm.SetDateTime(Parse.DateTime(utcNow));
+                if (warmingUp)
+                {
+                    algorithm.SetWarmUp(TimeSpan.FromDays(1));
+                    algorithm.PostInitialize();
+                    Assert.IsTrue(algorithm.IsWarmingUp);
+                }
+                if (expectedUnderlyingTicker == "GOOGL")
+                {
+                    Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
+                }
+
+                Assert.IsTrue(algorithm.GetOrAddUnrequestedSecurity(option, out var security));
+
+                Assert.AreEqual(option.ID, security.Symbol.ID);
+                Assert.AreEqual(googl.ID, security.Symbol.Underlying.ID);
+                Assert.AreEqual(expectedUnderlyingTicker, security.Symbol.Underlying.Value);
+                Assert.AreEqual(googl.ID, SymbolCache.GetSymbol(expectedUnderlyingTicker).ID);
+                if (expectedUnderlyingTicker == "GOOGL")
+                {
+                    // the old ticker still resolves to the security trading under it today
+                    Assert.AreEqual(currentGoog.ID, SymbolCache.GetSymbol("GOOG").ID);
+                    Assert.AreEqual(currentGoog.ID, algorithm.AddEquity("GOOG").Symbol.ID);
+                }
+            }
+            finally
+            {
+                SymbolCache.Clear();
+            }
         }
 
         [TestCase(1)]
