@@ -129,7 +129,7 @@ namespace QuantConnect.Indicators
         /// Resolution will <see cref="Resolution.Daily"/> if the difference exceeds 1 hour; otherwise, calculates a higher equivalent resolution.
         /// Then it sets the resolution to the symbols data so that the time alignment is performed correctly.
         /// </summary>
-        private void SetResolution(TInput input)
+        protected void SetResolution(TInput input)
         {
             var timeDifference = input.EndTime - input.Time;
             var resolution = timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
