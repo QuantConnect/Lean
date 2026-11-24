@@ -19,7 +19,6 @@ using NodaTime;
 using QuantConnect.Data;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -30,8 +29,6 @@ namespace QuantConnect.Indicators
     public abstract class MultiSymbolIndicator<TInput> : IndicatorBase<TInput>, IIndicatorWarmUpPeriodProvider
         where TInput : IBaseData
     {
-        private readonly AssetTimeZones _assetTimeZones = new();
-
         /// <summary>
         /// Relevant data for each symbol the indicator works on, including all inputs
         /// and actual data points used for calculation.
@@ -50,16 +47,9 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// The time zone of this indicator's values, so that the values of assets of different exchange time zones share
-        /// one clock. By default, the exchange time zone of the first symbol given at construction. That time zone can
-        /// repeat an hour when daylight saving time ends: for assets that trade then, such as crypto with US equities,
-        /// set <see cref="TimeZones.Utc"/>, which never does
+        /// one clock: the exchange time zone of the first symbol given at construction
         /// </summary>
-        [PandasIgnore]
-        public DateTimeZone TimeZone
-        {
-            get => _assetTimeZones.TimeZone;
-            set => _assetTimeZones.TimeZone = value;
-        }
+        protected DateTimeZone TimeZone { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -80,12 +70,9 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             DataBySymbol = symbols.ToDictionary(symbol => symbol, symbol => new SymbolData(symbol, period));
-            foreach (var symbol in DataBySymbol.Keys)
-            {
-                _assetTimeZones.Add(symbol);
-            }
             var isTimezoneDifferent = DataBySymbol.Values.Select(data => data.ExchangeTimeZone).Distinct().Count() > 1;
             WarmUpPeriod = period + (isTimezoneDifferent ? 1 : 0);
+            TimeZone = DataBySymbol.Values.FirstOrDefault()?.ExchangeTimeZone;
         }
 
         /// <summary>
@@ -125,13 +112,19 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>
+        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>.
+        /// The input of a symbol this indicator no longer tracks keeps its end time
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The end time of the indicator's value</returns>
         protected override DateTime GetValueEndTime(TInput input)
         {
-            return _assetTimeZones.GetEndTime(input);
+            if (TimeZone == null || !DataBySymbol.TryGetValue(input.Symbol, out var symbolData)
+                || symbolData.ExchangeTimeZone == TimeZone)
+            {
+                return input.EndTime;
+            }
+            return input.EndTime.ConvertTo(symbolData.ExchangeTimeZone, TimeZone);
         }
 
         /// <summary>
@@ -161,7 +154,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         private void SetResolution(TInput input)
         {
-            var resolution = AssetTimeZones.GetResolution(input);
+            var resolution = GetResolution(input);
             foreach (var (symbol, data) in DataBySymbol)
             {
                 data.SetResolution(resolution);
@@ -170,6 +163,15 @@ namespace QuantConnect.Indicators
                     data.CurrentInput = input;
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines the resolution of the input data based on the time difference between its start and end times
+        /// </summary>
+        private static Resolution GetResolution(TInput input)
+        {
+            var timeDifference = input.EndTime - input.Time;
+            return timeDifference.TotalHours > 1 ? Resolution.Daily : timeDifference.ToHigherResolutionEquivalent(false);
         }
 
         /// <summary>
@@ -206,8 +208,8 @@ namespace QuantConnect.Indicators
                     if (_currentInput != null)
                     {
                         // Without a resolution set, such as for a symbol added after the first input, use the input's own
-                        _resolution ??= AssetTimeZones.GetResolution(_currentInput);
-                        CurrentInputEndTimeUtc = AssetTimeZones.AlignToResolution(_currentInput.EndTime.ConvertToUtc(ExchangeTimeZone), _resolution);
+                        _resolution ??= GetResolution(_currentInput);
+                        CurrentInputEndTimeUtc = AdjustDateToResolution(_currentInput.EndTime.ConvertToUtc(ExchangeTimeZone));
                         NewInput?.Invoke(this, _currentInput);
                     }
                     else
@@ -244,6 +246,26 @@ namespace QuantConnect.Indicators
                 DataPoints.Reset();
                 CurrentInput = default;
                 _resolution = null;
+            }
+
+            /// <summary>
+            /// Truncates the given DateTime based on the specified resolution (Daily, Hourly, Minute, or Second).
+            /// </summary>
+            /// <param name="date">The DateTime to truncate.</param>
+            /// <returns>A DateTime truncated to the specified resolution.</returns>
+            private DateTime AdjustDateToResolution(DateTime date)
+            {
+                switch (_resolution)
+                {
+                    case Resolution.Daily:
+                        return date.Date;
+                    case Resolution.Hour:
+                        return date.Date.AddHours(date.Hour);
+                    case Resolution.Minute:
+                        return date.Date.AddHours(date.Hour).AddMinutes(date.Minute);
+                    default:
+                        return date;
+                }
             }
 
             /// <summary>

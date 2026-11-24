@@ -16,9 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using NUnit.Framework;
-using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -45,32 +43,19 @@ namespace QuantConnect.Tests.Indicators
 
         private static readonly TestCaseData[] Indicators =
         {
-            // the dual symbol indicators and alpha take the first two symbols, the others all of them
+            // the dual symbol indicators take the first two symbols, the cross-sectional information coefficient all of them
             Case("Beta", 2, symbols => new Beta(symbols[0], symbols[1], 3)),
             Case("Correlation", 2, symbols => new Correlation(symbols[0], symbols[1], 3)),
             Case("Covariance", 2, symbols => new Covariance(symbols[0], symbols[1], 3)),
             Case("LeastSquaresMovingAverageWithReference", 2, symbols => new LeastSquaresMovingAverageWithReference(symbols[0], symbols[1], 3)),
-            Case("Alpha", 2, symbols => new Alpha(symbols[0], symbols[1], 2, 3, 0m)),
             Case("CrossSectionalInformationCoefficient", null, symbols => new CrossSectionalInformationCoefficient(symbols, _ => new RateOfChange(1))),
-            Case("AdvanceDeclineRatio", null, symbols => AddAll(new AdvanceDeclineRatio("ADR"), symbols)),
-            Case("AdvanceDeclineVolumeRatio", null, symbols => AddAll(new AdvanceDeclineVolumeRatio("ADVR"), symbols)),
-            Case("AdvanceDeclineDifference", null, symbols => AddAll(new AdvanceDeclineDifference("ADDIFF"), symbols)),
-            Case("NewHighsNewLows", null, symbols => AddAll(new NewHighsNewLows("NHNL", 2), symbols)),
-            Case("NewHighsNewLowsVolume", null, symbols => AddAll(new NewHighsNewLowsVolume("NHNLV", 2), symbols)),
         };
 
         [TestCaseSource(nameof(Indicators))]
         public void ValuesOfAssetsOfDifferentTimeZonesAreInTheFirstSymbolTimeZone(int? assets, Func<Symbol[], IndicatorBase> createIndicator)
         {
             var symbols = MixedTimeZoneSymbols.Take(assets ?? MixedTimeZoneSymbols.Length).ToArray();
-            Run(createIndicator, symbols, null, TimeZones.NewYork);
-        }
-
-        [TestCaseSource(nameof(Indicators))]
-        public void ValuesAreInTheTimeZoneSet(int? assets, Func<Symbol[], IndicatorBase> createIndicator)
-        {
-            var symbols = MixedTimeZoneSymbols.Take(assets ?? MixedTimeZoneSymbols.Length).ToArray();
-            Run(createIndicator, symbols, TimeZones.Utc, TimeZones.Utc);
+            Run(createIndicator, symbols);
         }
 
         [TestCaseSource(nameof(Indicators))]
@@ -98,107 +83,16 @@ namespace QuantConnect.Tests.Indicators
             CollectionAssert.AreEqual(inputTimes, publishedTimes);
         }
 
-        [TestCaseSource(nameof(Indicators))]
-        public void ValuesKeepIncreasingTimesAcrossADaylightSavingFallBackInUtc(int? assets, Func<Symbol[], IndicatorBase> createIndicator)
-        {
-            // New York's clocks go back from 2:00 to 1:00 on 2023-11-05, at 6:00 UTC, when crypto trades but equities don't
-            var symbols = new[] { Symbols.SPY, Symbols.BTCUSD, Symbols.ETHUSD, Symbols.LTCUSD }.Take(assets ?? 4).ToArray();
-            var indicator = createIndicator(symbols);
-            // the breadth indicators and the cross-sectional information coefficient wait for every asset they track
-            indicator.GetType().GetMethod("Remove", new[] { typeof(Symbol) })?.Invoke(indicator, new object[] { Symbols.SPY });
-            Assert.AreEqual(TimeZones.NewYork, GetTimeZone(indicator));
-            SetTimeZone(indicator, TimeZones.Utc);
-            var times = new List<DateTime>();
-            indicator.Updated += (_, point) => times.Add(point.EndTime);
-
-            var start = new DateTime(2023, 11, 5, 3, 0, 0);
-            var endTimesUtc = Enumerable.Range(1, 6).Select(hour => start.AddHours(hour)).ToList();
-            foreach (var endTimeUtc in endTimesUtc)
-            {
-                for (var i = 1; i < symbols.Length; i++)
-                {
-                    indicator.Update(CreateBar(symbols[i], endTimeUtc, endTimeUtc.Hour, i));
-                }
-            }
-
-            // a value per period: a single asset completes the periods of the dual symbol indicators
-            Assert.Greater(times.Count, 2);
-            CollectionAssert.AllItemsAreUnique(times);
-            CollectionAssert.IsOrdered(times);
-            CollectionAssert.IsSubsetOf(times, endTimesUtc);
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public void NewHighsNewLowsSubIndicatorsShareTheValueTime(bool volume)
-        {
-            IndicatorBase indicator;
-            IndicatorBase[] subIndicators;
-            if (volume)
-            {
-                var nhnlv = AddAll(new NewHighsNewLowsVolume("NHNLV", 2), MixedTimeZoneSymbols);
-                indicator = nhnlv;
-                subIndicators = new IndicatorBase[] { nhnlv.Difference, nhnlv.Ratio, nhnlv.VolumeRatio };
-            }
-            else
-            {
-                var nhnl = AddAll(new NewHighsNewLows("NHNL", 2), MixedTimeZoneSymbols);
-                indicator = nhnl;
-                subIndicators = new IndicatorBase[] { nhnl.Difference, nhnl.Ratio };
-            }
-            var checkedValues = 0;
-            indicator.Updated += (_, point) =>
-            {
-                foreach (var subIndicator in subIndicators)
-                {
-                    Assert.AreEqual(point.EndTime, subIndicator.Current.EndTime, subIndicator.Name);
-                }
-                checkedValues++;
-            };
-
-            foreach (var bar in GetSlices(MixedTimeZoneSymbols).SelectMany(slice => slice.Bars.Values))
-            {
-                indicator.Update(bar);
-            }
-
-            Assert.Greater(checkedValues, 5);
-        }
-
-        [Test]
-        public void TimeZoneCanBeSetFromPython()
-        {
-            using (Py.GIL())
-            {
-                var module = PyModule.FromString(Guid.NewGuid().ToString(), @"
-from AlgorithmImports import *
-
-def create(target, reference):
-    beta = Beta(target, reference, 3)
-    beta.time_zone = TimeZones.UTC
-    return beta
-");
-                var beta = module.GetAttr("create").Invoke(MixedTimeZoneSymbols[0].ToPython(), MixedTimeZoneSymbols[1].ToPython())
-                    .GetAndDispose<Beta>();
-
-                Assert.AreEqual(TimeZones.Utc, GetTimeZone(beta));
-            }
-        }
-
         private static TestCaseData Case(string name, int? assets, Func<Symbol[], IndicatorBase> createIndicator)
         {
             return new TestCaseData(assets, createIndicator).SetName(name);
         }
 
-        private static void Run(Func<Symbol[], IndicatorBase> createIndicator, Symbol[] symbols, DateTimeZone timeZone,
-            DateTimeZone expectedTimeZone)
+        private static void Run(Func<Symbol[], IndicatorBase> createIndicator, Symbol[] symbols)
         {
             var slices = GetSlices(symbols);
 
             var indicator = createIndicator(symbols);
-            if (timeZone != null)
-            {
-                SetTimeZone(indicator, timeZone);
-            }
             var times = new List<DateTime>();
             var expectedTimes = new List<DateTime>();
             Slice currentSlice = null;
@@ -207,8 +101,8 @@ def create(target, reference):
                 if (indicator.IsReady)
                 {
                     times.Add(point.EndTime);
-                    // each value is published with an input of its own period
-                    expectedTimes.Add(currentSlice.UtcTime.ConvertFromUtc(expectedTimeZone));
+                    // each value has its period's time in the first symbol's exchange time zone, New York
+                    expectedTimes.Add(currentSlice.UtcTime.ConvertFromUtc(TimeZones.NewYork));
                 }
             };
             foreach (var slice in slices)
@@ -221,15 +115,10 @@ def create(target, reference):
             }
 
             var historyIndicator = createIndicator(symbols);
-            if (timeZone != null)
-            {
-                SetTimeZone(historyIndicator, timeZone);
-            }
             var algorithm = new AlgorithmStub();
             var history = historyIndicator switch
             {
                 IndicatorBase<IBaseDataBar> barIndicator => algorithm.IndicatorHistory(barIndicator, slices),
-                IndicatorBase<TradeBar> tradeBarIndicator => algorithm.IndicatorHistory(tradeBarIndicator, slices),
                 IndicatorBase<IBaseData> dataIndicator => algorithm.IndicatorHistory(dataIndicator, slices),
                 _ => throw new ArgumentException(historyIndicator.GetType().Name)
             };
@@ -264,25 +153,6 @@ def create(target, reference):
             var close = 100m + (hour * (index + 2) + index * 3) % 7 + hour * (index - 1) * 0.5m;
             return new TradeBar(endTime.AddHours(-1), symbol, close, close + 1 + index, close - 1 - hour % 3, close, 1000 + 100 * index,
                 TimeSpan.FromHours(1));
-        }
-
-        private static T AddAll<T>(T indicator, Symbol[] symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                ((dynamic)indicator).Add(symbol);
-            }
-            return indicator;
-        }
-
-        private static DateTimeZone GetTimeZone(IndicatorBase indicator)
-        {
-            return (DateTimeZone)indicator.GetType().GetProperty("TimeZone").GetValue(indicator);
-        }
-
-        private static void SetTimeZone(IndicatorBase indicator, DateTimeZone timeZone)
-        {
-            indicator.GetType().GetProperty("TimeZone").SetValue(indicator, timeZone);
         }
     }
 }

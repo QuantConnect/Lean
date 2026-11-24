@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using QuantConnect.Data.Market;
-using QuantConnect.Python;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -48,23 +46,8 @@ namespace QuantConnect.Indicators
     {
         private readonly TrackedAssets _trackedAssets;
         private readonly int _period;
-        private readonly AssetTimeZones _assetTimeZones = new();
 
-        private DateTime? _currentPeriodStartTimeUtc;
-        private DateTime? _currentPeriodEndTimeUtc;
-
-        /// <summary>
-        /// The time zone of this indicator's values, so that the values of assets of different exchange time zones share
-        /// one clock. By default, the exchange time zone of the first asset added. That time zone can repeat an hour when
-        /// daylight saving time ends: for assets that trade then, such as crypto with US equities, set
-        /// <see cref="TimeZones.Utc"/>, which never does
-        /// </summary>
-        [PandasIgnore]
-        public DateTimeZone TimeZone
-        {
-            get => _assetTimeZones.TimeZone;
-            set => _assetTimeZones.TimeZone = value;
-        }
+        private DateTime? _currentPeriodTime;
 
         /// <summary>
         /// Difference between the number of assets reaching new highs and the number of assets
@@ -119,7 +102,6 @@ namespace QuantConnect.Indicators
         /// <param name="asset">tracking asset issue</param>
         public virtual void Add(Symbol asset)
         {
-            _assetTimeZones.Add(asset);
             _trackedAssets.Add(asset);
         }
 
@@ -144,9 +126,7 @@ namespace QuantConnect.Indicators
         {
             _trackedAssets.Reset();
 
-            _currentPeriodStartTimeUtc = null;
-            _currentPeriodEndTimeUtc = null;
-            _assetTimeZones.Reset();
+            _currentPeriodTime = null;
 
             Difference.Reset();
             Ratio.Reset();
@@ -189,16 +169,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>The end time of the indicator's value</returns>
-        protected override DateTime GetValueEndTime(T input)
-        {
-            return _assetTimeZones.GetEndTime(input);
-        }
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
@@ -212,16 +182,6 @@ namespace QuantConnect.Indicators
                 return new IndicatorResult(0, IndicatorStatus.ValueNotReady);
             }
 
-            // The sub-indicators take the times of their values from the input they're given
-            var endTime = GetValueEndTime(input);
-            if (endTime != input.EndTime)
-            {
-                var valueInput = (T)(object)input.Clone();
-                valueInput.Time = endTime - (input.EndTime - input.Time);
-                valueInput.EndTime = endTime;
-                input = valueInput;
-            }
-
             var vNext = ComputeNextValue(input);
             return new IndicatorResult(vNext);
         }
@@ -229,11 +189,9 @@ namespace QuantConnect.Indicators
         private void Enqueue(T input)
         {
             TrackedAsset trackedAsset;
-            // Inputs of the same period share their UTC times, whatever their exchange time zones
-            var (startTimeUtc, endTimeUtc) = _assetTimeZones.GetUtcPeriod(input);
 
-            // In case of unordered input: an input of the period that ended when the current one started
-            if (endTimeUtc == _currentPeriodStartTimeUtc && endTimeUtc < _currentPeriodEndTimeUtc)
+            // In case of unordered input
+            if (input.EndTime == _currentPeriodTime)
             {
                 // Update the previous values in rolling window
                 if (_trackedAssets.TryGetAsset(input.Symbol, out trackedAsset))
@@ -244,7 +202,7 @@ namespace QuantConnect.Indicators
             }
 
             // In case of new period
-            if (endTimeUtc > _currentPeriodEndTimeUtc)
+            if (input.Time > _currentPeriodTime)
             {
                 foreach (TrackedAsset asset in _trackedAssets)
                 {
@@ -253,19 +211,17 @@ namespace QuantConnect.Indicators
                     UpdatePreviousValues(asset, asset.CurrentPeriodValue);
                     asset.CurrentPeriodValue = default;
                 }
-                _currentPeriodStartTimeUtc = startTimeUtc;
-                _currentPeriodEndTimeUtc = endTimeUtc;
+                _currentPeriodTime = input.Time;
             }
 
             if (_trackedAssets.TryGetAsset(input.Symbol, out trackedAsset)
-                && (!_currentPeriodEndTimeUtc.HasValue || endTimeUtc == _currentPeriodEndTimeUtc))
+                && (!_currentPeriodTime.HasValue || input.Time == _currentPeriodTime))
             {
                 trackedAsset.CurrentPeriodValue = input;
 
-                if (!_currentPeriodEndTimeUtc.HasValue)
+                if (!_currentPeriodTime.HasValue)
                 {
-                    _currentPeriodStartTimeUtc = startTimeUtc;
-                    _currentPeriodEndTimeUtc = endTimeUtc;
+                    _currentPeriodTime = input.Time;
                 }
             }
         }
@@ -292,8 +248,8 @@ namespace QuantConnect.Indicators
                 return;
             }
 
-            asset.RollingPreviousHigh.Update(_currentPeriodEndTimeUtc.Value, bar.High);
-            asset.RollingPreviousLow.Update(_currentPeriodEndTimeUtc.Value, bar.Low);
+            asset.RollingPreviousHigh.Update(_currentPeriodTime.Value, bar.High);
+            asset.RollingPreviousLow.Update(_currentPeriodTime.Value, bar.Low);
         }
 
         /// <summary>

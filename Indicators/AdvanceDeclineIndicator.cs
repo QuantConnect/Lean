@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using QuantConnect.Data.Market;
-using QuantConnect.Python;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,23 +31,8 @@ namespace QuantConnect.Indicators
         private IDictionary<SecurityIdentifier, TradeBar> _currentPeriod = new Dictionary<SecurityIdentifier, TradeBar>();
         private readonly Func<IEnumerable<TradeBar>, decimal> _computeSubValue;
         private readonly Func<decimal, decimal, decimal> _computeMainValue;
-        private readonly AssetTimeZones _assetTimeZones = new();
-        private DateTime? _currentPeriodStartTimeUtc;
-        private DateTime? _currentPeriodEndTimeUtc;
-
-        /// <summary>
-        /// The time zone of this indicator's values, so that the values of assets of different exchange time zones share
-        /// one clock. By default, the exchange time zone of the first asset added. That time zone can repeat an hour when
-        /// daylight saving time ends: for assets that trade then, such as crypto with US equities, set
-        /// <see cref="TimeZones.Utc"/>, which never does
-        /// </summary>
-        [PandasIgnore]
-        public DateTimeZone TimeZone
-        {
-            get => _assetTimeZones.TimeZone;
-            set => _assetTimeZones.TimeZone = value;
-        }
-
+        private DateTime? _currentPeriodTime = null;
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
@@ -66,7 +49,6 @@ namespace QuantConnect.Indicators
         /// <param name="asset">tracking asset issue</param>
         public virtual void Add(Symbol asset)
         {
-            _assetTimeZones.Add(asset);
             if (!_currentPeriod.ContainsKey(asset.ID))
             {
                 _currentPeriod.Add(asset.ID, null);
@@ -141,16 +123,6 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>
-        /// </summary>
-        /// <param name="input">The input given to the indicator</param>
-        /// <returns>The end time of the indicator's value</returns>
-        protected override DateTime GetValueEndTime(TradeBar input)
-        {
-            return _assetTimeZones.GetEndTime(input);
-        }
-
-        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
@@ -178,26 +150,20 @@ namespace QuantConnect.Indicators
             {
                 _currentPeriod[key] = null;
             }
-            _currentPeriodStartTimeUtc = null;
-            _currentPeriodEndTimeUtc = null;
-            _assetTimeZones.Reset();
+            _currentPeriodTime = null;
 
             base.Reset();
         }
 
         private void Enqueue(TradeBar input)
         {
-            // Inputs of the same period share their UTC times, whatever their exchange time zones
-            var (startTimeUtc, endTimeUtc) = _assetTimeZones.GetUtcPeriod(input);
-
-            // An input of the period that ended when the current one started
-            if (endTimeUtc == _currentPeriodStartTimeUtc && endTimeUtc < _currentPeriodEndTimeUtc)
+            if (input.EndTime == _currentPeriodTime)
             {
                 _previousPeriod[input.Symbol.ID] = input;
                 return;
             }
 
-            if (endTimeUtc > _currentPeriodEndTimeUtc)
+            if (input.Time > _currentPeriodTime)
             {
                 _previousPeriod.Clear();
                 foreach (var key in _currentPeriod.Keys.ToList())
@@ -205,17 +171,15 @@ namespace QuantConnect.Indicators
                     _previousPeriod[key] = _currentPeriod[key];
                     _currentPeriod[key] = null;
                 }
-                _currentPeriodStartTimeUtc = startTimeUtc;
-                _currentPeriodEndTimeUtc = endTimeUtc;
+                _currentPeriodTime = input.Time;
             }
 
-            if (_currentPeriod.ContainsKey(input.Symbol.ID) && (!_currentPeriodEndTimeUtc.HasValue || endTimeUtc == _currentPeriodEndTimeUtc))
+            if (_currentPeriod.ContainsKey(input.Symbol.ID) && (!_currentPeriodTime.HasValue || input.Time == _currentPeriodTime))
             {
                 _currentPeriod[input.Symbol.ID] = input;
-                if (!_currentPeriodEndTimeUtc.HasValue)
+                if (!_currentPeriodTime.HasValue)
                 {
-                    _currentPeriodStartTimeUtc = startTimeUtc;
-                    _currentPeriodEndTimeUtc = endTimeUtc;
+                    _currentPeriodTime = input.Time;
                 }
             }
         }
