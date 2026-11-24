@@ -47,6 +47,7 @@ namespace QuantConnect.Indicators
         private readonly HashSet<Symbol> _periodAssets = new();
         private DateTime _periodEndTimeUtc;
         private IBaseData _periodLastInput;
+        private DateTime _periodLastValueEndTime;
         private bool _isPeriodCorrelated;
         private bool _isReady;
         private bool _hasNewValue;
@@ -169,6 +170,8 @@ namespace QuantConnect.Indicators
             {
                 _periodAssets.Add(input.Symbol);
                 _periodLastInput = input;
+                // While its asset is tracked, as one removed before the period is correlated keeps its input's time
+                _periodLastValueEndTime = GetValueEndTime(input);
                 // An asset added after its period was correlated doesn't correlate that period again
                 if (!_isPeriodCorrelated && _periodAssets.Count == _assets.Count)
                 {
@@ -191,7 +194,7 @@ namespace QuantConnect.Indicators
             {
                 return;
             }
-            Current = new IndicatorDataPoint(_periodLastInput.Symbol, GetValueEndTime(_periodLastInput), IndicatorValue);
+            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastValueEndTime, IndicatorValue);
             OnUpdated(Current);
         }
 

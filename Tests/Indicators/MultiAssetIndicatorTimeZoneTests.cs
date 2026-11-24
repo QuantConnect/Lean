@@ -83,6 +83,43 @@ namespace QuantConnect.Tests.Indicators
             CollectionAssert.AreEqual(inputTimes, publishedTimes);
         }
 
+        [Test]
+        public void CrossSectionalInformationCoefficientPeriodWhoseLastAssetWasRemovedKeepsTheFirstSymbolTimeZone()
+        {
+            // ZN, in Chicago time, gives each period its last input
+            var zn = MixedTimeZoneSymbols[1];
+            var symbols = new[]
+            {
+                MixedTimeZoneSymbols[0],
+                MixedTimeZoneSymbols[2],
+                Symbol.CreateFuture(Futures.Indices.Russell2000EMini, Market.CME, FutureExpiry),
+                MixedTimeZoneSymbols[3],
+                zn
+            };
+            var indicator = new CrossSectionalInformationCoefficient(symbols, _ => new RateOfChange(1));
+            var times = new List<DateTime>();
+            indicator.Updated += (_, point) => times.Add(point.EndTime);
+            const int lastHour = 5;
+            for (var hour = 0; hour <= lastHour; hour++)
+            {
+                for (var i = 0; i < symbols.Length; i++)
+                {
+                    // ZB has no input for the last period, which is then correlated when the next one starts
+                    if (hour < lastHour || symbols[i] != MixedTimeZoneSymbols[3])
+                    {
+                        indicator.Update(CreateBar(symbols[i], GetEndTimeUtc(hour), hour, i));
+                    }
+                }
+            }
+            indicator.Remove(zn);
+            var valueCount = times.Count;
+
+            indicator.Update(CreateBar(symbols[0], GetEndTimeUtc(lastHour + 1), lastHour + 1, 0));
+
+            Assert.AreEqual(valueCount + 1, times.Count);
+            Assert.AreEqual(GetEndTimeUtc(lastHour).ConvertFromUtc(TimeZones.NewYork), times[^1]);
+        }
+
         private static TestCaseData Case(string name, int? assets, Func<Symbol[], IndicatorBase> createIndicator)
         {
             return new TestCaseData(assets, createIndicator).SetName(name);
