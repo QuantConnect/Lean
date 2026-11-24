@@ -512,15 +512,43 @@ def create(algorithm, symbols):
 
             var rows = _algorithm.IndicatorHistory(indicator, slices).Current;
 
-            // scipy.stats.spearmanr across the assets with a bar, from index 2. Each value has its period's end in the
-            // time zone of the first asset
+            // scipy.stats.spearmanr across the assets with a bar, from index 2. Each value has its period's end in UTC
             var expected = new[] { -0.8, -1.0, 0.4, -0.4, 0.8 };
-            var firstTimeZone = marketHours.GetExchangeHours(Market.CME, pricesBySymbol.Keys.First(), SecurityType.Future).TimeZone;
-            var expectedTimes = Enumerable.Range(2, 5).Select(i => new DateTime(2024, 1, 2, 15 + i, 0, 0).ConvertFromUtc(firstTimeZone)).ToList();
+            var expectedTimes = Enumerable.Range(2, 5).Select(i => new DateTime(2024, 1, 2, 15 + i, 0, 0)).ToList();
             CollectionAssert.AreEqual(expected, published.Select(point => Math.Round((double)point.Value, 9)));
             CollectionAssert.AreEqual(expectedTimes, published.Select(point => point.EndTime));
             CollectionAssert.AreEqual(expected, rows.Select(point => Math.Round((double)point.Value, 9)));
             CollectionAssert.AreEqual(expectedTimes, rows.Select(point => point.EndTime));
+        }
+
+        [Test]
+        public void CrossSectionalInformationCoefficientHistoryKeepsEveryPeriodAcrossDaylightSavingTimeFallBack()
+        {
+            // hourly crypto bars ending 02:00 to 08:00 UTC on 2024-11-03, when New York's clock repeats 01:00 to 02:00. SPY,
+            // the first asset, is removed, so each period is correlated as soon as the three crypto assets have a bar
+            var crypto = new[] { "BTCUSD", "ETHUSD", "LTCUSD" }.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.Coinbase)).ToList();
+            var slices = new List<Slice>();
+            for (var i = 0; i < 7; i++)
+            {
+                var endTimeUtc = new DateTime(2024, 11, 3, 2 + i, 0, 0);
+                var bars = crypto.Select((symbol, j) =>
+                {
+                    var price = 100m + i * (j + 1) % 7;
+                    return (BaseData)new TradeBar(endTimeUtc.AddHours(-1), symbol, price, price, price, price, 1000, TimeSpan.FromHours(1));
+                }).ToList();
+                slices.Add(new Slice(endTimeUtc, bars, endTimeUtc));
+            }
+            var indicator = new CrossSectionalInformationCoefficient(crypto.Prepend(Symbols.SPY), _ => new RateOfChange(1));
+            indicator.Remove(Symbols.SPY);
+            var published = new List<IndicatorDataPoint>();
+            indicator.Updated += (_, point) => published.Add(point);
+
+            var rows = _algorithm.IndicatorHistory(indicator, slices).Current;
+
+            var expectedTimes = Enumerable.Range(2, 5).Select(i => new DateTime(2024, 11, 3, 2 + i, 0, 0)).ToList();
+            CollectionAssert.AreEqual(expectedTimes, published.Select(point => point.EndTime));
+            CollectionAssert.AreEqual(expectedTimes, rows.Select(point => point.EndTime));
+            CollectionAssert.AreEqual(published.Select(point => point.Value), rows.Select(point => point.Value));
         }
 
         [TestCase("count")]

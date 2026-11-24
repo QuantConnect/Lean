@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using QuantConnect.Data;
 
 namespace QuantConnect.Indicators
@@ -35,7 +34,8 @@ namespace QuantConnect.Indicators
     /// end at different local times, such as futures of different exchanges, share their daily periods. The indicator
     /// correlates a period as soon as every asset it tracks has an input for it. Otherwise, such as when an asset was
     /// delisted, it correlates the assets that have one when the next period starts. Each value has the latest end time
-    /// of its period's inputs, in the exchange time zone of the first asset the indicator tracked. A period needs at
+    /// of its period's inputs, in UTC, so values of assets of different exchange time zones, and values across daylight
+    /// saving time changes, keep distinct and increasing times. A period needs at
     /// least three assets with a signal value and a return. An asset with no input for a period pairs its last signal
     /// value with its return since then. Use <see cref="Add"/> and <see cref="Remove"/> to follow a changing
     /// cross-section, such as a universe's constituents.
@@ -50,7 +50,6 @@ namespace QuantConnect.Indicators
         private DateTime _periodEndTimeUtc;
         private IBaseData _periodLastInput;
         private DateTime _periodLastInputEndTimeUtc;
-        private DateTimeZone _timeZone;
         private bool _isPeriodCorrelated;
         private bool _isResolutionSet;
         private bool _isReady;
@@ -113,7 +112,6 @@ namespace QuantConnect.Indicators
             {
                 DataBySymbol[symbol] = new SymbolData(symbol, 2);
             }
-            _timeZone ??= DataBySymbol[symbol].ExchangeTimeZone;
             if (_isResolutionSet)
             {
                 _assetsAddedAfterFirstInput.Add(symbol);
@@ -205,9 +203,9 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Correlates the period and publishes it with the latest end time of its inputs, in the exchange time zone of the
-        /// first asset the indicator tracked, whatever the order of the inputs. A period correlated when the next one starts keeps its own time, and assets of different exchange
-        /// time zones don't give two periods the same time, such as in the indicator's history.
+        /// Correlates the period and publishes it with the latest end time of its inputs, in UTC: a period correlated when
+        /// the next one starts keeps its own time, and no two periods get the same time, such as in the indicator's history,
+        /// whatever the inputs' exchange time zones and daylight saving time.
         /// </summary>
         private void PublishPeriod()
         {
@@ -217,7 +215,7 @@ namespace QuantConnect.Indicators
             {
                 return;
             }
-            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastInputEndTimeUtc.ConvertFromUtc(_timeZone), IndicatorValue);
+            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastInputEndTimeUtc, IndicatorValue);
             OnUpdated(Current);
         }
 

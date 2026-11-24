@@ -109,11 +109,8 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(ExpectedValues[i] ?? 0, (double)indicator.Current.Value, 1e-9, $"Index {i}");
             }
 
-            // each day's latest close, 22:00 UTC, in the first asset's time zone, though ZC's bar comes first each day
-            var firstAsset = closesUtc.Keys.First();
-            var firstTimeZone = marketHours.GetExchangeHours(firstAsset.ID.Market, firstAsset, firstAsset.SecurityType).TimeZone;
-            CollectionAssert.AreEqual(Enumerable.Range(2, 5).Select(i => (StartTime.AddDays(i) + new TimeSpan(22, 0, 0)).ConvertFromUtc(firstTimeZone)),
-                publishedTimes);
+            // each day's latest close, 22:00 UTC, though ZC's bar comes first each day
+            CollectionAssert.AreEqual(Enumerable.Range(2, 5).Select(i => StartTime.AddDays(i) + new TimeSpan(22, 0, 0)), publishedTimes);
         }
 
         [Test]
@@ -227,6 +224,32 @@ namespace QuantConnect.Tests.Indicators
             // scipy.stats.spearmanr across the other four assets from index 3
             AssertPublished(new[] { -0.7, -0.4, 0.2, 0.0, 1.0 }, published);
             AssertPeriodTimes(new[] { 2, 3, 4, 5, 6 }, publishedTimes);
+        }
+
+        [Test]
+        public void KeepsIncreasingTimesAcrossDaylightSavingTimeFallBack()
+        {
+            // SPY, tracked first, has no bars while New York's clock repeats 01:00 to 02:00 (05:00 to 07:00 UTC), so each period
+            // of the three crypto assets is correlated when the next one starts
+            var crypto = new[] { "BTCUSD", "ETHUSD", "LTCUSD" }.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.Coinbase)).ToList();
+            var indicator = new CrossSectionalInformationCoefficient(crypto.Prepend(Symbols.SPY), _ => new RateOfChange(1));
+            var average = new SimpleMovingAverage(2).Of(indicator);
+            var publishedTimes = new List<DateTime>();
+            indicator.Updated += (_, point) => publishedTimes.Add(point.EndTime);
+
+            var startUtc = new DateTime(2024, 11, 3, 5, 50, 0);
+            for (var i = 0; i < 20; i++)
+            {
+                for (var j = 0; j < crypto.Count; j++)
+                {
+                    var price = 100m + i * (j + 1) % 7;
+                    indicator.Update(new TradeBar(startUtc.AddMinutes(i), crypto[j], price, price, price, price, 1000, TimeSpan.FromMinutes(1)));
+                }
+            }
+
+            // the periods ending 05:53 to 06:09 UTC, every one of them in the chained indicator
+            CollectionAssert.AreEqual(Enumerable.Range(3, 17).Select(i => startUtc.AddMinutes(i)), publishedTimes);
+            Assert.AreEqual(publishedTimes.Count, average.Samples);
         }
 
         [Test]
@@ -481,7 +504,7 @@ def create(symbols):
 
         private static void AssertPeriodTimes(IEnumerable<int> indices, List<DateTime> publishedTimes)
         {
-            CollectionAssert.AreEqual(indices.Select(index => CreateBar(Symbols.AAPL, index, 1m).EndTime), publishedTimes);
+            CollectionAssert.AreEqual(indices.Select(index => CreateBar(Symbols.AAPL, index, 1m).EndTime.ConvertToUtc(TimeZones.NewYork)), publishedTimes);
         }
 
         private static void UpdateAll(CrossSectionalInformationCoefficient indicator, int index)
