@@ -118,6 +118,25 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(expected, expiration(date));
         }
 
+        // 8/31/2020 and 8/31/2026 are UK summer bank holidays: the last London business day of August is the Friday before
+        [TestCase("20201001", "20200828")]
+        [TestCase("20261001", "20260828")]
+        // 5/31/2021 and 5/31/2027 are UK spring bank holidays (and US Memorial Day)
+        [TestCase("20210701", "20210528")]
+        [TestCase("20270701", "20270528")]
+        // normal case: the last London business day of the second month preceding the contract month
+        [TestCase("20211001", "20210831")]
+        [TestCase("20251001", "20250829")]
+        public void BrentLastDayFinancialFuturesExpireOnTheLastLondonBusinessDay(string input, string expectedStr)
+        {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr);
+
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(expected, expiration(date));
+        }
+
         [Test]
         public void MCLFutures()
         {
