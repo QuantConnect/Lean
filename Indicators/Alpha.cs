@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using NodaTime;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -82,6 +83,19 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _targetROC.IsReady && _beta.IsReady && _referenceROC.IsReady;
+
+        /// <summary>
+        /// The time zone of this indicator's values, so that the values of a target and a reference of different exchange
+        /// time zones share one clock. By default, the target's exchange time zone. That time zone can repeat an hour when
+        /// daylight saving time ends: for assets that trade then, such as crypto with US equities, set
+        /// <see cref="TimeZones.Utc"/>, which never does
+        /// </summary>
+        [PandasIgnore]
+        public DateTimeZone TimeZone
+        {
+            get => _beta.TimeZone;
+            set => _beta.TimeZone = value;
+        }
 
         /// <summary>
         /// Creates a new Alpha indicator with the specified name, target, reference, and period values
@@ -305,6 +319,17 @@ namespace QuantConnect.Indicators
             }
 
             return _alpha;
+        }
+
+        /// <summary>
+        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>The end time of the indicator's value</returns>
+        protected override DateTime GetValueEndTime(IBaseDataBar input)
+        {
+            // The beta computed its value from this same input
+            return _beta.Current.EndTime;
         }
 
         /// <summary>

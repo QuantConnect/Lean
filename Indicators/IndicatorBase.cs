@@ -217,7 +217,7 @@ namespace QuantConnect.Indicators
                 var nextResult = ValidateAndComputeNextValue((T)input);
                 if (nextResult.Status == IndicatorStatus.Success)
                 {
-                    Current = new IndicatorDataPoint(input.Symbol, input.EndTime, nextResult.Value);
+                    Current = new IndicatorDataPoint(input.Symbol, GetValueEndTime((T)input), nextResult.Value);
 
                     // let others know we've produced a new data point
                     OnUpdated(Current);
@@ -271,6 +271,16 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected abstract decimal ComputeNextValue(T input);
+
+        /// <summary>
+        /// Gets the end time of the value this indicator computes from the given input: by default, the input's end time
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>The end time of the indicator's value</returns>
+        protected virtual DateTime GetValueEndTime(T input)
+        {
+            return input.EndTime;
+        }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
