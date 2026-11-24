@@ -109,7 +109,7 @@ namespace QuantConnect.Securities.Option
             var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
             // fee models that depend on the position have to see the counter-party's long contracts, not the algorithm's short ones
-            var counterPartyOption = CreateCounterPartyOption(option, holding);
+            var counterPartyOption = option.WithHoldings(holding.AveragePrice, -holding.Quantity);
 
             // Scenario 1 (base): we just close option position, selling the counter-party's long contracts
             var marketOrder1 = new MarketOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
@@ -147,28 +147,6 @@ namespace QuantConnect.Securities.Option
                         - optionOrderFee2;
 
             return altPnL - basePnL;
-        }
-
-        /// <summary>
-        /// Creates a stand-in for the option that holds the counter-party's side of the algorithm's position.
-        /// It is the same option type and shares the option's prices and contract details, only the position differs.
-        /// </summary>
-        private static Option CreateCounterPartyOption(Option option, OptionHolding holding)
-        {
-            var symbol = option.Symbol;
-            var exchangeHours = option.Exchange.Hours;
-            var symbolProperties = (OptionSymbolProperties)option.SymbolProperties;
-            Option counterPartyOption = option switch
-            {
-                IndexOption.IndexOption => new IndexOption.IndexOption(symbol, exchangeHours, option.QuoteCurrency, (IndexOption.IndexOptionSymbolProperties)symbolProperties,
-                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying, option.ExerciseSettlement),
-                FutureOption.FutureOption => new FutureOption.FutureOption(symbol, exchangeHours, option.QuoteCurrency, symbolProperties,
-                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying),
-                _ => new Option(symbol, exchangeHours, option.QuoteCurrency, symbolProperties,
-                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying)
-            };
-            counterPartyOption.Holdings.SetHoldings(holding.AveragePrice, -holding.Quantity);
-            return counterPartyOption;
         }
     }
 }

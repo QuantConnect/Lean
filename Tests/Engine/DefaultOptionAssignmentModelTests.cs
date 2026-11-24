@@ -206,6 +206,7 @@ namespace QuantConnect.Tests.Engine
                 Assert.AreEqual(10, security.Holdings.Quantity);
                 Assert.AreEqual(option.GetType(), security.GetType());
                 Assert.AreEqual(option.BidPrice, security.BidPrice);
+                Assert.AreEqual(option.LocalTime, security.LocalTime);
             }
             Assert.AreEqual(-10, option.Holdings.Quantity);
         }
