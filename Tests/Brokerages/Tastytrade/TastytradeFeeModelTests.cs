@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Brokerages.Tastytrade
         [Test, TestCaseSource(nameof(FeeTestParameters))]
         public void CalculateRightOrderFeeBasedOnSecurity(Symbol symbol, decimal orderQuantity, decimal symbolHoldingQuantity, decimal expectedFeeQuantity)
         {
-            var parameters = GetOrderFeeParameters(symbol, orderQuantity, symbolHoldingQuantity);
+            var parameters = GetOrderFeeParameters(new MarketOrder(symbol, orderQuantity, DateTime.UtcNow), symbolHoldingQuantity);
 
             var fee = _feeModel.GetOrderFee(parameters);
 
@@ -87,20 +87,46 @@ namespace QuantConnect.Tests.Brokerages.Tastytrade
         }
 
         /// <summary>
-        /// Creates <see cref="OrderFeeParameters"/> using a <see cref="MarketOrder"/> and given
-        /// symbol and holding quantity.
+        /// Provides option exercises and assignments of different sizes, as the change in the holder's position.
         /// </summary>
-        /// <param name="symbol">The symbol of the security being ordered.</param>
-        /// <param name="orderQuantity">The order quantity.</param>
+        private static IEnumerable<TestCaseData> OptionExerciseTestParameters
+        {
+            get
+            {
+                var aaplOptionContract = Symbol.CreateOption(Symbols.AAPL, Market.USA, SecurityType.Option.DefaultOptionStyle(), OptionRight.Call, 200m, new DateTime(2025, 06, 20));
+                yield return new(aaplOptionContract, -1m, 1m);
+                yield return new(aaplOptionContract, -10m, 10m);
+                yield return new(aaplOptionContract, 10m, -10m);
+                var SP500EMini = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2025, 06, 20));
+                var SP500EMini_OptionContract = Symbol.CreateOption(SP500EMini, SP500EMini.ID.Market, SecurityType.FutureOption.DefaultOptionStyle(), OptionRight.Put, 900m, new DateTime(2025, 09, 19));
+                yield return new(SP500EMini_OptionContract, -10m, 10m);
+                yield return new(SP500EMini_OptionContract, 10m, -10m);
+            }
+        }
+
+        [Test, TestCaseSource(nameof(OptionExerciseTestParameters))]
+        public void ChargesAFlatFeeForOptionExercisesAndAssignments(Symbol symbol, decimal orderQuantity, decimal symbolHoldingQuantity)
+        {
+            var parameters = GetOrderFeeParameters(new OptionExerciseOrder(symbol, orderQuantity, DateTime.UtcNow), symbolHoldingQuantity);
+
+            var fee = _feeModel.GetOrderFee(parameters);
+
+            Assert.AreEqual(5m, fee.Value.Amount);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+        }
+
+        /// <summary>
+        /// Creates <see cref="OrderFeeParameters"/> for the given order and holding quantity.
+        /// </summary>
+        /// <param name="order">The order to get the fee of.</param>
         /// <param name="symbolHoldingQuantity">The current holding quantity.</param>
         /// <returns>A populated <see cref="OrderFeeParameters"/> object.</returns>
-        private static OrderFeeParameters GetOrderFeeParameters(Symbol symbol, decimal orderQuantity, decimal symbolHoldingQuantity)
+        private static OrderFeeParameters GetOrderFeeParameters(Order order, decimal symbolHoldingQuantity)
         {
-            var security = new Security(symbol, null, new Cash("USD", 0m, 1m), SymbolProperties.GetDefault("USD"), null, null, new SecurityCache());
+            var security = new Security(order.Symbol, null, new Cash("USD", 0m, 1m), SymbolProperties.GetDefault("USD"), null, null, new SecurityCache());
             security.Holdings.SetHoldings(100, symbolHoldingQuantity);
 
-            var marketOrder = new MarketOrder(symbol, orderQuantity, DateTime.UtcNow);
-            return new OrderFeeParameters(security, marketOrder);
+            return new OrderFeeParameters(security, order);
         }
     }
 }
