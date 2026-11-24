@@ -43,12 +43,10 @@ namespace QuantConnect.Indicators
         private readonly Func<Symbol, IIndicator> _signalFactory;
         private readonly Dictionary<Symbol, AssetData> _assets = new();
         private readonly Dictionary<Symbol, IIndicator> _signals = new();
-        private readonly HashSet<Symbol> _assetsAddedAfterFirstInput = new();
         private readonly HashSet<Symbol> _periodAssets = new();
         private DateTime _periodEndTimeUtc;
         private IBaseData _periodLastInput;
         private bool _isPeriodCorrelated;
-        private bool _isResolutionSet;
         private bool _isReady;
         private bool _hasNewValue;
         private int _signalWarmUpPeriod = 1;
@@ -109,10 +107,6 @@ namespace QuantConnect.Indicators
             {
                 DataBySymbol[symbol] = new SymbolData(symbol, 2);
             }
-            if (_isResolutionSet)
-            {
-                _assetsAddedAfterFirstInput.Add(symbol);
-            }
         }
 
         /// <summary>
@@ -126,7 +120,6 @@ namespace QuantConnect.Indicators
             _assets.Remove(symbol);
             _signals.Remove(symbol);
             DataBySymbol.Remove(symbol);
-            _assetsAddedAfterFirstInput.Remove(symbol);
             _periodAssets.Remove(symbol);
         }
 
@@ -153,17 +146,9 @@ namespace QuantConnect.Indicators
                 return IndicatorValue;
             }
 
-            // The inherited symbol data aligns the input's end time: in UTC, truncated to the inputs' resolution
+            // The inherited symbol data aligns the input's end time: in UTC, truncated to the input's resolution
             var symbolData = DataBySymbol[input.Symbol];
-            if (!_isResolutionSet || _assetsAddedAfterFirstInput.Remove(input.Symbol))
-            {
-                SetResolution(input);
-                _isResolutionSet = true;
-            }
-            else
-            {
-                symbolData.CurrentInput = input;
-            }
+            symbolData.CurrentInput = input;
 
             var inputEndTimeUtc = symbolData.CurrentInputEndTimeUtc;
             if (inputEndTimeUtc > _periodEndTimeUtc)
@@ -247,12 +232,10 @@ namespace QuantConnect.Indicators
             {
                 asset.Reset();
             }
-            _assetsAddedAfterFirstInput.Clear();
             _periodAssets.Clear();
             _periodEndTimeUtc = default;
             _periodLastInput = null;
             _isPeriodCorrelated = false;
-            _isResolutionSet = false;
             _isReady = false;
             base.Reset();
         }
