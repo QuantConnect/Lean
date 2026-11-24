@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Engine
             Assert.AreEqual(expectedQuantity, result.Quantity);
         }
 
-        // IB: the bid and ask fall in different commission tiers, the counter-party sells at the bid.
+        // IB: the bid and ask fall in different commission tiers, the counter-party sells at the bid; at the ask's tier exercising would win.
         // Tastytrade: closing the counter-party's long contracts is free, exercising them costs a flat fee
         private static IEnumerable<TestCaseData> CounterPartyFeeModels
         {
@@ -232,7 +232,8 @@ namespace QuantConnect.Tests.Engine
                 new SecurityCache()
             );
             securities.Add(underlyingSymbol, underlying);
-            underlying.SetMarketPrice(new Tick { Symbol = underlyingSymbol, TickType = TickType.Quote, BidPrice = 0.5009m, AskPrice = 0.54m, Value = 0.54m, Time = today });
+            // exercising and selling the shares at the bid returns 0.089 per share, 0.001 less than selling the contracts at the bid
+            underlying.SetMarketPrice(new Tick { Symbol = underlyingSymbol, TickType = TickType.Quote, BidPrice = 0.589m, AskPrice = 0.60m, Value = 0.60m, Time = today });
 
             var symbol = Symbol.CreateOption(underlyingSymbol, underlyingSymbol.ID.Market, OptionStyle.American, OptionRight.Call, 0.5m, expiration);
             var symbolProperties = new OptionSymbolProperties(string.Empty, Currencies.USD, 100, 0.01m, 1);
