@@ -108,20 +108,24 @@ namespace QuantConnect.Securities.Option
             // it's negative THEIR holdings. holding.Quantity is negative, so if counter-party exercises, they would reduce holdings
             var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
+            // fee models that depend on the position have to see the counter-party's long contracts, not the algorithm's short ones
+            var counterPartyOption = CreateCounterPartyOption(option, holding);
+
             // Scenario 1 (base): we just close option position, selling the counter-party's long contracts
             var marketOrder1 = new MarketOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var orderFee1 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
+                new OrderFeeParameters(counterPartyOption, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
 
             var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
                 * option.QuoteCurrency.ConversionRate
                 * option.SymbolProperties.ContractMultiplier
                 - orderFee1;
 
-            // Scenario 2 (alternative): we exercise option and then close underlying position
-            var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
+            // Scenario 2 (alternative): we exercise option and then close underlying position.
+            // An exercise order's quantity is the change in the holder's position, so exercising the counter-party's long contracts is negative
+            var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var optionOrderFee2 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, optionExerciseOrder2)).Value.Amount * option.QuoteCurrency.ConversionRate;
+                new OrderFeeParameters(counterPartyOption, optionExerciseOrder2)).Value.Amount * option.QuoteCurrency.ConversionRate;
 
             var underlyingOrderFee2Amount = 0m;
 
@@ -143,6 +147,28 @@ namespace QuantConnect.Securities.Option
                         - optionOrderFee2;
 
             return altPnL - basePnL;
+        }
+
+        /// <summary>
+        /// Creates a stand-in for the option that holds the counter-party's side of the algorithm's position.
+        /// It is the same option type and shares the option's prices and contract details, only the position differs.
+        /// </summary>
+        private static Option CreateCounterPartyOption(Option option, OptionHolding holding)
+        {
+            var symbol = option.Symbol;
+            var exchangeHours = option.Exchange.Hours;
+            var symbolProperties = (OptionSymbolProperties)option.SymbolProperties;
+            Option counterPartyOption = option switch
+            {
+                IndexOption.IndexOption => new IndexOption.IndexOption(symbol, exchangeHours, option.QuoteCurrency, (IndexOption.IndexOptionSymbolProperties)symbolProperties,
+                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying, option.ExerciseSettlement),
+                FutureOption.FutureOption => new FutureOption.FutureOption(symbol, exchangeHours, option.QuoteCurrency, symbolProperties,
+                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying),
+                _ => new Option(symbol, exchangeHours, option.QuoteCurrency, symbolProperties,
+                    holding.CurrencyConverter, RegisteredSecurityDataTypesProvider.Null, option.Cache, option.Underlying)
+            };
+            counterPartyOption.Holdings.SetHoldings(holding.AveragePrice, -holding.Quantity);
+            return counterPartyOption;
         }
     }
 }
