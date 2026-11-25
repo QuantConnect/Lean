@@ -32,8 +32,8 @@ namespace QuantConnect.Tests.API
     public class ApiTestBase
     {
         private static readonly object _configurationLock = new();
-        // the api refuses a user's backtest creates once too many queue up, so the parallel tests take turns
-        private static readonly SemaphoreSlim _backtestCreates = new(6);
+        // the api handles a user's backtest creates one at a time and refuses one that waits too long, so the parallel tests take turns
+        private static readonly object _backtestCreateLock = new();
 
         internal int TestAccount;
         internal string TestToken;
@@ -135,18 +135,13 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// Creates a backtest, with at most 6 creates in flight across the tests
+        /// Creates a backtest, one at a time across the tests
         /// </summary>
         protected Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null)
         {
-            _backtestCreates.Wait();
-            try
+            lock (_backtestCreateLock)
             {
                 return ApiClient.CreateBacktest(projectId, compileId, backtestName, parameters);
-            }
-            finally
-            {
-                _backtestCreates.Release();
             }
         }
 
