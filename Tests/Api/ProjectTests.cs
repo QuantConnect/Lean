@@ -344,7 +344,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Using our successful compile; launch a backtest!
             var backtestName = $"{DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")} API Backtest";
-            var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
+            var backtest = CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
@@ -432,7 +432,7 @@ namespace QuantConnect.Algorithm.CSharp
                 compile = WaitForCompilerResponse(ApiClient, project.ProjectId, compile.CompileId);
                 Assert.IsTrue(compile.Success, $"Error compiling project:\n    {string.Join("\n    ", compile.Errors)}");
 
-                var backtest = ApiClient.CreateBacktest(project.ProjectId, compile.CompileId, $"Orders Pagination Backtest {GetTimestamp()}");
+                var backtest = CreateBacktest(project.ProjectId, compile.CompileId, $"Orders Pagination Backtest {GetTimestamp()}");
                 backtest = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId, secondsTimeout: 300);
                 Assert.IsTrue(backtest.Success, $"Error running backtest:\n    {string.Join("\n    ", backtest.Errors)}");
                 var totalOrders = int.Parse(backtest.Statistics["Total Orders"], System.Globalization.CultureInfo.InvariantCulture);
@@ -572,7 +572,7 @@ namespace QuantConnect.Algorithm.CSharp
             compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
             Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
 
-            var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, $"{testName} Backtest {GetTimestamp()}");
+            var backtest = CreateBacktest(projectId, compile.CompileId, $"{testName} Backtest {GetTimestamp()}");
             backtest = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId, secondsTimeout: 300);
             Assert.IsTrue(backtest.Success, $"Error running backtest: {string.Join(", ", backtest.Errors)}");
             backtestId = backtest.BacktestId;
@@ -636,7 +636,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(compileSuccess.Success, $"Error compiling project:\n    {string.Join("\n    ", compileSuccess.Errors)}");
 
             var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
-            var backtest = ApiClient.CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
+            var backtest = CreateBacktest(project.ProjectId, compileSuccess.CompileId, backtestName);
 
             // Read ongoing backtest
             var backtestRead = ApiClient.ReadBacktest(project.ProjectId, backtest.BacktestId);
@@ -812,7 +812,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 // Create backtest
                 var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
-                var backtest = ApiClient.CreateBacktest(projectId, compileId, backtestName);
+                var backtest = CreateBacktest(projectId, compileId, backtestName);
                 var stringRepresentation = backtest.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
@@ -970,7 +970,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
             var backtestName = $"Estimate optimization Backtest";
-            var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
+            var backtest = CreateBacktest(projectId, compile.CompileId, backtestName);
 
             // Now wait until the backtest is completed and request the orders again
             var backtestReady = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId);
@@ -1112,7 +1112,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
 
                 var parameters = new Dictionary<string, string> { { "ema-fast", "20" }, { "ema-slow", "60" } };
-                var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, $"Parameters Backtest {GetTimestamp()}", parameters);
+                var backtest = CreateBacktest(projectId, compile.CompileId, $"Parameters Backtest {GetTimestamp()}", parameters);
                 Assert.IsTrue(backtest.Success, $"Error creating backtest: {string.Join(", ", backtest.Errors)}");
                 Assert.IsFalse(backtest.Debugging, "A backtest created through the api does not run under debugging mode");
 

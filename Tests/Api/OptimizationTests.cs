@@ -227,7 +227,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
 
             var backtestName = $"Estimate optimization Backtest";
-            var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
+            var backtest = CreateBacktest(projectId, compile.CompileId, backtestName);
 
             // Now wait until the backtest is completed and request the orders again
             var backtestReady = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId);
