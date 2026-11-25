@@ -46,6 +46,12 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; set; }
 
         /// <summary>
+        /// The time zone of this indicator's values, so that the values of assets of different exchange time zones share
+        /// one clock: the exchange time zone of the first symbol given at construction
+        /// </summary>
+        protected DateTimeZone TimeZone { get; }
+
+        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => DataBySymbol.Values.All(data => data.DataPoints.IsReady);
@@ -66,6 +72,7 @@ namespace QuantConnect.Indicators
             DataBySymbol = symbols.ToDictionary(symbol => symbol, symbol => new SymbolData(symbol, period));
             var isTimezoneDifferent = DataBySymbol.Values.Select(data => data.ExchangeTimeZone).Distinct().Count() > 1;
             WarmUpPeriod = period + (isTimezoneDifferent ? 1 : 0);
+            TimeZone = DataBySymbol.Values.FirstOrDefault()?.ExchangeTimeZone;
         }
 
         /// <summary>
@@ -102,6 +109,22 @@ namespace QuantConnect.Indicators
             }
 
             return IndicatorValue;
+        }
+
+        /// <summary>
+        /// Gets the end time of the value this indicator computes from the given input, in <see cref="TimeZone"/>.
+        /// The input of a symbol this indicator no longer tracks keeps its end time
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>The end time of the indicator's value</returns>
+        protected override DateTime GetValueEndTime(TInput input)
+        {
+            if (TimeZone == null || !DataBySymbol.TryGetValue(input.Symbol, out var symbolData)
+                || symbolData.ExchangeTimeZone == TimeZone)
+            {
+                return input.EndTime;
+            }
+            return input.EndTime.ConvertTo(symbolData.ExchangeTimeZone, TimeZone);
         }
 
         /// <summary>

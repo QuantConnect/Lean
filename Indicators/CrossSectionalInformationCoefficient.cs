@@ -34,9 +34,10 @@ namespace QuantConnect.Indicators
     /// end at different local times, such as futures of different exchanges, share their daily periods. The indicator
     /// correlates a period as soon as every asset it tracks has an input for it. Otherwise, such as when an asset was
     /// delisted, it correlates the assets that have one when the next period starts. Each value has the end time of its
-    /// period's last input. A period needs at least three assets with a signal value and a return. An asset with no input
-    /// for a period pairs its last signal value with its return since then. Use <see cref="Add"/> and
-    /// <see cref="Remove"/> to follow a changing cross-section, such as a universe's constituents.
+    /// period's last input, in the exchange time zone of the first asset given at construction. A period needs at least
+    /// three assets with a signal value and a return. An asset with no input for a period pairs its last signal value with
+    /// its return since then. Use <see cref="Add"/> and <see cref="Remove"/> to follow a changing cross-section, such as a
+    /// universe's constituents.
     /// </summary>
     public class CrossSectionalInformationCoefficient : MultiSymbolIndicator<IBaseData>
     {
@@ -46,6 +47,7 @@ namespace QuantConnect.Indicators
         private readonly HashSet<Symbol> _periodAssets = new();
         private DateTime _periodEndTimeUtc;
         private IBaseData _periodLastInput;
+        private DateTime _periodLastValueEndTime;
         private bool _isPeriodCorrelated;
         private bool _isReady;
         private bool _hasNewValue;
@@ -168,6 +170,8 @@ namespace QuantConnect.Indicators
             {
                 _periodAssets.Add(input.Symbol);
                 _periodLastInput = input;
+                // While its asset is tracked, as one removed before the period is correlated keeps its input's time
+                _periodLastValueEndTime = GetValueEndTime(input);
                 // An asset added after its period was correlated doesn't correlate that period again
                 if (!_isPeriodCorrelated && _periodAssets.Count == _assets.Count)
                 {
@@ -190,7 +194,7 @@ namespace QuantConnect.Indicators
             {
                 return;
             }
-            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastInput.EndTime, IndicatorValue);
+            Current = new IndicatorDataPoint(_periodLastInput.Symbol, _periodLastValueEndTime, IndicatorValue);
             OnUpdated(Current);
         }
 
