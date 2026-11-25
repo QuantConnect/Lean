@@ -19,6 +19,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -31,6 +32,8 @@ namespace QuantConnect.Tests.API
     public class ApiTestBase
     {
         private static readonly object _configurationLock = new();
+        // the api refuses a user's backtest creates once too many queue up, so the parallel tests take turns
+        private static readonly SemaphoreSlim _backtestCreates = new(6);
 
         internal int TestAccount;
         internal string TestToken;
@@ -99,7 +102,7 @@ namespace QuantConnect.Tests.API
             // Create a backtest
             Log.Debug("ApiTestBase.Setup(): Creating test backtest");
             var backtestName = $"{DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")} API Backtest";
-            var backtest = ApiClient.CreateBacktest(TestProject.ProjectId, compile.CompileId, backtestName);
+            var backtest = CreateBacktest(TestProject.ProjectId, compile.CompileId, backtestName);
             if (!backtest.Success)
             {
                 Assert.Warn("Could not create backtest for the test project, tests using it will fail.");
@@ -128,6 +131,22 @@ namespace QuantConnect.Tests.API
             {
                 Log.Debug("ApiTestBase.TearDown(): Deleting test project");
                 ApiClient.DeleteProject(TestProject.ProjectId);
+            }
+        }
+
+        /// <summary>
+        /// Creates a backtest, with at most 6 creates in flight across the tests
+        /// </summary>
+        protected Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null)
+        {
+            _backtestCreates.Wait();
+            try
+            {
+                return ApiClient.CreateBacktest(projectId, compileId, backtestName, parameters);
+            }
+            finally
+            {
+                _backtestCreates.Release();
             }
         }
 
