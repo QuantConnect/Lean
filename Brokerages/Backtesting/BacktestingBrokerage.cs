@@ -365,6 +365,12 @@ namespace QuantConnect.Brokerages.Backtesting
                             // invoke fee models for completely filled order events
                             foreach (var fill in fills)
                             {
+                                // an exercise is charged once, on the option's fill: delivering the underlying is part of it
+                                if (order.Type == OrderType.OptionExercise && fill.Symbol != order.Symbol)
+                                {
+                                    continue;
+                                }
+
                                 if (fill.Status == OrderStatus.Filled)
                                 {
                                     // this check is provided for backwards compatibility of older user-defined fill models

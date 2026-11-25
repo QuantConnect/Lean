@@ -18,9 +18,12 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.IndexOption;
+using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Data;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using System.Linq;
 
@@ -160,6 +163,111 @@ namespace QuantConnect.Tests.Engine
             var result = new DefaultOptionAssignmentModel().GetAssignment(new OptionAssignmentParameters(option));
 
             Assert.AreEqual(expectedQuantity, result.Quantity);
+        }
+
+        // IB: the bid and ask fall in different commission tiers, the counter-party sells at the bid; at the ask's tier exercising would win.
+        // Tastytrade: closing the counter-party's long contracts is free, exercising them costs a flat fee
+        private static IEnumerable<TestCaseData> CounterPartyFeeModels
+        {
+            get
+            {
+                yield return new TestCaseData(new InteractiveBrokersFeeModel());
+                yield return new TestCaseData(new TastytradeFeeModel());
+            }
+        }
+
+        [TestCaseSource(nameof(CounterPartyFeeModels))]
+        public void DoesNotAssignWhenSellingAtTheBidBeatsExercising(IFeeModel feeModel)
+        {
+            var option = CreateShortCallNearExpiration(feeModel);
+
+            var result = new DefaultOptionAssignmentModel().GetAssignment(new OptionAssignmentParameters(option));
+
+            Assert.AreEqual(0, result.Quantity);
+        }
+
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.IndexOption)]
+        [TestCase(SecurityType.FutureOption)]
+        public void EstimatesFeesAgainstTheCounterPartyPosition(SecurityType securityType)
+        {
+            var feeModel = new RecordingFeeModel();
+            var option = CreateShortCallNearExpiration(feeModel, securityType);
+
+            new DefaultOptionAssignmentModel().GetAssignment(new OptionAssignmentParameters(option));
+
+            // the counter-party holds 10 long contracts of the same option and either sells or exercises them
+            Assert.AreEqual(2, feeModel.Estimates.Count);
+            Assert.AreEqual(OrderType.Market, feeModel.Estimates[0].Order.Type);
+            Assert.AreEqual(OrderType.OptionExercise, feeModel.Estimates[1].Order.Type);
+            foreach (var (order, security) in feeModel.Estimates)
+            {
+                Assert.AreEqual(-10, order.Quantity);
+                Assert.AreEqual(10, security.Holdings.Quantity);
+                Assert.AreEqual(option.GetType(), security.GetType());
+                Assert.AreEqual(option.BidPrice, security.BidPrice);
+                Assert.AreEqual(option.LocalTime, security.LocalTime);
+                // the counter-party's contracts are valued at the option's market price, like the algorithm's
+                Assert.AreEqual(option.Holdings.Price, security.Holdings.Price);
+                Assert.AreEqual(-option.Holdings.HoldingsValue, security.Holdings.HoldingsValue);
+            }
+            Assert.AreEqual(-10, option.Holdings.Quantity);
+            Assert.AreEqual(0.1m, option.Holdings.AveragePrice);
+            Assert.AreEqual(0.1m, option.Holdings.Price);
+        }
+
+        private static Option CreateShortCallNearExpiration(IFeeModel feeModel, SecurityType securityType = SecurityType.Option)
+        {
+            var expiration = new DateTime(2016, 02, 19);
+            var today = expiration.AddDays(-3);
+            var securities = new SecurityManager(TimeKeeper);
+            var underlyingSymbol = securityType switch
+            {
+                SecurityType.IndexOption => Symbols.SPX,
+                SecurityType.FutureOption => Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, expiration),
+                _ => Symbols.SPY
+            };
+            var underlying = new Security(
+                underlyingSymbol,
+                SecurityExchangeHours,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            securities.Add(underlyingSymbol, underlying);
+            // exercising and selling the shares at the bid returns 0.089 per share, 0.001 less than selling the contracts at the bid
+            underlying.SetMarketPrice(new Tick { Symbol = underlyingSymbol, TickType = TickType.Quote, BidPrice = 0.589m, AskPrice = 0.60m, Value = 0.60m, Time = today });
+
+            var symbol = Symbol.CreateOption(underlyingSymbol, underlyingSymbol.ID.Market, OptionStyle.American, OptionRight.Call, 0.5m, expiration);
+            var symbolProperties = new OptionSymbolProperties(string.Empty, Currencies.USD, 100, 0.01m, 1);
+            var cash = new Cash(Currencies.USD, 0, 1m);
+            Option option = securityType switch
+            {
+                SecurityType.IndexOption => new IndexOption(symbol, SecurityExchangeHours, cash, new IndexOptionSymbolProperties(symbolProperties),
+                    ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null, new OptionCache(), underlying),
+                SecurityType.FutureOption => new FutureOption(symbol, SecurityExchangeHours, cash, symbolProperties,
+                    ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null, new OptionCache(), underlying),
+                _ => new Option(symbol, SecurityExchangeHours, cash, symbolProperties,
+                    ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null, new OptionCache(), underlying)
+            };
+            option.FeeModel = feeModel;
+            securities.Add(symbol, option);
+            option.Holdings.SetHoldings(0.1m, -10);
+            option.SetMarketPrice(new Tick { Symbol = symbol, TickType = TickType.Quote, BidPrice = 0.09m, AskPrice = 0.11m, Value = 0.10m, Time = today });
+            return option;
+        }
+
+        private class RecordingFeeModel : FeeModel
+        {
+            public List<(Order Order, Security Security)> Estimates { get; } = new();
+
+            public override OrderFee GetOrderFee(OrderFeeParameters parameters)
+            {
+                Estimates.Add((parameters.Order, parameters.Security));
+                return OrderFee.Zero;
+            }
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)

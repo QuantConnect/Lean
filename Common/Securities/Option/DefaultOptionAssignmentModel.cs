@@ -108,20 +108,24 @@ namespace QuantConnect.Securities.Option
             // it's negative THEIR holdings. holding.Quantity is negative, so if counter-party exercises, they would reduce holdings
             var underlyingQuantity = option.GetExerciseQuantity(holding.Quantity);
 
-            // Scenario 1 (base): we just close option position
-            var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
+            // fee models that depend on the position have to see the counter-party's long contracts, not the algorithm's short ones
+            var counterPartyOption = option.WithHoldings(holding.AveragePrice, -holding.Quantity);
+
+            // Scenario 1 (base): we just close option position, selling the counter-party's long contracts
+            var marketOrder1 = new MarketOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var orderFee1 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
+                new OrderFeeParameters(counterPartyOption, marketOrder1)).Value.Amount * option.QuoteCurrency.ConversionRate;
 
             var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
                 * option.QuoteCurrency.ConversionRate
                 * option.SymbolProperties.ContractMultiplier
                 - orderFee1;
 
-            // Scenario 2 (alternative): we exercise option and then close underlying position
-            var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
+            // Scenario 2 (alternative): we exercise option and then close underlying position.
+            // An exercise order's quantity is the change in the holder's position, so exercising the counter-party's long contracts is negative
+            var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
             var optionOrderFee2 = option.FeeModel.GetOrderFee(
-                new OrderFeeParameters(option, optionExerciseOrder2)).Value.Amount * option.QuoteCurrency.ConversionRate;
+                new OrderFeeParameters(counterPartyOption, optionExerciseOrder2)).Value.Amount * option.QuoteCurrency.ConversionRate;
 
             var underlyingOrderFee2Amount = 0m;
 

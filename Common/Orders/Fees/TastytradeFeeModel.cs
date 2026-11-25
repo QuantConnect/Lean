@@ -32,6 +32,11 @@ namespace QuantConnect.Orders.Fees
         private const decimal _optionFeeOpen = 1m;
 
         /// <summary>
+        /// The fee associated with an option exercise or assignment (per transaction).
+        /// </summary>
+        private const decimal _optionExerciseFee = 5m;
+
+        /// <summary>
         /// The fee associated with futures transactions (per contract).
         /// </summary>
         private const decimal _futureFee = 1.25m;
@@ -51,6 +56,12 @@ namespace QuantConnect.Orders.Fees
         /// </returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
+            // an option exercise or assignment is charged a flat fee, whatever its size
+            if (parameters.Order.Type == OrderType.OptionExercise)
+            {
+                return new OrderFee(new CashAmount(_optionExerciseFee, Currencies.USD));
+            }
+
             var feeRate = default(decimal);
             switch (parameters.Security.Type)
             {

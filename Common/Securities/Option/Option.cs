@@ -324,6 +324,21 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates a copy of this option that holds the given position and shares everything else with it,
+        /// such as its prices, local time and models
+        /// </summary>
+        /// <param name="averagePrice">The average price of the position</param>
+        /// <param name="quantity">The quantity of the position</param>
+        internal Option WithHoldings(decimal averagePrice, decimal quantity)
+        {
+            var copy = (Option)MemberwiseClone();
+            copy.Holdings = new OptionHolding(copy, Holdings.CurrencyConverter);
+            copy.Holdings.SetHoldings(averagePrice, quantity);
+            copy.Holdings.UpdateMarketPrice(Holdings.Price);
+            return copy;
+        }
+
+        /// <summary>
         /// Checks if option is eligible for automatic exercise on expiration
         /// </summary>
         public bool IsAutoExercised(decimal underlyingPrice)
