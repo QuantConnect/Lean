@@ -207,8 +207,13 @@ namespace QuantConnect.Tests.Engine
                 Assert.AreEqual(option.GetType(), security.GetType());
                 Assert.AreEqual(option.BidPrice, security.BidPrice);
                 Assert.AreEqual(option.LocalTime, security.LocalTime);
+                // the counter-party's contracts are valued at the option's market price, like the algorithm's
+                Assert.AreEqual(option.Holdings.Price, security.Holdings.Price);
+                Assert.AreEqual(-option.Holdings.HoldingsValue, security.Holdings.HoldingsValue);
             }
             Assert.AreEqual(-10, option.Holdings.Quantity);
+            Assert.AreEqual(0.1m, option.Holdings.AveragePrice);
+            Assert.AreEqual(0.1m, option.Holdings.Price);
         }
 
         private static Option CreateShortCallNearExpiration(IFeeModel feeModel, SecurityType securityType = SecurityType.Option)

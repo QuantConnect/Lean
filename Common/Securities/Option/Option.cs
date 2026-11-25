@@ -334,6 +334,7 @@ namespace QuantConnect.Securities.Option
             var copy = (Option)MemberwiseClone();
             copy.Holdings = new OptionHolding(copy, Holdings.CurrencyConverter);
             copy.Holdings.SetHoldings(averagePrice, quantity);
+            copy.Holdings.UpdateMarketPrice(Holdings.Price);
             return copy;
         }
 
