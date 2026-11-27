@@ -118,6 +118,56 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(expected, expiration(date));
         }
 
+        // 8/31/2020 and 8/31/2026 are UK summer bank holidays: the last London business day of August is the Friday before
+        [TestCase("20201001", "20200828")]
+        [TestCase("20261001", "20260828")]
+        // 5/31/2021 and 5/31/2027 are UK spring bank holidays (and US Memorial Day)
+        [TestCase("20210701", "20210528")]
+        [TestCase("20270701", "20270528")]
+        // normal case: the last London business day of the second month preceding the contract month
+        [TestCase("20211001", "20210831")]
+        [TestCase("20251001", "20250829")]
+        public void BrentLastDayFinancialFuturesExpireOnTheLastLondonBusinessDay(string input, string expectedStr)
+        {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr);
+
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(expected, expiration(date));
+        }
+
+        // the February contract terminates on the second last London business day of December
+        // (last trade dates of the BZ February contracts in our data, 2017 to 2026)
+        [TestCase("20170201", "20161229")]
+        [TestCase("20180201", "20171228")]
+        [TestCase("20190201", "20181228")]
+        [TestCase("20200201", "20191230")]
+        [TestCase("20210201", "20201230")]
+        [TestCase("20220201", "20211230")]
+        [TestCase("20230201", "20221229")]
+        [TestCase("20240201", "20231228")]
+        [TestCase("20250201", "20241230")]
+        [TestCase("20260201", "20251230")]
+        public void BrentLastDayFinancialFebruaryFuturesExpireOnTheSecondLastLondonBusinessDay(string input, string expectedStr)
+        {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr);
+
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(expected, expiration(date));
+        }
+
+        [Test]
+        public void BrentLastDayFinancialFebruaryFutureBeforeTheRuleChangeKeepsItsExpiry()
+        {
+            // BZG16 predates the rule that starts with the March 2016 contract, so the February exception doesn't apply
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(new DateTime(2015, 12, 31), expiration(new DateTime(2016, 2, 1)));
+        }
+
         [Test]
         public void MCLFutures()
         {

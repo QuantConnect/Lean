@@ -2287,21 +2287,15 @@ namespace QuantConnect.Securities.Future
                 {
                     var market = Market.NYMEX;
                     var symbol = Futures.Energy.BrentLastDayFinancial;
+                    // Because the rule uses London business days, the UK bank holidays are listed as bank holidays in MHDB
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
                     // Monthly contracts listed for the current year and the next 7 calendar years and 3 additional contract months.
                     // Trading terminates the last London business day of the month, 2 months prior to the contract month except for the February contract month which terminates the 2nd last London business day of the month, 2 months prior to the contract month.
                     var twoMonthsPriorToContractMonth = time.AddMonths(-2);
 
-                    DateTime lastBusinessDay;
-
-                    if (twoMonthsPriorToContractMonth.Month == 2)
-                    {
-                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1, holidays);
-                    }
-                    else
-                    {
-                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1, holidays);
-                    }
+                    // The current rule starts with the March 2016 contract, so the February exception starts with February 2017
+                    var n = time.Month == 2 && time.Year >= 2017 ? 2 : 1;
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, n, holidays);
 
                     lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidays);
 
