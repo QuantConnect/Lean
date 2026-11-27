@@ -48,13 +48,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         /// <param name="resultHandler">Result handler reference used to send errors</param>
         /// <param name="enumerator">The source enumerator to be wrapped</param>
-        /// <param name="security">The security who's data is being enumerated</param>
+        /// <param name="security">The security whose data is being enumerated</param>
         /// <param name="endTime">The end time of the subscription</param>
         /// <param name="extendedMarketHours">True if extended market hours are enabled</param>
         /// <param name="liveMode">True if live mode</param>
         /// <param name="securityExchangeHours">The security exchange hours instance to use</param>
-        /// <returns>A new instance of the <see cref="SubscriptionFilterEnumerator"/> class that has had it's <see cref="DataFilterError"/>
-        /// event subscribed to to send errors to the result handler</returns>
+        /// <returns>A new instance of the <see cref="SubscriptionFilterEnumerator"/> class that has had its <see cref="DataFilterError"/>
+        /// event subscribed to send errors to the result handler</returns>
         public static SubscriptionFilterEnumerator WrapForDataFeed(IResultHandler resultHandler, IEnumerator<BaseData> enumerator, Security security, DateTime endTime, bool extendedMarketHours, bool liveMode,
             SecurityExchangeHours securityExchangeHours)
         {
