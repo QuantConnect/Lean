@@ -2293,16 +2293,7 @@ namespace QuantConnect.Securities.Future
                     // Trading terminates the last London business day of the month, 2 months prior to the contract month except for the February contract month which terminates the 2nd last London business day of the month, 2 months prior to the contract month.
                     var twoMonthsPriorToContractMonth = time.AddMonths(-2);
 
-                    DateTime lastBusinessDay;
-
-                    if (twoMonthsPriorToContractMonth.Month == 2)
-                    {
-                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1, holidays);
-                    }
-                    else
-                    {
-                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1, holidays);
-                    }
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, time.Month == 2 ? 2 : 1, holidays);
 
                     lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(lastBusinessDay, -1, holidays);
 
