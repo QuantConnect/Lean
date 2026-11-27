@@ -1,0 +1,44 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+namespace QuantConnect.Brokerages
+{
+    /// <summary>
+    /// State of an asynchronous brokerage account-group assignment.
+    /// </summary>
+    public enum BrokerageAccountGroupAssignmentStatus
+    {
+        /// <summary>
+        /// No assignment result is available. The brokerage may not expose account-group management, or no request
+        /// has yet produced a result.
+        /// </summary>
+        Unavailable,
+
+        /// <summary>
+        /// The asynchronous request was accepted for processing.
+        /// </summary>
+        Pending,
+
+        /// <summary>
+        /// The brokerage confirmed the requested assignment and refreshed account state.
+        /// </summary>
+        Succeeded,
+
+        /// <summary>
+        /// The request failed or could not be confirmed.
+        /// </summary>
+        Failed
+    }
+}
