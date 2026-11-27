@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
@@ -241,6 +242,70 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedMarketHoursSegment.Start, marketHoursSegment.Start);
             Assert.AreEqual(expectedMarketHoursSegment.End, marketHoursSegment.End);
             Assert.AreEqual(expectedMarketHoursSegment.State, marketHoursSegment.State);
+        }
+
+        [TestCase("16:30", false, "Market: 09:00:00-16:30:00")]
+        [TestCase("16:30", true, "PreMarket: 04:00:00-09:00:00 | Market: 09:00:00-16:30:00 | PostMarket: 16:30:00-20:00:00")]
+        [TestCase("20:00", true, "PreMarket: 04:00:00-09:00:00 | Market: 09:00:00-20:00:00")]
+        [TestCase("21:00", true, "PreMarket: 04:00:00-09:00:00 | Market: 09:00:00-21:00:00")]
+        [TestCase("15:00", true, "PreMarket: 04:00:00-09:00:00 | Market: 09:00:00-16:00:00 | PostMarket: 16:00:00-20:00:00")]
+        public void GetMarketHoursWithLateClose(string lateClose, bool extendedMarketHours, string expectedSegments)
+        {
+            var segments = new List<MarketHoursSegment> { new(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(16, 0, 0)) };
+            if (extendedMarketHours)
+            {
+                segments.Insert(0, new(MarketHoursState.PreMarket, new TimeSpan(4, 0, 0), new TimeSpan(9, 0, 0)));
+                segments.Add(new(MarketHoursState.PostMarket, new TimeSpan(16, 0, 0), new TimeSpan(20, 0, 0)));
+            }
+            var date = new DateTime(2026, 11, 19);
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new[] { new LocalMarketHours(DayOfWeek.Thursday, segments) }.ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, TimeSpan.Parse(lateClose, CultureInfo.InvariantCulture) } });
+
+            var marketHours = exchangeHours.GetMarketHours(date);
+
+            Assert.AreEqual(expectedSegments, string.Join(" | ", marketHours.Segments));
+            Assert.AreEqual(string.Join(" | ", segments), string.Join(" | ", exchangeHours.GetMarketHours(date.AddDays(7)).Segments));
+        }
+
+        [Test]
+        public void MarketIsOpenUntilLateClose()
+        {
+            var date = new DateTime(2026, 11, 19);
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new[] { new LocalMarketHours(DayOfWeek.Thursday, new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(15, 30, 0))) }
+                    .ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } });
+
+            Assert.IsTrue(exchangeHours.IsOpen(date.AddHours(16), false));
+            Assert.IsFalse(exchangeHours.IsOpen(date.AddHours(16.5), false));
+            Assert.AreEqual(date.AddHours(16.5), exchangeHours.GetNextMarketClose(date.AddHours(12), false));
+            Assert.AreEqual(date.AddDays(7).AddHours(15.5), exchangeHours.GetNextMarketClose(date.AddHours(17), false));
+        }
+
+        [Test]
+        public void SettingTheExchangeMarketHoursKeepsItsLateCloses()
+        {
+            var date = new DateTime(2026, 11, 19);
+            var exchange = new SecurityExchange(new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new Dictionary<DayOfWeek, LocalMarketHours>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } }));
+
+            exchange.SetMarketHours(new[] { new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(15, 30, 0)) });
+
+            Assert.AreEqual(date.AddHours(16.5), exchange.Hours.GetNextMarketClose(date.AddHours(12), false));
         }
 
         [Test]

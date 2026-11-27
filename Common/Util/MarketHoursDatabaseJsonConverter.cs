@@ -238,6 +238,12 @@ namespace QuantConnect.Util
             public Dictionary<string, TimeSpan> LateOpens { get; set; } = new Dictionary<string, TimeSpan>();
 
             /// <summary>
+            /// Late closes by date
+            /// </summary>
+            [JsonProperty("lateCloses")]
+            public Dictionary<string, TimeSpan> LateCloses { get; set; } = new Dictionary<string, TimeSpan>();
+
+            /// <summary>
             /// Bank holidays date strings
             /// </summary>
             [JsonProperty("bankHolidays")]
@@ -270,6 +276,7 @@ namespace QuantConnect.Util
                 Holidays = hours.Holidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
                 EarlyCloses = entry.ExchangeHours.EarlyCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
                 LateOpens = entry.ExchangeHours.LateOpens.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
+                LateCloses = entry.ExchangeHours.LateCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
             }
 
             /// <summary>
@@ -292,6 +299,7 @@ namespace QuantConnect.Util
                 var bankHolidayDates = BankHolidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
                 IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
                 IReadOnlyDictionary<DateTime, TimeSpan> lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                IReadOnlyDictionary<DateTime, TimeSpan> lateCloses = LateCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
                 var exchangeTimeZone = DateTimeZoneProviders.Tzdb[ExchangeTimeZone];
 
                 if(underlyingEntry != null)
@@ -313,15 +321,19 @@ namespace QuantConnect.Util
                     {
                         lateOpens = ConvertTimeZone(underlyingEntry.ExchangeHours.LateOpens, underlyingEntry.ExchangeHours.TimeZone, exchangeTimeZone);
                     }
+                    if (lateCloses.Count == 0)
+                    {
+                        lateCloses = ConvertTimeZone(underlyingEntry.ExchangeHours.LateCloses, underlyingEntry.ExchangeHours.TimeZone, exchangeTimeZone);
+                    }
                 }
 
                 if(marketEntry != null)
                 {
                     foreach (var holiday in marketEntry.ExchangeHours.Holidays)
                     {
-                        // an early close or late open of this entry on a market-wide holiday means this entry trades on that date,
+                        // an early close, late open or late close of this entry on a market-wide holiday means this entry trades on that date,
                         // but expiration rules should still skip it, the same as a bank holiday
-                        if (earlyCloses.ContainsKey(holiday) || lateOpens.ContainsKey(holiday))
+                        if (earlyCloses.ContainsKey(holiday) || lateOpens.ContainsKey(holiday) || lateCloses.ContainsKey(holiday))
                         {
                             bankHolidayDates.Add(holiday);
                         }
@@ -347,9 +359,15 @@ namespace QuantConnect.Util
                         lateOpens = MergeLateOpensAndEarlyCloses(
                             ConvertTimeZone(marketEntry.ExchangeHours.LateOpens, marketEntry.ExchangeHours.TimeZone, exchangeTimeZone), lateOpens);
                     }
+
+                    if (marketEntry.ExchangeHours.LateCloses.Count > 0)
+                    {
+                        lateCloses = MergeLateOpensAndEarlyCloses(
+                            ConvertTimeZone(marketEntry.ExchangeHours.LateCloses, marketEntry.ExchangeHours.TimeZone, exchangeTimeZone), lateCloses);
+                    }
                 }
 
-                var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates);
+                var exchangeHours = new SecurityExchangeHours(exchangeTimeZone, holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates, lateCloses);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 

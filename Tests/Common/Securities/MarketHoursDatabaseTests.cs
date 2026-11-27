@@ -242,7 +242,8 @@ namespace QuantConnect.Tests.Common.Securities
                 var dateSets = new[]
                 {
                     ("early close", exchangeHours.EarlyCloses.Keys.AsEnumerable()),
-                    ("late open", exchangeHours.LateOpens.Keys.AsEnumerable())
+                    ("late open", exchangeHours.LateOpens.Keys.AsEnumerable()),
+                    ("late close", exchangeHours.LateCloses.Keys.AsEnumerable())
                 };
 
                 foreach (var (name, dates) in dateSets)
@@ -504,6 +505,20 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(date.AddHours(earlyCloseHour), exchangeHours.GetLastDailyMarketClose(date, false));
         }
 
+        [TestCase("2026-11-19", "Market: 10:00:00-16:30:00")]
+        [TestCase("2026-11-18", "Market: 09:00:00-15:30:00")]
+        [TestCase("2025-11-13", "Market: 10:00:00-16:30:00")]
+        [TestCase("2026-01-02", "Market: 10:00:00-15:30:00")]
+        public void KospiIndexTradesAnHourLaterOnTheCollegeEntranceExamDate(string date, string expectedMarketHours)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(Market.KRX, Symbol.Create("KM", SecurityType.Index, Market.KRX), SecurityType.Index);
+
+            var marketHours = exchangeHours.GetMarketHours(Parse.DateTime(date));
+
+            Assert.AreEqual(expectedMarketHours, string.Join(" | ", marketHours.Segments));
+        }
+
         [Test]
         public void InheritedEarlyClosesAndLateOpensAreConvertedToTheExchangeTimeZone()
         {
@@ -514,7 +529,8 @@ namespace QuantConnect.Tests.Common.Securities
       ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""thursday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
       ""holidays"": [],
       ""earlyCloses"": { ""11/28/2025"": ""12:00:00"", ""12/24/2025"": ""23:30:00"" },
-      ""lateOpens"": { ""11/28/2025"": ""09:30:00"" }
+      ""lateOpens"": { ""11/28/2025"": ""09:30:00"" },
+      ""lateCloses"": { ""11/27/2025"": ""16:00:00"" }
     },
     ""Index-usa-NDX"": {
       ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
@@ -538,6 +554,7 @@ namespace QuantConnect.Tests.Common.Securities
             var newYork = database.GetExchangeHours(Market.USA, Symbol.Create("NDX", SecurityType.Index, Market.USA), SecurityType.Index);
             Assert.AreEqual(new TimeSpan(13, 0, 0), newYork.EarlyCloses[new DateTime(2025, 11, 28)]);
             Assert.AreEqual(new TimeSpan(10, 30, 0), newYork.LateOpens[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(17, 0, 0), newYork.LateCloses[new DateTime(2025, 11, 27)]);
             // 23:30 Chicago is 00:30 of the next day in New York
             Assert.IsFalse(newYork.EarlyCloses.ContainsKey(new DateTime(2025, 12, 24)));
             Assert.AreEqual(new TimeSpan(0, 30, 0), newYork.EarlyCloses[new DateTime(2025, 12, 25)]);
@@ -552,6 +569,7 @@ namespace QuantConnect.Tests.Common.Securities
             var losAngeles = database.GetExchangeHours(Market.USA, option, SecurityType.IndexOption);
             Assert.AreEqual(new TimeSpan(10, 0, 0), losAngeles.EarlyCloses[new DateTime(2025, 11, 28)]);
             Assert.AreEqual(new TimeSpan(7, 30, 0), losAngeles.LateOpens[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(14, 0, 0), losAngeles.LateCloses[new DateTime(2025, 11, 27)]);
             Assert.AreEqual(new TimeSpan(21, 30, 0), losAngeles.EarlyCloses[new DateTime(2025, 12, 24)]);
         }
 

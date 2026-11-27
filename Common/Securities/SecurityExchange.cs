@@ -136,7 +136,8 @@ namespace QuantConnect.Securities
             }
 
             // create a new exchange hours instance for the new hours
-            Hours = new SecurityExchangeHours(Hours.TimeZone, Hours.Holidays, marketHours, Hours.EarlyCloses, Hours.LateOpens);
+            Hours = new SecurityExchangeHours(Hours.TimeZone, Hours.Holidays, marketHours, Hours.EarlyCloses, Hours.LateOpens,
+                lateCloses: Hours.LateCloses);
         }
     }
 }

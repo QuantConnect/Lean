@@ -24,7 +24,7 @@ namespace QuantConnect.Securities
 {
     /// <summary>
     /// Represents the schedule of a security exchange. This includes daily regular and extended market hours
-    /// as well as holidays, early closes and late opens.
+    /// as well as holidays, early closes, late opens and late closes.
     /// </summary>
     /// <remarks>
     /// This type assumes that IsOpen will be called with increasingly future times, that is, the calls should never back
@@ -38,6 +38,7 @@ namespace QuantConnect.Securities
         private HashSet<long> _bankHolidays;
         private IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
         private IReadOnlyDictionary<DateTime, TimeSpan> _lateOpens;
+        private IReadOnlyDictionary<DateTime, TimeSpan> _lateCloses;
 
         // these are listed individually for speed
         private LocalMarketHours _sunday;
@@ -102,6 +103,11 @@ namespace QuantConnect.Securities
         public IReadOnlyDictionary<DateTime, TimeSpan> LateOpens => _lateOpens;
 
         /// <summary>
+        /// Gets the late closes for this exchange, the dates its regular market closes later than usual
+        /// </summary>
+        public IReadOnlyDictionary<DateTime, TimeSpan> LateCloses => _lateCloses;
+
+        /// <summary>
         /// Gets the most common tradable time during the market week.
         /// For a normal US equity trading day this is 6.5 hours.
         /// This does NOT account for extended market hours and only
@@ -136,19 +142,23 @@ namespace QuantConnect.Securities
         /// <param name="marketHoursForEachDayOfWeek">The exchange's schedule for each day of the week</param>
         /// <param name="earlyCloses">The dates this exchange has an early close</param>
         /// <param name="lateOpens">The dates this exchange has a late open</param>
+        /// <param name="bankHolidayDates">The tradable dates that expiration rules skip because banks are closed</param>
+        /// <param name="lateCloses">The dates this exchange has a late close</param>
         public SecurityExchangeHours(
             DateTimeZone timeZone,
             IEnumerable<DateTime> holidayDates,
             Dictionary<DayOfWeek, LocalMarketHours> marketHoursForEachDayOfWeek,
             IReadOnlyDictionary<DateTime, TimeSpan> earlyCloses,
             IReadOnlyDictionary<DateTime, TimeSpan> lateOpens,
-            IEnumerable<DateTime> bankHolidayDates = null)
+            IEnumerable<DateTime> bankHolidayDates = null,
+            IReadOnlyDictionary<DateTime, TimeSpan> lateCloses = null)
         {
             TimeZone = timeZone;
             _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
             _bankHolidays = (bankHolidayDates ?? Enumerable.Empty<DateTime>()).Select(x => x.Date.Ticks).ToHashSet();
             _earlyCloses = earlyCloses;
             _lateOpens = lateOpens;
+            _lateCloses = lateCloses ?? new Dictionary<DateTime, TimeSpan>();
             _openHoursByDay = marketHoursForEachDayOfWeek;
 
             SetMarketHoursForDay(DayOfWeek.Sunday, out _sunday);
@@ -564,7 +574,8 @@ namespace QuantConnect.Securities
 
             var hasEarlyClose = _earlyCloses.TryGetValue(localDateTime.Date, out var earlyCloseTime);
             var hasLateOpen = _lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime);
-            if (!hasEarlyClose && !hasLateOpen)
+            var hasLateClose = _lateCloses.TryGetValue(localDateTime.Date, out var lateCloseTime);
+            if (!hasEarlyClose && !hasLateOpen && !hasLateClose)
             {
                 _cachedMarketHours = new(marketHours, localDateTime);
                 return marketHours;
@@ -649,6 +660,29 @@ namespace QuantConnect.Securities
                 marketHoursSegments = segmentsEarlyClose;
             }
 
+            // A late close extends the last regular market segment of the day, the segments it now overlaps are shortened or dropped
+            if (hasLateClose)
+            {
+                var lastMarketSegmentIndex = marketHoursSegments.Count - 1;
+                while (lastMarketSegmentIndex >= 0 && marketHoursSegments[lastMarketSegmentIndex].State != MarketHoursState.Market)
+                {
+                    lastMarketSegmentIndex--;
+                }
+
+                if (lastMarketSegmentIndex >= 0 && marketHoursSegments[lastMarketSegmentIndex].End < lateCloseTime)
+                {
+                    var segmentsLateClose = new List<MarketHoursSegment>(marketHoursSegments.Take(lastMarketSegmentIndex))
+                    {
+                        new(MarketHoursState.Market, marketHoursSegments[lastMarketSegmentIndex].Start, lateCloseTime)
+                    };
+                    foreach (var segment in marketHoursSegments.Skip(lastMarketSegmentIndex + 1).Where(segment => segment.End > lateCloseTime))
+                    {
+                        segmentsLateClose.Add(new(segment.State, segment.Start > lateCloseTime ? segment.Start : lateCloseTime, segment.End));
+                    }
+                    marketHoursSegments = segmentsLateClose;
+                }
+            }
+
             marketHours = new LocalMarketHours(localDateTime.DayOfWeek, marketHoursSegments);
             _cachedMarketHours = new(marketHours, localDateTime);
             return marketHours;
@@ -701,6 +735,7 @@ namespace QuantConnect.Securities
             _holidays = other._holidays;
             _earlyCloses = other._earlyCloses;
             _lateOpens = other._lateOpens;
+            _lateCloses = other._lateCloses;
             _sunday = other._sunday;
             _monday = other._monday;
             _tuesday = other._tuesday;
