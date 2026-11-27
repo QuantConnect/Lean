@@ -421,6 +421,46 @@ namespace QuantConnect.Tests.Brokerages
             Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
         }
 
+        [Test]
+        public void SecondPartFilledWhileItsCancelIsInFlightKeepsTheOrderFilled()
+        {
+            var leanOrder = new MarketOrder(Symbols.AAPL, -15, new DateTime(2024, 6, 10));
+            using var autoResetEventSecondPartCancelRejected = new AutoResetEvent(false);
+
+            using var brokerage = InitializeBrokerage((leanOrder.Symbol.Value, 180m, 10));
+
+            // The cancel targets the filled first part while the second part is being placed
+            brokerage.PlacingCrossZeroSecondPart = () =>
+                Assert.IsTrue(brokerage.CancelOrder(brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single()));
+            // The second part fills before the brokerage acknowledges its cancel, which the brokerage then rejects
+            brokerage.CancelInFlight = brokerageOrderId =>
+            {
+                if (brokerageOrderId == brokerage.PlacedBrokerageOrderIds[1])
+                {
+                    brokerage.FillCrossZeroSecondPart(brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single());
+                }
+            };
+            brokerage.Message += (_, message) =>
+            {
+                if (message.Code == "CancelNotOpenOrder")
+                {
+                    autoResetEventSecondPartCancelRejected.Set();
+                }
+            };
+            var orderStatuses = new List<OrderStatus>();
+            brokerage.OrdersStatusChanged += (_, orderEvents) => orderStatuses.Add(orderEvents[0].Status);
+
+            Assert.IsTrue(brokerage.PlaceOrder(leanOrder));
+
+            brokerage.FillOpenOrders();
+            Assert.IsTrue(autoResetEventSecondPartCancelRejected.WaitOne(TimeSpan.FromSeconds(5)));
+
+            CollectionAssert.AreEqual(brokerage.PlacedBrokerageOrderIds, brokerage.CanceledBrokerageOrderIds);
+            CollectionAssert.AreEqual(new[] { OrderStatus.Submitted, OrderStatus.PartiallyFilled, OrderStatus.Canceled, OrderStatus.Filled }, orderStatuses);
+            Assert.AreEqual(OrderStatus.Filled, brokerage.GetAllOrders(o => o.Id == leanOrder.Id).Single().Status);
+            Assert.AreEqual(0, brokerage.GetLeanOrderByZeroCrossBrokerageOrderIdCount());
+        }
+
         /// <summary>
         /// Create instance of Phony brokerage.
         /// </summary>
@@ -537,6 +577,11 @@ namespace QuantConnect.Tests.Brokerages
             public TimeSpan CancelAcknowledgementDelay { get; set; }
 
             /// <summary>
+            /// Invoked with the brokerage order id a cancel targets, before the brokerage acknowledges it.
+            /// </summary>
+            public Action<string> CancelInFlight { get; set; }
+
+            /// <summary>
             /// Held while an order is placed or canceled, the way a brokerage serializes its requests with its order updates stream.
             /// </summary>
             private readonly object _placementLock = new();
@@ -559,7 +604,8 @@ namespace QuantConnect.Tests.Brokerages
 
                 var brokerageOrderId = _tempBrokerageOrderIds.Last();
 
-                if (!TryGetOrRemoveCrossZeroOrder(brokerageOrderId, orderEvent.Status, out var leanOrder))
+                // A cancel reports the brokerage order it targeted itself, see CancelOrder
+                if (orderEvent.Status == OrderStatus.Canceled || !TryGetOrRemoveCrossZeroOrder(brokerageOrderId, orderEvent.Status, out var leanOrder))
                 {
                     leanOrder = _orderProvider.GetOrderById(orderEvent.OrderId);
                 }
@@ -584,6 +630,14 @@ namespace QuantConnect.Tests.Brokerages
             }
 
 
+            /// <summary>
+            /// Simulates the brokerage reporting the fill of the second part of a cross-zero order, which it fills whatever the Lean order status is.
+            /// </summary>
+            public void FillCrossZeroSecondPart(Order order)
+            {
+                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Filled });
+            }
+
             public override bool CancelOrder(Order order)
             {
                 // The cancel targets the brokerage order id it reads before waiting for the placement lock
@@ -592,7 +646,18 @@ namespace QuantConnect.Tests.Brokerages
                 {
                     CanceledBrokerageOrderIds.Add(brokerageOrderId);
                     Thread.Sleep(CancelAcknowledgementDelay);
-                    OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                    CancelInFlight?.Invoke(brokerageOrderId);
+
+                    // Like TradeStation, whose rejected cancel of a closed brokerage order closes the orders still open
+                    if (order.Status.IsOpen())
+                    {
+                        TryGetOrRemoveCrossZeroOrder(brokerageOrderId, OrderStatus.Canceled, out _);
+                        OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero, "CancelOrder") { Status = OrderStatus.Canceled });
+                    }
+                    else
+                    {
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CancelNotOpenOrder", $"BrokerageOrderId: {brokerageOrderId} is not open"));
+                    }
                 }
                 return true;
             }

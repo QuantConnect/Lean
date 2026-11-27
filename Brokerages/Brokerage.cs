@@ -724,9 +724,11 @@ namespace QuantConnect.Brokerages
         private readonly ConcurrentDictionary<int, bool> _isClosedByQueuedCrossZeroLeanOrderId = new();
 
         /// <summary>
-        /// The brokerage order ids of the cross-zero second parts this class already requested to cancel, so each is requested once.
+        /// The orders the cross-zero second parts are requested to cancel with, by their brokerage order id, so each is requested once.
+        /// An order takes its second part's final status once the brokerage reports it, so a brokerage that then rejects the cancel
+        /// sees the second part is no longer open and doesn't close a filled Lean order as canceled.
         /// </summary>
-        private readonly ConcurrentDictionary<string, bool> _cancelRequestedCrossZeroBrokerageOrderIds = new();
+        private readonly ConcurrentDictionary<string, Order> _cancelOrderByCrossZeroBrokerageOrderId = new();
 
         /// <summary>
         /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
@@ -902,7 +904,10 @@ namespace QuantConnect.Brokerages
                         case OrderStatus.Canceled:
                         case OrderStatus.Invalid:
                             LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
-                            _cancelRequestedCrossZeroBrokerageOrderIds.TryRemove(brokerageOrderId, out _);
+                            if (_cancelOrderByCrossZeroBrokerageOrderId.TryRemove(brokerageOrderId, out var cancelOrder))
+                            {
+                                cancelOrder.Status = leanOrderStatus;
+                            }
                             break;
                     }
                     return true;
@@ -1014,8 +1019,21 @@ namespace QuantConnect.Brokerages
         {
             foreach (var (brokerageOrderId, leanOrder) in LeanOrderByZeroCrossBrokerageOrderId)
             {
-                if (leanOrder.Id != leanOrderId || !_cancelRequestedCrossZeroBrokerageOrderIds.TryAdd(brokerageOrderId, true))
+                if (leanOrder.Id != leanOrderId)
                 {
+                    continue;
+                }
+
+                // Its own copy takes the second part's final status, the tracked order can't: brokerages skip the events of a closed order
+                var cancelOrder = leanOrder.Clone();
+                if (!_cancelOrderByCrossZeroBrokerageOrderId.TryAdd(brokerageOrderId, cancelOrder))
+                {
+                    continue;
+                }
+                if (!LeanOrderByZeroCrossBrokerageOrderId.ContainsKey(brokerageOrderId))
+                {
+                    // The second part reported its final status before the copy was added, so the copy can't take it
+                    _cancelOrderByCrossZeroBrokerageOrderId.TryRemove(brokerageOrderId, out _);
                     continue;
                 }
 
@@ -1023,18 +1041,25 @@ namespace QuantConnect.Brokerages
                 // Off the caller's thread: the event can be raised while the brokerage holds the lock its cancel takes
                 Task.Run(() =>
                 {
+                    // The second part can fill before this runs
+                    if (!cancelOrder.Status.IsOpen())
+                    {
+                        return;
+                    }
+
                     var isCanceled = false;
 #pragma warning disable CA1031 // Do not catch general exception types
                     try
                     {
-                        isCanceled = CancelOrder(leanOrder);
+                        isCanceled = CancelOrder(cancelOrder);
                     }
                     catch (Exception err)
                     {
                         Log.Error(err);
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
-                    if (!isCanceled)
+                    // A second part that filled meanwhile has nothing left to cancel
+                    if (!isCanceled && cancelOrder.Status.IsOpen())
                     {
                         OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroCancelFailed",
                             $"{leanOrder.Symbol} Failed canceling the second part of cross order for LeanOrderId: {leanOrderId.ToStringInvariant()} " +
