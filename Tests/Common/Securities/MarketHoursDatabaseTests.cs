@@ -339,17 +339,17 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(lateOpenHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketOpen(earlyCloseHour, true));
         }
 
-        [TestCase("6/25/2008", "14:30:00")]
-        [TestCase("9/15/2009", "14:30:00")]
-        [TestCase("7/24/2012", "13:00:00")]
-        [TestCase("5/22/2013", "13:00:00")]
-        [TestCase("9/23/2013", "13:00:00")]
-        [TestCase("9/16/2014", "13:00:00")]
-        [TestCase("8/19/2020", "13:30:00")]
-        [TestCase("6/28/2021", "13:30:00")]
-        [TestCase("8/25/2022", "13:00:00")]
-        [TestCase("10/9/2023", "14:00:00")]
-        public void HangSengIndexTradesOnlyInTheAfternoonOnSevereWeatherDays(string date, string afternoonOpen)
+        [TestCase("6/25/2008", "14:30:00", "6/24/2008")]
+        [TestCase("9/15/2009", "14:30:00", "9/14/2009")]
+        [TestCase("7/24/2012", "13:00:00", "7/23/2012")]
+        [TestCase("5/22/2013", "13:00:00", "5/21/2013")]
+        [TestCase("9/23/2013", "13:00:00", "9/19/2013")]
+        [TestCase("9/16/2014", "13:00:00", "9/15/2014")]
+        [TestCase("8/19/2020", "13:30:00", "8/18/2020")]
+        [TestCase("6/28/2021", "13:30:00", "6/25/2021")]
+        [TestCase("8/25/2022", "13:00:00", "8/24/2022")]
+        [TestCase("10/9/2023", "14:00:00", "10/6/2023")]
+        public void HangSengIndexTradesOnlyInTheAfternoonOnSevereWeatherDays(string date, string afternoonOpen, string previousTradingDay)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
             var index = Symbol.Create("HSI", SecurityType.Index, Market.HKFE);
@@ -361,8 +361,8 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(new TimeSpan(16, 0, 0), segment.End);
             Assert.AreEqual(MarketHoursState.Market, segment.State);
 
-            var previousDay = exchangeHours.GetPreviousTradingDay(severeWeatherDay);
-            Assert.AreEqual(2, exchangeHours.GetMarketHours(previousDay).Segments.Count);
+            var ordinaryDay = DateTime.Parse(previousTradingDay, CultureInfo.InvariantCulture);
+            Assert.AreEqual(2, exchangeHours.GetMarketHours(ordinaryDay).Segments.Count);
         }
 
         [Test]
