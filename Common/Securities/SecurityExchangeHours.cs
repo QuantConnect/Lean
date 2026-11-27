@@ -699,6 +699,7 @@ namespace QuantConnect.Securities
 
             _cachedMarketHours = null;
             _holidays = other._holidays;
+            _bankHolidays = other._bankHolidays;
             _earlyCloses = other._earlyCloses;
             _lateOpens = other._lateOpens;
             _sunday = other._sunday;

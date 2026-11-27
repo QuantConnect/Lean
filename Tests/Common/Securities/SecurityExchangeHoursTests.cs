@@ -498,6 +498,29 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Parse.DateTime(expectedPreviousMarketOpen), previousMarketOpen);
         }
 
+        [TestCase(new string[0], new[] { "20200831" })]
+        [TestCase(new[] { "20200831" }, new string[0])]
+        [TestCase(new[] { "20200831" }, new[] { "20200525", "20200831" })]
+        public void UpdateReplacesBankHolidays(string[] currentBankHolidays, string[] newBankHolidays)
+        {
+            var exchangeHours = CreateExchangeHoursWithBankHolidays(currentBankHolidays);
+
+            exchangeHours.Update(CreateExchangeHoursWithBankHolidays(newBankHolidays));
+
+            CollectionAssert.AreEquivalent(newBankHolidays.Select(Time.ParseDate), exchangeHours.BankHolidays);
+        }
+
+        private static SecurityExchangeHours CreateExchangeHoursWithBankHolidays(IEnumerable<string> bankHolidays)
+        {
+            var days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>();
+            return new SecurityExchangeHours(TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                days.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                bankHolidays.Select(Time.ParseDate));
+        }
+
         private static SecurityExchangeHours CreateExchangeHoursWithPreMarketBeforeMidnightOpen()
         {
             var marketHours = Enum.GetValues<DayOfWeek>()
