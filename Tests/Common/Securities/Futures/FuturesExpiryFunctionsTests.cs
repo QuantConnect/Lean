@@ -160,6 +160,15 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [Test]
+        public void BrentLastDayFinancialFebruaryFutureBeforeTheRuleChangeKeepsItsExpiry()
+        {
+            // BZG16 predates the rule that starts with the March 2016 contract, so the February exception doesn't apply
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, SecurityType.Future, Market.NYMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(new DateTime(2015, 12, 31), expiration(new DateTime(2016, 2, 1)));
+        }
+
+        [Test]
         public void MCLFutures()
         {
             var canonical = Symbol.Create("MCL", SecurityType.Future, Market.NYMEX);
