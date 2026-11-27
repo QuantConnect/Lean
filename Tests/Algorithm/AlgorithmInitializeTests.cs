@@ -19,9 +19,11 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
@@ -43,7 +45,16 @@ namespace QuantConnect.Tests.Algorithm
         public void NiftyExampleRegistersOneMovingAveragePerSymbol()
         {
             var algorithm = new CustomDataNiftyAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            // DataManagerStub shares one type registry across tests, where other tests register their own Nifty type
+            var registeredTypes = new RegisteredSecurityDataTypesProvider();
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var securityService = new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(),
+                algorithm, registeredTypes, new SecurityCacheProvider(algorithm.Portfolio), algorithm: algorithm);
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
+            var universeSelection = new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider);
+            algorithm.SubscriptionManager.SetDataManager(new DataManager(new NullDataFeed(), universeSelection, algorithm, algorithm.TimeKeeper,
+                marketHoursDatabase, false, registeredTypes, dataPermissionManager));
             algorithm.SetHistoryProvider(new FakeHistoryProvider());
 
             algorithm.Initialize();
