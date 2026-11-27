@@ -339,6 +339,32 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(lateOpenHour, futureEntry.ExchangeHours.GetMarketHours(earlyCloseDate).GetMarketOpen(earlyCloseHour, true));
         }
 
+        [TestCase("6/25/2008", "14:30:00")]
+        [TestCase("9/15/2009", "14:30:00")]
+        [TestCase("7/24/2012", "13:00:00")]
+        [TestCase("5/22/2013", "13:00:00")]
+        [TestCase("9/23/2013", "13:00:00")]
+        [TestCase("9/16/2014", "13:00:00")]
+        [TestCase("8/19/2020", "13:30:00")]
+        [TestCase("6/28/2021", "13:30:00")]
+        [TestCase("8/25/2022", "13:00:00")]
+        [TestCase("10/9/2023", "14:00:00")]
+        public void HangSengIndexTradesOnlyInTheAfternoonOnSevereWeatherDays(string date, string afternoonOpen)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var index = Symbol.Create("HSI", SecurityType.Index, Market.HKFE);
+            var exchangeHours = provider.GetExchangeHours(Market.HKFE, index, SecurityType.Index);
+            var severeWeatherDay = DateTime.Parse(date, CultureInfo.InvariantCulture);
+
+            var segment = exchangeHours.GetMarketHours(severeWeatherDay).Segments.Single();
+            Assert.AreEqual(TimeSpan.Parse(afternoonOpen, CultureInfo.InvariantCulture), segment.Start);
+            Assert.AreEqual(new TimeSpan(16, 0, 0), segment.End);
+            Assert.AreEqual(MarketHoursState.Market, segment.State);
+
+            var previousDay = exchangeHours.GetPreviousTradingDay(severeWeatherDay);
+            Assert.AreEqual(2, exchangeHours.GetMarketHours(previousDay).Segments.Count);
+        }
+
         [Test]
         public void CorrectlyReadFxcmForexMarketHours()
         {
