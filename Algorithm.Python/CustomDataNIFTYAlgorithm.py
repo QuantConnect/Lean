@@ -33,7 +33,7 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
 
         self.settings.automatic_indicator_warm_up = True
         rupee_sma = self.sma(rupee, 20)
-        nifty_sma = self.sma(rupee, 20)
+        nifty_sma = self.sma(nifty, 20)
         self.log(f"SMA - Is ready? USDINR: {rupee_sma.is_ready} NIFTY: {nifty_sma.is_ready}")
 
         self.minimum_correlation_history = 50

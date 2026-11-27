@@ -14,9 +14,12 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -35,6 +38,23 @@ namespace QuantConnect.Tests.Algorithm
         private const BrokerageName BrokerageName = QuantConnect.Brokerages.BrokerageName.FxcmBrokerage;
         private const int RoundingPrecision = 20;
         private readonly MarketOrder _order = new MarketOrder { Quantity = 1000 };
+
+        [Test]
+        public void NiftyExampleRegistersOneMovingAveragePerSymbol()
+        {
+            var algorithm = new CustomDataNiftyAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetHistoryProvider(new FakeHistoryProvider());
+
+            algorithm.Initialize();
+
+            var subscriptions = algorithm.SubscriptionManager.Subscriptions.ToList();
+            var rupee = subscriptions.Single(config => config.Type == typeof(DollarRupee));
+            var nifty = subscriptions.Single(config => config.Type == typeof(Nifty));
+
+            Assert.AreEqual(1, rupee.Consolidators.Count);
+            Assert.AreEqual(1, nifty.Consolidators.Count);
+        }
 
         [TestCase(true)]
         [TestCase(false)]
