@@ -153,7 +153,7 @@ namespace QuantConnect.Tests.Common
             // we need to get the greeks else they will calculated below after we change the static evaluation date
             var gamma = results1.Greeks.Gamma;
             var delta = results1.Greeks.Delta;
-            var vega = results1.Greeks.Delta;
+            var vega = results1.Greeks.Vega;
             var lambda = results1.Greeks.Lambda;
             var theta = results1.Greeks.Theta;
 

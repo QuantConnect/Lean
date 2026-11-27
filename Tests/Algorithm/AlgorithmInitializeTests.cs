@@ -14,11 +14,16 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.HistoricalData;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
@@ -35,6 +40,32 @@ namespace QuantConnect.Tests.Algorithm
         private const BrokerageName BrokerageName = QuantConnect.Brokerages.BrokerageName.FxcmBrokerage;
         private const int RoundingPrecision = 20;
         private readonly MarketOrder _order = new MarketOrder { Quantity = 1000 };
+
+        [Test]
+        public void NiftyExampleRegistersOneMovingAveragePerSymbol()
+        {
+            var algorithm = new CustomDataNiftyAlgorithm();
+            // DataManagerStub shares one type registry across tests, where other tests register their own Nifty type
+            var registeredTypes = new RegisteredSecurityDataTypesProvider();
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var securityService = new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, SymbolPropertiesDatabase.FromDataFolder(),
+                algorithm, registeredTypes, new SecurityCacheProvider(algorithm.Portfolio), algorithm: algorithm);
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataPermissionManager = new DataPermissionManager();
+            var universeSelection = new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider);
+            algorithm.SubscriptionManager.SetDataManager(new DataManager(new NullDataFeed(), universeSelection, algorithm, algorithm.TimeKeeper,
+                marketHoursDatabase, false, registeredTypes, dataPermissionManager));
+            algorithm.SetHistoryProvider(new FakeHistoryProvider());
+
+            algorithm.Initialize();
+
+            var subscriptions = algorithm.SubscriptionManager.Subscriptions.ToList();
+            var rupee = subscriptions.Single(config => config.Type == typeof(DollarRupee));
+            var nifty = subscriptions.Single(config => config.Type == typeof(Nifty));
+
+            Assert.AreEqual(1, rupee.Consolidators.Count);
+            Assert.AreEqual(1, nifty.Consolidators.Count);
+        }
 
         [TestCase(true)]
         [TestCase(false)]

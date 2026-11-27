@@ -48,11 +48,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Define the symbol and "type" of our generic data:
             var rupee = AddData<DollarRupee>("USDINR", Resolution.Daily).Symbol;
-            AddData<Nifty>("NIFTY", Resolution.Daily);
+            var nifty = AddData<Nifty>("NIFTY", Resolution.Daily).Symbol;
 
             Settings.AutomaticIndicatorWarmUp = true;
             var rupeeSma = SMA(rupee, 20);
-            var niftySma = SMA(rupee, 20);
+            var niftySma = SMA(nifty, 20);
             Log($"SMA - Is ready? USDINR: {rupeeSma.IsReady} NIFTY: {niftySma.IsReady}");
         }
 

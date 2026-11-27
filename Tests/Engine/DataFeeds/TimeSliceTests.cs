@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var security2 = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                subscriptionDataConfig1,
+                subscriptionDataConfig2,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
@@ -136,6 +136,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new Dictionary<Universe, BaseDataCollection>());
 
             Assert.AreEqual(2, timeSlice.CustomData.Count);
+            Assert.AreEqual(symbol1, timeSlice.CustomData[0].Target.Symbol);
+            Assert.AreEqual(symbol2, timeSlice.CustomData[1].Target.Symbol);
 
             var data1 = timeSlice.CustomData[0].Data[0];
             var data2 = timeSlice.CustomData[1].Data[0];

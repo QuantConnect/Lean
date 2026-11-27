@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 newMarginRemaining = Portfolio.MarginRemaining;
 
-                if (marginRemaining > 0)
+                if (newMarginRemaining > 0)
                 {
                     throw new RegressionTestException($"Expected no margin remaining after buying with full leverage. " +
                         $"Actual margin remaining is {newMarginRemaining}");
