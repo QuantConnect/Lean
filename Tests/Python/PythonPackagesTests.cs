@@ -15,6 +15,9 @@
 */
 
 using System;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using Python.Runtime;
 using NUnit.Framework;
 
@@ -2943,6 +2946,49 @@ def RunTest():
     })
     
     report = sv.analyze(df, target_feat='target')");
+        }
+
+        [Test]
+        public void Cryptography()
+        {
+            AssertCode(@"
+from cryptography.fernet import Fernet
+
+def RunTest():
+    cipher = Fernet(Fernet.generate_key())
+    message = b'LEAN'
+    assert cipher.decrypt(cipher.encrypt(message)) == message");
+        }
+
+        // Runs first: a python extension loading the environment's libssl earlier would hide a wrong library search path
+        [Test, Order(1)]
+        public void DotNetLoadsPythonEnvironmentOpenSsl()
+        {
+            if (!OS.IsLinux)
+            {
+                Assert.Ignore("Only Linux resolves OpenSSL by soname");
+            }
+
+            // .NET loads libssl and libcrypto by soname, and python extensions loaded later bind to those same copies,
+            // so they need to be the python environment's, which its extensions were built against
+            SHA256.HashData(new byte[1]);
+
+            string pythonPrefix;
+            using (Py.GIL())
+            {
+                using var sys = Py.Import("sys");
+                // a virtual environment keeps using its base installation's native libraries
+                pythonPrefix = sys.GetAttr("base_prefix").As<string>();
+            }
+            var openSslLibraries = File.ReadLines("/proc/self/maps")
+                .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last())
+                .Where(path => path.Contains("/libssl.so") || path.Contains("/libcrypto.so"))
+                .Distinct()
+                .ToList();
+
+            Assert.IsNotEmpty(openSslLibraries);
+            Assert.IsTrue(openSslLibraries.All(path => path.StartsWith(pythonPrefix, StringComparison.InvariantCulture)),
+                $"OpenSSL loaded outside of {pythonPrefix}: {string.Join(", ", openSslLibraries)}");
         }
 
         [TestCase("tf2onnx", "1.16.1", "__version__"), Explicit("These need to be run by themselves")]
