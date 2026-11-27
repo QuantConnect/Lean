@@ -264,7 +264,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new[] { new LocalMarketHours(DayOfWeek.Thursday, segments) }.ToDictionary(x => x.DayOfWeek),
                 new Dictionary<DateTime, TimeSpan>(),
                 new Dictionary<DateTime, TimeSpan>(),
-                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, TimeSpan.Parse(lateClose, CultureInfo.InvariantCulture) } });
+                Enumerable.Empty<DateTime>(),
+                new Dictionary<DateTime, TimeSpan> { { date, TimeSpan.Parse(lateClose, CultureInfo.InvariantCulture) } });
 
             var marketHours = exchangeHours.GetMarketHours(date);
 
@@ -283,7 +284,8 @@ namespace QuantConnect.Tests.Common.Securities
                     .ToDictionary(x => x.DayOfWeek),
                 new Dictionary<DateTime, TimeSpan>(),
                 new Dictionary<DateTime, TimeSpan>(),
-                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } });
+                Enumerable.Empty<DateTime>(),
+                new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } });
 
             Assert.IsTrue(exchangeHours.IsOpen(date.AddHours(16), false));
             Assert.IsFalse(exchangeHours.IsOpen(date.AddHours(16.5), false));
@@ -291,21 +293,81 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(date.AddDays(7).AddHours(15.5), exchangeHours.GetNextMarketClose(date.AddHours(17), false));
         }
 
-        [Test]
-        public void SettingTheExchangeMarketHoursKeepsItsLateCloses()
+        [TestCase(null, "16:00", "16:30", "Market: 16:00:00-16:30:00")]
+        [TestCase(null, "10:00", "16:30", "Market: 10:00:00-16:30:00")]
+        [TestCase("13:00", null, "15:00", "Market: 09:00:00-13:00:00")]
+        [TestCase("13:00", null, "16:30", "Market: 09:00:00-13:00:00")]
+        [TestCase("12:00", "13:00", "16:30", "Market: 09:00:00-12:00:00 | Market: 13:00:00-16:30:00")]
+        public void LateCloseKeepsTheEarlyCloseAndLateOpenOfTheSameDate(string earlyClose, string lateOpen, string lateClose, string expectedSegments)
         {
             var date = new DateTime(2026, 11, 19);
+            Dictionary<DateTime, TimeSpan> ToDictionary(string time) => time == null
+                ? new Dictionary<DateTime, TimeSpan>()
+                : new Dictionary<DateTime, TimeSpan> { { date, TimeSpan.Parse(time, CultureInfo.InvariantCulture) } };
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new[] { new LocalMarketHours(DayOfWeek.Thursday, new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(15, 30, 0))) }
+                    .ToDictionary(x => x.DayOfWeek),
+                ToDictionary(earlyClose),
+                ToDictionary(lateOpen),
+                Enumerable.Empty<DateTime>(),
+                ToDictionary(lateClose));
+
+            Assert.AreEqual(expectedSegments, string.Join(" | ", exchangeHours.GetMarketHours(date).Segments));
+        }
+
+        [Test]
+        public void GetMarketHoursOfTheCachedDateDoesNotAllocate()
+        {
+            var date = new DateTime(2026, 11, 18);
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new[] { new LocalMarketHours(DayOfWeek.Wednesday, new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(15, 30, 0))) }
+                    .ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>(),
+                Enumerable.Empty<DateTime>(),
+                new Dictionary<DateTime, TimeSpan> { { date.AddDays(1), new TimeSpan(16, 30, 0) } });
+            long AllocatedBytes(int calls)
+            {
+                var allocatedBytes = GC.GetAllocatedBytesForCurrentThread();
+                for (var i = 0; i < calls; i++)
+                {
+                    exchangeHours.GetMarketHours(date.AddHours(12));
+                }
+                return GC.GetAllocatedBytesForCurrentThread() - allocatedBytes;
+            }
+            exchangeHours.GetMarketHours(date);
+            AllocatedBytes(10);
+
+            Assert.AreEqual(0, AllocatedBytes(10000));
+        }
+
+        [Test]
+        public void SettingTheExchangeMarketHoursKeepsItsLateClosesAndBankHolidays()
+        {
+            var date = new DateTime(2026, 11, 19);
+            var bankHoliday = new DateTime(2026, 11, 26);
             var exchange = new SecurityExchange(new SecurityExchangeHours(
                 TimeZones.NewYork,
                 Enumerable.Empty<DateTime>(),
                 new Dictionary<DayOfWeek, LocalMarketHours>(),
                 new Dictionary<DateTime, TimeSpan>(),
                 new Dictionary<DateTime, TimeSpan>(),
-                lateCloses: new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } }));
+                new[] { bankHoliday },
+                new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(16, 30, 0) } }));
 
             exchange.SetMarketHours(new[] { new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 0, 0), new TimeSpan(15, 30, 0)) });
 
             Assert.AreEqual(date.AddHours(16.5), exchange.Hours.GetNextMarketClose(date.AddHours(12), false));
+            CollectionAssert.AreEqual(new[] { bankHoliday }, exchange.Hours.BankHolidays);
+
+            var updatedHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
+            updatedHours.Update(exchange.Hours);
+            CollectionAssert.AreEqual(new[] { bankHoliday }, updatedHours.BankHolidays);
+            Assert.AreEqual(date.AddHours(16.5), updatedHours.GetNextMarketClose(date.AddHours(12), false));
         }
 
         [Test]

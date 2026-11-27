@@ -238,9 +238,9 @@ namespace QuantConnect.Util
             public Dictionary<string, TimeSpan> LateOpens { get; set; } = new Dictionary<string, TimeSpan>();
 
             /// <summary>
-            /// Late closes by date
+            /// Late closes by date, the time the regular market closes that same day
             /// </summary>
-            [JsonProperty("lateCloses")]
+            [JsonProperty("lateCloses", NullValueHandling = NullValueHandling.Ignore)]
             public Dictionary<string, TimeSpan> LateCloses { get; set; } = new Dictionary<string, TimeSpan>();
 
             /// <summary>
@@ -277,6 +277,7 @@ namespace QuantConnect.Util
                 EarlyCloses = entry.ExchangeHours.EarlyCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
                 LateOpens = entry.ExchangeHours.LateOpens.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
                 LateCloses = entry.ExchangeHours.LateCloses.ToDictionary(pair => pair.Key.ToString("M/d/yyyy", CultureInfo.InvariantCulture), pair => pair.Value);
+                BankHolidays = hours.BankHolidays.Select(x => x.ToString("M/d/yyyy", CultureInfo.InvariantCulture)).ToList();
             }
 
             /// <summary>
@@ -323,7 +324,7 @@ namespace QuantConnect.Util
                     }
                     if (lateCloses.Count == 0)
                     {
-                        lateCloses = ConvertTimeZone(underlyingEntry.ExchangeHours.LateCloses, underlyingEntry.ExchangeHours.TimeZone, exchangeTimeZone);
+                        lateCloses = ConvertTimeZone(underlyingEntry.ExchangeHours.LateCloses, underlyingEntry.ExchangeHours.TimeZone, exchangeTimeZone, sameDay: true);
                     }
                 }
 
@@ -331,9 +332,9 @@ namespace QuantConnect.Util
                 {
                     foreach (var holiday in marketEntry.ExchangeHours.Holidays)
                     {
-                        // an early close, late open or late close of this entry on a market-wide holiday means this entry trades on that date,
+                        // an early close or late open of this entry on a market-wide holiday means this entry trades on that date,
                         // but expiration rules should still skip it, the same as a bank holiday
-                        if (earlyCloses.ContainsKey(holiday) || lateOpens.ContainsKey(holiday) || lateCloses.ContainsKey(holiday))
+                        if (earlyCloses.ContainsKey(holiday) || lateOpens.ContainsKey(holiday))
                         {
                             bankHolidayDates.Add(holiday);
                         }
@@ -363,7 +364,7 @@ namespace QuantConnect.Util
                     if (marketEntry.ExchangeHours.LateCloses.Count > 0)
                     {
                         lateCloses = MergeLateOpensAndEarlyCloses(
-                            ConvertTimeZone(marketEntry.ExchangeHours.LateCloses, marketEntry.ExchangeHours.TimeZone, exchangeTimeZone), lateCloses);
+                            ConvertTimeZone(marketEntry.ExchangeHours.LateCloses, marketEntry.ExchangeHours.TimeZone, exchangeTimeZone, sameDay: true), lateCloses);
                     }
                 }
 
@@ -386,10 +387,11 @@ namespace QuantConnect.Util
 
             /// <summary>
             /// Converts the late opens or early closes inherited from another entry into this entry's exchange time zone,
-            /// so that they keep their instant when both entries are in different time zones
+            /// so that they keep their instant when both entries are in different time zones.
+            /// With <paramref name="sameDay"/>, the times that would move to another date are skipped, since a late close only extends its own day
             /// </summary>
             private static IReadOnlyDictionary<DateTime, TimeSpan> ConvertTimeZone(IReadOnlyDictionary<DateTime, TimeSpan> times,
-                DateTimeZone from, DateTimeZone to)
+                DateTimeZone from, DateTimeZone to, bool sameDay = false)
             {
                 if (from.Equals(to))
                 {
@@ -400,6 +402,12 @@ namespace QuantConnect.Util
                 foreach (var (date, time) in times)
                 {
                     var converted = (date + time).ConvertTo(from, to);
+                    if (sameDay && converted.Date != date)
+                    {
+                        Log.Error($"MarketHoursDatabaseJsonConverter.ConvertTimeZone(): the late close of {date:yyyy-MM-dd} at {time} in {from} " +
+                            $"is on {converted:yyyy-MM-dd HH:mm} in {to}, another date. It's skipped, a late close only extends its own day.");
+                        continue;
+                    }
                     result[converted.Date] = converted.TimeOfDay;
                 }
                 return result;

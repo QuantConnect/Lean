@@ -508,6 +508,8 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("2026-11-19", "Market: 10:00:00-16:30:00")]
         [TestCase("2026-11-18", "Market: 09:00:00-15:30:00")]
         [TestCase("2025-11-13", "Market: 10:00:00-16:30:00")]
+        [TestCase("2017-11-16", "Market: 10:00:00-16:30:00")]
+        [TestCase("2017-11-23", "Market: 10:00:00-16:30:00")]
         [TestCase("2026-01-02", "Market: 10:00:00-15:30:00")]
         public void KospiIndexTradesAnHourLaterOnTheCollegeEntranceExamDate(string date, string expectedMarketHours)
         {
@@ -517,6 +519,47 @@ namespace QuantConnect.Tests.Common.Securities
             var marketHours = exchangeHours.GetMarketHours(Parse.DateTime(date));
 
             Assert.AreEqual(expectedMarketHours, string.Join(" | ", marketHours.Segments));
+        }
+
+        [Test]
+        public void MarketWideLateClosesKeepHolidaysAndExplicitEarlyCloses()
+        {
+            var json = @"{
+  ""entries"": {
+    ""Index-usa-[*]"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""thursday"": [ { ""start"": ""09:00:00"", ""end"": ""15:30:00"", ""state"": ""market"" } ],
+      ""holidays"": [ ""11/26/2026"" ],
+      ""lateCloses"": { ""11/19/2026"": ""17:00:00"" }
+    },
+    ""Index-usa-AAA"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""thursday"": [ { ""start"": ""09:00:00"", ""end"": ""15:30:00"", ""state"": ""market"" } ],
+      ""holidays"": [],
+      ""earlyCloses"": { ""11/19/2026"": ""13:00:00"" },
+      ""lateCloses"": { ""11/26/2026"": ""15:00:00"" }
+    },
+    ""Index-usa-BBB"": {
+      ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
+      ""monday"": [], ""tuesday"": [], ""wednesday"": [], ""friday"": [], ""saturday"": [], ""sunday"": [],
+      ""thursday"": [ { ""start"": ""08:00:00"", ""end"": ""14:00:00"", ""state"": ""market"" } ],
+      ""holidays"": [],
+      ""lateCloses"": null
+    }
+  }
+}";
+            var database = JsonConvert.DeserializeObject<MarketHoursDatabase>(json);
+
+            var withEarlyClose = database.GetExchangeHours(Market.USA, Symbol.Create("AAA", SecurityType.Index, Market.USA), SecurityType.Index);
+            Assert.AreEqual("Market: 09:00:00-13:00:00", string.Join(" | ", withEarlyClose.GetMarketHours(new DateTime(2026, 11, 19)).Segments));
+            Assert.IsFalse(withEarlyClose.IsDateOpen(new DateTime(2026, 11, 26)));
+            Assert.IsFalse(withEarlyClose.IsOpen(new DateTime(2026, 11, 26, 12, 0, 0), false));
+
+            var withNullLateCloses = database.GetExchangeHours(Market.USA, Symbol.Create("BBB", SecurityType.Index, Market.USA), SecurityType.Index);
+            Assert.AreEqual("Market: 08:00:00-14:00:00", string.Join(" | ", withNullLateCloses.GetMarketHours(new DateTime(2026, 11, 12)).Segments));
+            Assert.AreEqual("Market: 08:00:00-17:00:00", string.Join(" | ", withNullLateCloses.GetMarketHours(new DateTime(2026, 11, 19)).Segments));
         }
 
         [Test]
@@ -530,7 +573,7 @@ namespace QuantConnect.Tests.Common.Securities
       ""holidays"": [],
       ""earlyCloses"": { ""11/28/2025"": ""12:00:00"", ""12/24/2025"": ""23:30:00"" },
       ""lateOpens"": { ""11/28/2025"": ""09:30:00"" },
-      ""lateCloses"": { ""11/27/2025"": ""16:00:00"" }
+      ""lateCloses"": { ""11/27/2025"": ""16:00:00"", ""12/26/2025"": ""23:30:00"" }
     },
     ""Index-usa-NDX"": {
       ""dataTimeZone"": ""America/New_York"", ""exchangeTimeZone"": ""America/New_York"",
@@ -558,10 +601,14 @@ namespace QuantConnect.Tests.Common.Securities
             // 23:30 Chicago is 00:30 of the next day in New York
             Assert.IsFalse(newYork.EarlyCloses.ContainsKey(new DateTime(2025, 12, 24)));
             Assert.AreEqual(new TimeSpan(0, 30, 0), newYork.EarlyCloses[new DateTime(2025, 12, 25)]);
+            // a late close only extends its own day, one that moves to the next day isn't inherited
+            Assert.IsFalse(newYork.LateCloses.ContainsKey(new DateTime(2025, 12, 26)));
+            Assert.IsFalse(newYork.LateCloses.ContainsKey(new DateTime(2025, 12, 27)));
 
             var chicago = database.GetExchangeHours(Market.USA, Symbol.Create("TESTCHI", SecurityType.Index, Market.USA), SecurityType.Index);
             Assert.AreEqual(new TimeSpan(12, 0, 0), chicago.EarlyCloses[new DateTime(2025, 11, 28)]);
             Assert.AreEqual(new TimeSpan(9, 30, 0), chicago.LateOpens[new DateTime(2025, 11, 28)]);
+            Assert.AreEqual(new TimeSpan(23, 30, 0), chicago.LateCloses[new DateTime(2025, 12, 26)]);
 
             // the option inherits its New York underlying's calendar, already converted from the Chicago one
             var underlying = Symbol.Create("NDX", SecurityType.Index, Market.USA);

@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Common.Util
                 CollectionAssert.AreEqual(original.ExchangeHours.EarlyCloses, kvp.Value.ExchangeHours.EarlyCloses);
                 CollectionAssert.AreEqual(original.ExchangeHours.LateOpens, kvp.Value.ExchangeHours.LateOpens);
                 CollectionAssert.AreEqual(original.ExchangeHours.LateCloses, kvp.Value.ExchangeHours.LateCloses);
+                CollectionAssert.IsSubsetOf(original.ExchangeHours.BankHolidays, kvp.Value.ExchangeHours.BankHolidays);
 
                 foreach (var value in Enum.GetValues(typeof(DayOfWeek)))
                 {
