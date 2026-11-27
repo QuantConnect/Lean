@@ -94,6 +94,29 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
+        /// Marks an existing position as settled at the given price. The brokerage cash balance a live algorithm
+        /// starts from already holds the P&amp;L of a futures position it finds in the account (variation margin
+        /// is settled into cash daily), so the position is seeded as settled at that price: its unsettled profit
+        /// starts at zero and the next <see cref="Scan"/> settles only the move since then
+        /// </summary>
+        /// <param name="holding">The future holding loaded from the brokerage</param>
+        /// <param name="price">The price the brokerage cash balance already reflects, normally the current market price</param>
+        public void SetSettledPosition(FutureHolding holding, decimal price)
+        {
+            if (!holding.Invested || price == 0)
+            {
+                return;
+            }
+
+            _settlementPrice = price;
+            _settledFutureQuantity = holding.Quantity;
+
+            var settledProfit = holding.GetQuantityValue(_settledFutureQuantity, _settlementPrice).Amount
+                - holding.GetQuantityValue(_settledFutureQuantity, holding.AveragePrice).Amount;
+            holding.AddSettledProfit(settledProfit - holding.GetSettledProfitAmount().Amount);
+        }
+
+        /// <summary>
         /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
         /// <param name="newLocalTime">Current local time</param>
