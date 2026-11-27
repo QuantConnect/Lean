@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Data.Custom.IconicTypes;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -82,6 +83,29 @@ namespace QuantConnect.Tests.Engine
             Assert.IsNull(algorithm.RunTimeError);
 
             results.Exit();
+        }
+
+        [Test]
+        public void SetsAlgorithmRunTimeErrorOnPersistentDisconnectWithOnlyCustomData()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(DateTime.UtcNow);
+            algorithm.AddData<UnlinkedData>("CUSTOM");
+            // without an exchange to wait for, the handler checks again in an hour minus the threshold: one second here
+            var handler = new DefaultBrokerageMessageHandler(algorithm, TimeSpan.FromSeconds(2), TimeSpan.FromHours(1) - TimeSpan.FromSeconds(1));
+
+            handler.HandleMessage(BrokerageMessageEvent.Disconnected("Disconnection!"));
+
+            Assert.IsNull(algorithm.RunTimeError);
+
+            // the handler looks once a minute whether that time has passed
+            var deadline = DateTime.UtcNow.AddSeconds(90);
+            while (algorithm.RunTimeError == null && DateTime.UtcNow < deadline)
+            {
+                Thread.Sleep(100);
+            }
+
+            Assert.AreEqual("Disconnection!", algorithm.RunTimeError?.Message);
         }
     }
 }

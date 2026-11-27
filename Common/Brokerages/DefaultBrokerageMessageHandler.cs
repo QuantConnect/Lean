@@ -126,10 +126,7 @@ namespace QuantConnect.Brokerages
                         Log.Trace(Messages.DefaultBrokerageMessageHandler.DisconnectedWhenExchangesAreClosed);
 
                         // if they aren't open, we'll need to check again a little bit before markets open
-                        DateTime nextMarketOpenUtc;
-                        if (_algorithm.Securities.Count != 0)
-                        {
-                            nextMarketOpenUtc = (from kvp in _algorithm.Securities
+                        var nextMarketOpenUtc = (from kvp in _algorithm.Securities
                                                  let security = kvp.Value
                                                  where security.Type != SecurityType.Base
                                                  let exchange = security.Exchange
@@ -139,13 +136,10 @@ namespace QuantConnect.Brokerages
                                                          .GetSubscriptionDataConfigs(security.Symbol)
                                                          .IsExtendedMarketHours())
                                                  let marketOpenUtc = marketOpen.ConvertToUtc(exchange.TimeZone)
-                                                 select marketOpenUtc).Min();
-                        }
-                        else
-                        {
-                            // if we have no securities just make next market open an hour from now
-                            nextMarketOpenUtc = DateTime.UtcNow.AddHours(1);
-                        }
+                                                 select marketOpenUtc)
+                            // if we have no securities, or only custom data ones, just make next market open an hour from now
+                            .DefaultIfEmpty(DateTime.UtcNow.AddHours(1))
+                            .Min();
 
                         var timeUntilNextMarketOpen = nextMarketOpenUtc - DateTime.UtcNow - _openThreshold;
                         Log.Trace(Messages.DefaultBrokerageMessageHandler.TimeUntilNextMarketOpen(timeUntilNextMarketOpen));
